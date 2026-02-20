@@ -2,16 +2,20 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "compile",
-      "group": "build",
+      "label": "build DiskScribe2026",
+      "type": "shell",
+      "command": "npm run compile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": "$tsc"
     },
     {
-      "type": "npm",
-      "script": "watch",
+      "label": "watch DiskScribe2026",
+      "type": "shell",
+      "command": "npm run watch",
       "isBackground": true,
-      "group": "build",
       "problemMatcher": "$tsc-watch"
     }
   ]
