@@ -52,17 +52,29 @@ interface HexSelectMessage {
   end: number;
 }
 
+interface HexExtractMessage {
+  type: 'hex.extract';
+  mode: HexMode;
+  start: number;
+  end: number;
+}
+
 interface RefreshMessage {
   type: 'refresh';
 }
 
-type IncomingMessage = HexReadMessage | HexJumpMessage | HexSelectMessage | RefreshMessage;
+type IncomingMessage =
+  | HexReadMessage
+  | HexJumpMessage
+  | HexSelectMessage
+  | HexExtractMessage
+  | RefreshMessage;
 
 export function activate(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95);
   statusBarItem.name = 'DiskScribe2026 Hex Status';
   statusBarItem.text = 'DiskScribe2026: no selection';
-  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in DiskScribe2026.';
+  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026.';
   statusBarItem.show();
 
   const editorProvider = new Pc98DiskEditorProvider(context, statusBarItem);
@@ -95,7 +107,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const didJump = await editorProvider.jumpToOffset(resolved.mode, resolved.offset);
       if (!didJump) {
         void vscode.window.showInformationMessage(
-          'Open a .hdi/.nhd/.d88 file in DiskScribe2026 first.'
+          'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026 first.'
         );
       }
     }),
@@ -113,11 +125,19 @@ export function activate(context: vscode.ExtensionContext): void {
         );
       }
     }),
+    vscode.commands.registerCommand('pc98.extractSelection', async () => {
+      const extracted = await editorProvider.extractSelectionToFile();
+      if (!extracted) {
+        void vscode.window.showInformationMessage(
+          'No byte selection to extract. Open a supported disk and select bytes first.'
+        );
+      }
+    }),
     vscode.commands.registerCommand('pc98.openVirtualDisk', async (resource?: vscode.Uri) => {
       const sourceUri = resolveSourceDiskUri(resource, editorProvider);
       if (!sourceUri) {
         void vscode.window.showWarningMessage(
-          'Select or open a .hdi/.nhd/.d88 file before opening the virtual disk document.'
+          'Select or open a .hdi/.nhd/.d88/.hdm file before opening the virtual disk document.'
         );
         return;
       }
@@ -278,6 +298,23 @@ class Pc98DiskEditorProvider
     return true;
   }
 
+  async extractSelectionToFile(): Promise<boolean> {
+    const session = this.getActiveSession();
+    if (!session) {
+      return false;
+    }
+
+    const selection = this.getSelectionForSession(session);
+    if (!selection) {
+      return false;
+    }
+
+    const start = this.clampViewOffset(session, selection.mode, selection.start);
+    const end = this.clampViewOffset(session, selection.mode, selection.end);
+    const normalized = normalizeSelection(selection.mode, start, end);
+    return this.extractRangeToFile(session, normalized.mode, normalized.start, normalized.end);
+  }
+
   private async createSession(
     panel: vscode.WebviewPanel,
     uri: vscode.Uri
@@ -397,6 +434,9 @@ class Pc98DiskEditorProvider
       case 'hex.select':
         await this.handleHexSelect(session, message);
         break;
+      case 'hex.extract':
+        await this.handleHexExtract(session, message);
+        break;
       default:
         break;
     }
@@ -441,6 +481,14 @@ class Pc98DiskEditorProvider
     this.updateStatusBar();
   }
 
+  private async handleHexExtract(session: HexSession, message: HexExtractMessage): Promise<void> {
+    const mode = normalizeMode(message.mode, session.mode);
+    const start = this.clampViewOffset(session, mode, message.start);
+    const end = this.clampViewOffset(session, mode, message.end);
+    const selection = normalizeSelection(mode, start, end);
+    await this.extractRangeToFile(session, selection.mode, selection.start, selection.end);
+  }
+
   private async postJumpAck(session: HexSession, mode: HexMode, offset: number): Promise<void> {
     const clamped = this.clampViewOffset(session, mode, offset);
     session.mode = mode;
@@ -463,6 +511,54 @@ class Pc98DiskEditorProvider
       start: selection.start,
       end: selection.end
     });
+  }
+
+  private async extractRangeToFile(
+    session: HexSession,
+    mode: HexMode,
+    start: number,
+    end: number
+  ): Promise<boolean> {
+    const normalized = normalizeSelection(mode, start, end);
+    const baseOffset = normalized.mode === 'disk' ? session.summary.dataOffsetBytes : 0;
+    const absoluteStart = baseOffset + normalized.start;
+    const length = normalized.end - normalized.start + 1;
+    if (length <= 0) {
+      return false;
+    }
+
+    const sourceBaseName = path.parse(session.uri.path).name || 'disk-image';
+    const rangeName = `${normalized.start.toString(16).toUpperCase()}-${normalized.end
+      .toString(16)
+      .toUpperCase()}`;
+    const defaultFileName = `${sourceBaseName}.${normalized.mode}.${rangeName}.bin`;
+
+    const defaultUri =
+      session.uri.scheme === 'file'
+        ? vscode.Uri.file(path.join(path.dirname(session.uri.fsPath), defaultFileName))
+        : undefined;
+
+    const targetUri = await vscode.window.showSaveDialog({
+      title: 'PC-98: Extract Selected Bytes',
+      saveLabel: 'Extract',
+      defaultUri,
+      filters: {
+        Binary: ['bin'],
+        All: ['*']
+      }
+    });
+    if (!targetUri) {
+      return false;
+    }
+
+    const bytes = await session.reader.readFileBytes(absoluteStart, length);
+    await vscode.workspace.fs.writeFile(targetUri, bytes);
+
+    const extractedCount = bytes.length.toLocaleString();
+    void vscode.window.showInformationMessage(
+      `Extracted ${extractedCount} bytes to ${path.basename(targetUri.path)}.`
+    );
+    return true;
   }
 
   private getViewLength(session: HexSession, mode: HexMode): number {
@@ -524,7 +620,7 @@ class Pc98DiskEditorProvider
     const session = this.getActiveSession();
     if (!session) {
       this.statusBarItem.text = 'DiskScribe2026: no selection';
-      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in DiskScribe2026.';
+      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026.';
       this.statusBarItem.show();
       return;
     }
@@ -597,6 +693,7 @@ class Pc98DiskEditorProvider
         <button id="jumpLbaButton" type="button">Jump LBA</button>
         <button id="copyOffsetButton" type="button">Copy Offset</button>
         <button id="copyLbaButton" type="button">Copy LBA</button>
+        <button id="extractSelectionButton" type="button">Extract</button>
         <button id="refreshButton" type="button">Refresh</button>
       </div>
     </div>
@@ -719,7 +816,7 @@ async function runJumpToLba(editorProvider: Pc98DiskEditorProvider): Promise<voi
 
   const didJump = await editorProvider.jumpToLba(lba);
   if (!didJump) {
-    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88 file in DiskScribe2026 first.');
+    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026 first.');
   }
 }
 
@@ -815,6 +912,22 @@ function parseIncomingMessage(value: unknown): IncomingMessage | undefined {
     ) {
       return {
         type: 'hex.select',
+        mode: value.mode,
+        start: Math.floor(value.start),
+        end: Math.floor(value.end)
+      };
+    }
+    return undefined;
+  }
+
+  if (value.type === 'hex.extract') {
+    if (
+      isHexMode(value.mode) &&
+      Number.isFinite(value.start) &&
+      Number.isFinite(value.end)
+    ) {
+      return {
+        type: 'hex.extract',
         mode: value.mode,
         start: Math.floor(value.start),
         end: Math.floor(value.end)

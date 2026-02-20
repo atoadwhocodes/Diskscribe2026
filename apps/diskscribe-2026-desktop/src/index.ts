@@ -1,5 +1,5 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
-import { existsSync } from 'node:fs';
+import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { DiskSummary } from '../../../src/core/diskSummary';
 import { buildDiskSummaryFromPath, isSupportedDiskPath } from '../../../src/core/diskSummary';
@@ -88,7 +88,7 @@ ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefin
     filters: [
       {
         name: 'PC-98 Disk Images',
-        extensions: ['hdi', 'nhd', 'd88']
+        extensions: ['hdi', 'nhd', 'd88', 'hdm']
       }
     ]
   });
@@ -168,6 +168,9 @@ async function handleIncomingMessage(session: DesktopSession, rawMessage: unknow
     case 'hex.select':
       await handleHexSelect(session, rawMessage);
       return;
+    case 'hex.extract':
+      await handleHexExtract(session, rawMessage);
+      return;
     default:
       return;
   }
@@ -179,7 +182,7 @@ async function handleRendererReady(session: DesktopSession): Promise<void> {
   if (!session.summary || !session.filePath) {
     postRendererMessage(session, {
       type: 'desktop.notice',
-      message: 'Open a .hdi, .nhd, or .d88 disk image to begin.'
+      message: 'Open a .hdi, .nhd, .d88, or .hdm disk image to begin.'
     });
     return;
   }
@@ -200,7 +203,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   }
 
   if (!isSupportedDiskPath(normalizedPath)) {
-    postError(session, 'Unsupported extension. Use .hdi, .nhd, or .d88.');
+    postError(session, 'Unsupported extension. Use .hdi, .nhd, .d88, or .hdm.');
     return;
   }
 
@@ -362,6 +365,33 @@ async function handleHexSelect(
   postSelectAck(session, selection);
 }
 
+async function handleHexExtract(
+  session: DesktopSession,
+  message: Record<string, unknown>
+): Promise<void> {
+  if (!session.summary) {
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: 'Open a disk image before extracting bytes.'
+    });
+    return;
+  }
+
+  const mode = normalizeMode(message.mode, session.mode);
+  const start = clampViewOffset(
+    session,
+    mode,
+    Number.isFinite(message.start) ? Math.floor(Number(message.start)) : 0
+  );
+  const end = clampViewOffset(
+    session,
+    mode,
+    Number.isFinite(message.end) ? Math.floor(Number(message.end)) : 0
+  );
+  const selection = normalizeSelection(mode, start, end);
+  await extractRangeToFile(session, selection.mode, selection.start, selection.end);
+}
+
 async function jumpToLba(session: DesktopSession, lba: number): Promise<void> {
   if (!session.summary) {
     postRendererMessage(session, {
@@ -456,6 +486,56 @@ function postError(session: DesktopSession, message: string): void {
   postRendererMessage(session, {
     type: 'desktop.notice',
     message: `Error: ${message}`
+  });
+}
+
+async function extractRangeToFile(
+  session: DesktopSession,
+  mode: HexMode,
+  start: number,
+  end: number
+): Promise<void> {
+  if (!session.summary || !session.reader || !session.filePath) {
+    return;
+  }
+
+  const selection = normalizeSelection(mode, start, end);
+  const baseOffset = selection.mode === 'disk' ? session.summary.dataOffsetBytes : 0;
+  const absoluteStart = baseOffset + selection.start;
+  const length = selection.end - selection.start + 1;
+  if (length <= 0) {
+    return;
+  }
+
+  const sourceBaseName = path.parse(session.filePath).name || 'disk-image';
+  const rangeName = `${selection.start.toString(16).toUpperCase()}-${selection.end
+    .toString(16)
+    .toUpperCase()}`;
+  const defaultPath = path.join(
+    path.dirname(session.filePath),
+    `${sourceBaseName}.${selection.mode}.${rangeName}.bin`
+  );
+
+  const window = BrowserWindow.fromId(session.windowId) ?? undefined;
+  const targetPath = await dialog.showSaveDialog(window, {
+    title: 'PC-98: Extract Selected Bytes',
+    defaultPath,
+    buttonLabel: 'Extract',
+    filters: [
+      { name: 'Binary', extensions: ['bin'] },
+      { name: 'All files', extensions: ['*'] }
+    ]
+  });
+  if (targetPath.canceled || !targetPath.filePath) {
+    return;
+  }
+
+  const bytes = await session.reader.readFileBytes(absoluteStart, length);
+  await fs.writeFile(targetPath.filePath, bytes);
+
+  postRendererMessage(session, {
+    type: 'desktop.notice',
+    message: `Extracted ${bytes.length.toLocaleString()} bytes to ${path.basename(targetPath.filePath)}.`
   });
 }
 
