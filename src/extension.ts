@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95);
   statusBarItem.name = 'DiskScribe2026 Hex Status';
   statusBarItem.text = 'DiskScribe2026: no selection';
-  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026.';
+  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026.';
   statusBarItem.show();
 
   const editorProvider = new Pc98DiskEditorProvider(context, statusBarItem);
@@ -107,7 +107,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const didJump = await editorProvider.jumpToOffset(resolved.mode, resolved.offset);
       if (!didJump) {
         void vscode.window.showInformationMessage(
-          'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026 first.'
+          'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026 first.'
         );
       }
     }),
@@ -137,7 +137,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const sourceUri = resolveSourceDiskUri(resource, editorProvider);
       if (!sourceUri) {
         void vscode.window.showWarningMessage(
-          'Select or open a .hdi/.nhd/.d88/.hdm file before opening the virtual disk document.'
+          'Select or open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file before opening the virtual disk document.'
         );
         return;
       }
@@ -620,7 +620,7 @@ class Pc98DiskEditorProvider
     const session = this.getActiveSession();
     if (!session) {
       this.statusBarItem.text = 'DiskScribe2026: no selection';
-      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026.';
+      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026.';
       this.statusBarItem.show();
       return;
     }
@@ -816,7 +816,7 @@ async function runJumpToLba(editorProvider: Pc98DiskEditorProvider): Promise<voi
 
   const didJump = await editorProvider.jumpToLba(lba);
   if (!didJump) {
-    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88/.hdm file in DiskScribe2026 first.');
+    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026 first.');
   }
 }
 

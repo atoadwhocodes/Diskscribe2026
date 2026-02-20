@@ -5,7 +5,7 @@ import * as iconv from 'iconv-lite';
 import { parseGenericByExtension, type PartitionEntry } from './diskParsers';
 
 const MAX_PREVIEW_BYTES = 262144;
-const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm']);
+const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm', '.hdd', '.fdi', '.fdd']);
 
 const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 2, sectorsPerTrack: 8 },
@@ -19,7 +19,7 @@ const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 16, sectorsPerTrack: 63 }
 ];
 
-export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'Unknown';
+export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Unknown';
 
 export interface GeometryGuess {
   cylinders: number;
@@ -181,6 +181,15 @@ function detectFormat(extension: string): DiskFormat {
   }
   if (extension === '.hdm') {
     return 'HDM';
+  }
+  if (extension === '.hdd') {
+    return 'HDD';
+  }
+  if (extension === '.fdi') {
+    return 'FDI';
+  }
+  if (extension === '.fdd') {
+    return 'FDD';
   }
   return 'Unknown';
 }
