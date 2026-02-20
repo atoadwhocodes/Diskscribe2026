@@ -1,5 +1,5 @@
 import './desktopTheme.css';
-import './editor.css';
+import '../../../media/editor.css';
 
 type HexMode = 'disk' | 'raw';
 
@@ -49,7 +49,7 @@ window.diskScribeDesktop.onHostMessage((message) => {
 
 wireDesktopControls();
 
-void import('./editor.js')
+void import('../../../media-src/editor')
   .then(async () => {
     await window.diskScribeDesktop.postMessage({ type: 'desktop.rendererReady' });
   })
