@@ -1,10 +1,9 @@
 # DiskScribe2026
 
-Minimal VS Code extension scaffold for inspecting PC-98 disk images (`.hdi`, `.nhd`, `.d88`) using:
+DiskScribe2026 now ships with two shells over shared disk logic:
 
-- A custom read-only editor (`pc98.dskedit`)
-- Command entry points for jump/navigation and virtual document output
-- A virtual text document (`pc98disk:`) for quick metadata inspection
+- VS Code extension (`pc98.dskedit`) for in-editor workflows
+- Electron desktop app (`apps/diskscribe-2026-desktop`) for standalone use
 
 ## Included Features
 
@@ -21,8 +20,13 @@ Minimal VS Code extension scaffold for inspecting PC-98 disk images (`.hdi`, `.n
 - Virtualized hex view with disk/raw mode toggle and persistent selection highlight
 - Extension-host paged byte reads (64 KiB default pages) with per-session LRU cache
 - Status bar sync for Offset, LBA, and CHS (when geometry is available)
+- Standalone desktop shell with:
+  - Open Disk dialog
+  - Jump to Offset / Jump to LBA
+  - Copy Offset / Copy LBA
+  - Shared `hex.read`, `hex.jump`, `hex.select` message protocol
 
-## Development
+## Development (Extension)
 
 ```bash
 npm install
@@ -34,10 +38,24 @@ Run with VS Code extension host:
 1. Open this folder in VS Code
 2. Press `F5` (uses `.vscode/launch.json`)
 
+## Development (Desktop)
+
+```bash
+cd apps/diskscribe-2026-desktop
+npm install
+npm run make
+```
+
 ## Project Layout
 
 - `src/extension.ts`: activation, command wiring, custom editor registration
-- `src/diskParsers.ts`: format parsers and partition extraction
-- `src/diskSummary.ts`: disk metadata + preview helpers
+- `src/core/diskParsers.ts`: shared format parsers and partition extraction
+- `src/core/diskSummary.ts`: shared disk metadata + preview helpers
+- `src/core/hex/pagedFileByteReader.ts`: shared paged/LRU byte reader
+- `src/diskParsers.ts`: extension compatibility re-export
+- `src/diskSummary.ts`: VS Code URI wrapper over shared summary builder
 - `media/editor.js`: webview frontend logic
 - `media/editor.css`: webview styles
+- `apps/diskscribe-2026-desktop/src/index.ts`: Electron main process host and byte service
+- `apps/diskscribe-2026-desktop/src/preload.ts`: IPC bridge for renderer
+- `apps/diskscribe-2026-desktop/src/renderer.ts`: desktop controls + webview protocol shim

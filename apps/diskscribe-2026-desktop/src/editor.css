@@ -1,0 +1,199 @@
+body {
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+  margin: 0;
+  padding: 12px;
+}
+
+.toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.toolbar h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.toolbar button {
+  background: var(--vscode-button-background);
+  border: none;
+  border-radius: 4px;
+  color: var(--vscode-button-foreground);
+  cursor: pointer;
+  padding: 6px 10px;
+}
+
+.toolbar button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.status {
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+}
+
+.panel {
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 10px;
+}
+
+.panel h2 {
+  font-size: 0.95rem;
+  margin: 0 0 8px 0;
+}
+
+.summaryTable {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.summaryTable th,
+.summaryTable td {
+  border-bottom: 1px solid var(--vscode-editorWidget-border);
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.summaryTable th {
+  color: var(--vscode-descriptionForeground);
+  font-weight: 600;
+  width: 140px;
+}
+
+.summaryTable thead th {
+  width: auto;
+}
+
+pre {
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+  margin: 0;
+  overflow: auto;
+  padding: 8px;
+  white-space: pre-wrap;
+}
+
+.hexControls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hexControls label {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9rem;
+}
+
+.hexControls select {
+  background: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-editorWidget-border));
+  color: var(--vscode-dropdown-foreground);
+  padding: 2px 4px;
+}
+
+#hexRangeMeta {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9rem;
+}
+
+.hexScroller {
+  background: var(--vscode-textCodeBlock-background);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 4px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.9rem;
+  height: 420px;
+  overflow: auto;
+  position: relative;
+}
+
+#hexSpacer {
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+}
+
+#hexRows {
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.hexRow {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: 20px;
+  left: 0;
+  padding: 0 6px;
+  position: absolute;
+  right: 0;
+  white-space: pre;
+}
+
+.hexAddr {
+  color: var(--vscode-descriptionForeground);
+  display: inline-block;
+  flex-shrink: 0;
+  width: 94px;
+}
+
+.hexBytes {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 49ch;
+}
+
+.hexAscii {
+  display: inline-block;
+  padding-left: 10px;
+}
+
+.hexByte,
+.asciiByte {
+  border-radius: 2px;
+  display: inline-block;
+  text-align: center;
+}
+
+.hexByte {
+  min-width: 2ch;
+}
+
+.asciiByte {
+  min-width: 1ch;
+}
+
+.hexByte[data-byte-off],
+.asciiByte[data-byte-off] {
+  cursor: pointer;
+}
+
+.hexByte.is-missing,
+.asciiByte.is-missing {
+  color: var(--vscode-descriptionForeground);
+}
+
+.hexByte.is-range,
+.asciiByte.is-range {
+  background: var(--vscode-editor-selectionBackground);
+}
+
+.hexByte.is-cursor,
+.asciiByte.is-cursor {
+  background: var(--vscode-editor-findMatchHighlightBackground);
+  outline: 1px solid var(--vscode-editor-findMatchBorder, transparent);
+}
