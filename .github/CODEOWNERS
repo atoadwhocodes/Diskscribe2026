@@ -1,0 +1,7 @@
+# Default owner for all changes.
+* @atoadwhocodes
+
+# Require owner review for security-sensitive automation.
+/.github/workflows/* @atoadwhocodes
+/.github/dependabot.yml @atoadwhocodes
+/SECURITY.md @atoadwhocodes
