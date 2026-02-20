@@ -24,7 +24,7 @@ const MBR_TYPE_LABELS = new Map<number, string>([
   [0xef, 'EFI System']
 ]);
 
-export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'Generic';
+export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'Generic';
 
 export interface PartitionEntry {
   index: number;
@@ -158,6 +158,38 @@ export function parseD88(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
   };
 }
 
+export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
+  const headerSummary = [`File size: ${imageSizeBytes.toLocaleString()} bytes`];
+  const parserNotes: string[] = [];
+
+  const bpb = parseBootSectorBpb(imagePrefix);
+  let sectorSize = SECTOR_SIZE;
+
+  if (bpb) {
+    sectorSize = bpb.bytesPerSector;
+    headerSummary.push(
+      `Boot sector BPB: ${bpb.bytesPerSector} bytes/sector, ${bpb.sectorsPerCluster} sectors/cluster`
+    );
+    if (bpb.totalSectors > 0) {
+      headerSummary.push(`Boot sector total sectors: ${bpb.totalSectors.toLocaleString()}`);
+    }
+  } else {
+    parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
+  }
+
+  parserNotes.push('HDM disks are treated as floppy-style raw images with data offset 0.');
+
+  return {
+    parserKind: 'HDM',
+    parserId: 'parseHDM',
+    sectorSize,
+    dataOffsetBytes: 0,
+    headerSummary,
+    parserNotes,
+    partitions: []
+  };
+}
+
 export function parseGenericByExtension(
   extension: string,
   imagePrefix: Uint8Array,
@@ -171,6 +203,9 @@ export function parseGenericByExtension(
   }
   if (extension === '.d88') {
     return parseD88(imagePrefix, imageSizeBytes);
+  }
+  if (extension === '.hdm') {
+    return parseHDM(imagePrefix, imageSizeBytes);
   }
 
   const detection = detectDataOffset(imagePrefix, imageSizeBytes, 'Unknown');
@@ -277,6 +312,53 @@ function readAscii(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('ascii').replace(/\0/g, '');
 }
 
+interface BootSectorBpb {
+  bytesPerSector: number;
+  sectorsPerCluster: number;
+  totalSectors: number;
+}
+
+function parseBootSectorBpb(bytes: Uint8Array): BootSectorBpb | undefined {
+  if (bytes.length < SECTOR_SIZE) {
+    return undefined;
+  }
+
+  const bytesPerSector = readUint16LE(bytes, 11);
+  const sectorsPerCluster = bytes[13] ?? 0;
+  const reservedSectors = readUint16LE(bytes, 14);
+  const fatCount = bytes[16] ?? 0;
+  const rootEntries = readUint16LE(bytes, 17);
+  const totalSectors16 = readUint16LE(bytes, 19);
+  const totalSectors32 = readUint32LE(bytes, 32);
+  const totalSectors = totalSectors16 > 0 ? totalSectors16 : totalSectors32;
+
+  if (!isValidSectorSize(bytesPerSector)) {
+    return undefined;
+  }
+  if (sectorsPerCluster <= 0 || reservedSectors <= 0) {
+    return undefined;
+  }
+  if (fatCount <= 0 || fatCount > 4) {
+    return undefined;
+  }
+  if (rootEntries === 0) {
+    return undefined;
+  }
+  if (totalSectors <= 0) {
+    return undefined;
+  }
+
+  return {
+    bytesPerSector,
+    sectorsPerCluster,
+    totalSectors
+  };
+}
+
+function isValidSectorSize(value: number): boolean {
+  return value === 128 || value === 256 || value === 512 || value === 1024 || value === 2048 || value === 4096;
+}
+
 function isReasonableHeaderSize(value: number, imageSizeBytes: number): boolean {
   if (!Number.isSafeInteger(value) || value <= 0) {
     return false;
@@ -297,4 +379,11 @@ function readUint32LE(bytes: Uint8Array, offset: number): number {
     (bytes[offset + 2] << 16) |
     (bytes[offset + 3] << 24 >>> 0)
   ) >>> 0;
+}
+
+function readUint16LE(bytes: Uint8Array, offset: number): number {
+  if (offset < 0 || offset + 2 > bytes.length) {
+    return 0;
+  }
+  return bytes[offset] | (bytes[offset + 1] << 8);
 }

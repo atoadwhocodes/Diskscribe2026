@@ -1,8 +1,6 @@
 import './desktopTheme.css';
 import '../../../media/editor.css';
 
-type HexMode = 'disk' | 'raw';
-
 interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
@@ -64,34 +62,6 @@ function wireDesktopControls(): void {
       void handleOpenDisk();
     });
   }
-
-  const jumpOffsetButton = document.getElementById('jumpOffsetButton');
-  if (jumpOffsetButton) {
-    jumpOffsetButton.addEventListener('click', () => {
-      void handleJumpOffset();
-    });
-  }
-
-  const jumpLbaButton = document.getElementById('jumpLbaButton');
-  if (jumpLbaButton) {
-    jumpLbaButton.addEventListener('click', () => {
-      void handleJumpLba();
-    });
-  }
-
-  const copyOffsetButton = document.getElementById('copyOffsetButton');
-  if (copyOffsetButton) {
-    copyOffsetButton.addEventListener('click', () => {
-      void window.diskScribeDesktop.postMessage({ type: 'desktop.copyOffset' });
-    });
-  }
-
-  const copyLbaButton = document.getElementById('copyLbaButton');
-  if (copyLbaButton) {
-    copyLbaButton.addEventListener('click', () => {
-      void window.diskScribeDesktop.postMessage({ type: 'desktop.copyLba' });
-    });
-  }
 }
 
 async function handleOpenDisk(): Promise<void> {
@@ -104,52 +74,6 @@ async function handleOpenDisk(): Promise<void> {
   await window.diskScribeDesktop.postMessage({
     type: 'desktop.openDisk',
     filePath: selectedPath
-  });
-}
-
-async function handleJumpOffset(): Promise<void> {
-  const modeInput = window.prompt('Offset mode (disk/raw):', 'disk');
-  if (modeInput === null) {
-    return;
-  }
-  const mode: HexMode = modeInput.trim().toLowerCase() === 'raw' ? 'raw' : 'disk';
-
-  const offsetInput = window.prompt(
-    'Enter offset in decimal or hex (0x..., ...h):',
-    mode === 'disk' ? '0x0' : '0'
-  );
-  if (offsetInput === null) {
-    return;
-  }
-
-  const offset = parseOffsetInput(offsetInput);
-  if (offset === undefined || offset < 0) {
-    setStatus('Invalid offset input.');
-    return;
-  }
-
-  await window.diskScribeDesktop.postMessage({
-    type: 'hex.jump',
-    mode,
-    offset
-  });
-}
-
-async function handleJumpLba(): Promise<void> {
-  const input = window.prompt('Enter LBA (decimal):', '0');
-  if (input === null) {
-    return;
-  }
-
-  const lba = parseDecimalInteger(input);
-  if (lba === undefined || lba < 0) {
-    setStatus('Invalid LBA input.');
-    return;
-  }
-
-  await window.diskScribeDesktop.postMessage({
-    type: 'desktop.jumpLba',
-    lba
   });
 }
 
@@ -166,42 +90,6 @@ function handleDesktopMessage(message: unknown): void {
   if (message.type === 'desktop.notice' && typeof message.message === 'string') {
     setStatus(message.message);
   }
-}
-
-function parseDecimalInteger(value: string): number | undefined {
-  const cleaned = value.trim().replace(/,/g, '');
-  if (!/^[0-9]+$/.test(cleaned)) {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(cleaned, 10);
-  if (!Number.isSafeInteger(parsed)) {
-    return undefined;
-  }
-  return parsed;
-}
-
-function parseOffsetInput(value: string): number | undefined {
-  const cleaned = value.trim().replace(/,/g, '').toLowerCase();
-  if (cleaned.length === 0) {
-    return undefined;
-  }
-
-  let parsed: number | undefined;
-  if (/^0x[0-9a-f]+$/.test(cleaned)) {
-    parsed = Number.parseInt(cleaned, 16);
-  } else if (/^[0-9a-f]+h$/.test(cleaned)) {
-    parsed = Number.parseInt(cleaned.slice(0, -1), 16);
-  } else if (/^[0-9]+$/.test(cleaned)) {
-    parsed = Number.parseInt(cleaned, 10);
-  } else {
-    return undefined;
-  }
-
-  if (!Number.isSafeInteger(parsed)) {
-    return undefined;
-  }
-  return parsed;
 }
 
 function setStatus(text: string): void {

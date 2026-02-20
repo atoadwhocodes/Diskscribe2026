@@ -5,9 +5,13 @@ import * as iconv from 'iconv-lite';
 import { parseGenericByExtension, type PartitionEntry } from './diskParsers';
 
 const MAX_PREVIEW_BYTES = 262144;
-const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88']);
+const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm']);
 
 const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
+  { heads: 2, sectorsPerTrack: 8 },
+  { heads: 2, sectorsPerTrack: 9 },
+  { heads: 2, sectorsPerTrack: 15 },
+  { heads: 2, sectorsPerTrack: 18 },
   { heads: 8, sectorsPerTrack: 17 },
   { heads: 8, sectorsPerTrack: 26 },
   { heads: 8, sectorsPerTrack: 33 },
@@ -15,7 +19,7 @@ const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 16, sectorsPerTrack: 63 }
 ];
 
-export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'Unknown';
+export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'Unknown';
 
 export interface GeometryGuess {
   cylinders: number;
@@ -64,7 +68,7 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
     notes.push('Disk image is empty.');
   }
   if (stat.size % sectorSize !== 0) {
-    notes.push('Image size is not aligned to 512-byte sectors.');
+    notes.push(`Image size is not aligned to ${sectorSize.toLocaleString()}-byte sectors.`);
   }
   if (format === 'D88' && parsedImage.sectorSize === 512) {
     notes.push('D88 can contain variable sector sizes; this parser currently assumes 512-byte sectors.');
@@ -174,6 +178,9 @@ function detectFormat(extension: string): DiskFormat {
   }
   if (extension === '.d88') {
     return 'D88';
+  }
+  if (extension === '.hdm') {
+    return 'HDM';
   }
   return 'Unknown';
 }

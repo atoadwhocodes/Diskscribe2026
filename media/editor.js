@@ -52,7 +52,8 @@ const elements = {
     jumpOffsetButton: document.getElementById('jumpOffsetButton'),
     jumpLbaButton: document.getElementById('jumpLbaButton'),
     copyOffsetButton: document.getElementById('copyOffsetButton'),
-    copyLbaButton: document.getElementById('copyLbaButton')
+    copyLbaButton: document.getElementById('copyLbaButton'),
+    extractSelectionButton: document.getElementById('extractSelectionButton')
 };
 const state = {
     summary: undefined,
@@ -99,6 +100,11 @@ if (elements.copyOffsetButton) {
 if (elements.copyLbaButton) {
     elements.copyLbaButton.addEventListener('click', () => {
         void copyLbaToClipboard();
+    });
+}
+if (elements.extractSelectionButton) {
+    elements.extractSelectionButton.addEventListener('click', () => {
+        void requestExtractSelection();
     });
 }
 if (elements.hexModeSelect) {
@@ -733,6 +739,16 @@ async function copyLbaToClipboard() {
         return;
     }
     setText(elements.status, `Copied LBA: ${formatNumber(lba)}`);
+}
+async function requestExtractSelection() {
+    const start = clampOffset(state.selectionStart, state.mode);
+    const end = clampOffset(state.selectionEnd, state.mode);
+    post({
+        type: 'hex.extract',
+        mode: state.mode,
+        start,
+        end
+    });
 }
 async function copyText(value) {
     if (!value) {
