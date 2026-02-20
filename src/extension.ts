@@ -5,7 +5,7 @@ import { PagedByteReader } from './hex/byteReader';
 
 const CUSTOM_EDITOR_VIEW_TYPE = 'pc98.dskedit';
 const VIRTUAL_DOCUMENT_SCHEME = 'pc98disk';
-const HEX_CONFIG_SECTION = 'diskedit2026.hex';
+const HEX_CONFIG_SECTION = 'diskscribe2026.hex';
 
 type HexMode = 'disk' | 'raw';
 
@@ -60,9 +60,9 @@ type IncomingMessage = HexReadMessage | HexJumpMessage | HexSelectMessage | Refr
 
 export function activate(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95);
-  statusBarItem.name = 'diskedit-2026 Hex Status';
-  statusBarItem.text = 'diskedit-2026: no selection';
-  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in diskedit-2026.';
+  statusBarItem.name = 'DiskScribe2026 Hex Status';
+  statusBarItem.text = 'DiskScribe2026: no selection';
+  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in DiskScribe2026.';
   statusBarItem.show();
 
   const editorProvider = new Pc98DiskEditorProvider(context, statusBarItem);
@@ -95,7 +95,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const didJump = await editorProvider.jumpToOffset(resolved.mode, resolved.offset);
       if (!didJump) {
         void vscode.window.showInformationMessage(
-          'Open a .hdi/.nhd/.d88 file in diskedit-2026 first.'
+          'Open a .hdi/.nhd/.d88 file in DiskScribe2026 first.'
         );
       }
     }),
@@ -523,15 +523,15 @@ class Pc98DiskEditorProvider
   private updateStatusBar(): void {
     const session = this.getActiveSession();
     if (!session) {
-      this.statusBarItem.text = 'diskedit-2026: no selection';
-      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in diskedit-2026.';
+      this.statusBarItem.text = 'DiskScribe2026: no selection';
+      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88 file in DiskScribe2026.';
       this.statusBarItem.show();
       return;
     }
 
     const selection = this.getSelectionForSession(session);
     if (!selection) {
-      this.statusBarItem.text = `diskedit-2026 ${path.basename(session.uri.path)}: no selection`;
+      this.statusBarItem.text = `DiskScribe2026 ${path.basename(session.uri.path)}: no selection`;
       this.statusBarItem.tooltip = 'Click a byte in hex view to select it.';
       this.statusBarItem.show();
       return;
@@ -583,11 +583,11 @@ class Pc98DiskEditorProvider
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource};" />
   <link rel="stylesheet" href="${styleUri}" />
-  <title>diskedit-2026</title>
+  <title>DiskScribe2026</title>
 </head>
 <body>
   <header class="toolbar">
-    <h1>diskedit-2026</h1>
+    <h1>DiskScribe2026</h1>
     <button id="refreshButton" type="button">Refresh</button>
   </header>
 
@@ -701,7 +701,7 @@ async function runJumpToLba(editorProvider: Pc98DiskEditorProvider): Promise<voi
 
   const didJump = await editorProvider.jumpToLba(lba);
   if (!didJump) {
-    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88 file in diskedit-2026 first.');
+    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88 file in DiskScribe2026 first.');
   }
 }
 
