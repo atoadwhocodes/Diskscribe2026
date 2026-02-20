@@ -1,17 +1,17 @@
 {
-  "name": "diskedit-2026",
-  "displayName": "diskedit-2026",
+  "name": "diskscribe-2026",
+  "displayName": "DiskScribe2026",
   "description": "Custom editor for PC-98 disk images (.hdi, .nhd, .d88) with partition/FAT inspector and Shift-JIS preview.",
   "version": "0.0.1",
   "publisher": "your-name-or-handle",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/atoadwhocodes/DiskEdit-2026.git"
+    "url": "git+https://github.com/atoadwhocodes/DiskScribe2026.git"
   },
   "bugs": {
-    "url": "https://github.com/atoadwhocodes/DiskEdit-2026/issues"
+    "url": "https://github.com/atoadwhocodes/DiskScribe2026/issues"
   },
-  "homepage": "https://github.com/atoadwhocodes/DiskEdit-2026#readme",
+  "homepage": "https://github.com/atoadwhocodes/DiskScribe2026#readme",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -39,7 +39,7 @@
     "customEditors": [
       {
         "viewType": "pc98.dskedit",
-        "displayName": "diskedit-2026",
+        "displayName": "DiskScribe2026",
         "selector": [
           {
             "filenamePattern": "*.hdi"
@@ -88,23 +88,23 @@
       }
     ],
     "configuration": {
-      "title": "diskedit-2026",
+      "title": "DiskScribe2026",
       "properties": {
-        "diskedit2026.hex.pageBytes": {
+        "diskscribe2026.hex.pageBytes": {
           "type": "integer",
           "default": 65536,
           "minimum": 4096,
           "maximum": 1048576,
           "description": "Byte page size used by the extension-host hex reader cache."
         },
-        "diskedit2026.hex.maxCachedPages": {
+        "diskscribe2026.hex.maxCachedPages": {
           "type": "integer",
           "default": 32,
           "minimum": 1,
           "maximum": 1024,
           "description": "Maximum number of cached pages per open disk editor session."
         },
-        "diskedit2026.hex.defaultMode": {
+        "diskscribe2026.hex.defaultMode": {
           "type": "string",
           "enum": [
             "disk",

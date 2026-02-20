@@ -1,4 +1,4 @@
-# diskedit-2026
+# DiskScribe2026
 
 Minimal VS Code extension scaffold for inspecting PC-98 disk images (`.hdi`, `.nhd`, `.d88`) using:
 

@@ -12,4 +12,4 @@
 - Added extension-host byte server protocol (`hex.read`, `hex.jump`, `hex.select`)
 - Added paged reader cache (64 KiB pages, configurable max cached pages)
 - Added jump/copy commands for offset and LBA with status bar synchronization
-- Renamed package display identity to `diskedit-2026`
+- Renamed package display identity to `DiskScribe2026`

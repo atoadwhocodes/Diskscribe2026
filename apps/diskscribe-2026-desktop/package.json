@@ -1,8 +1,8 @@
 {
-  "name": "diskedit-2026-desktop",
-  "productName": "diskedit-2026-desktop",
+  "name": "diskscribe-2026-desktop",
+  "productName": "DiskScribe2026 Desktop",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Standalone desktop shell for DiskScribe2026.",
   "main": ".webpack/main",
   "private": true,
   "scripts": {
