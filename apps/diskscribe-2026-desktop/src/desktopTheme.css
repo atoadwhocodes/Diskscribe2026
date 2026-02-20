@@ -1,0 +1,43 @@
+:root {
+  --vscode-font-family: "Segoe UI", "Noto Sans", sans-serif;
+  --vscode-editor-font-family: "Cascadia Mono", "Consolas", "Courier New", monospace;
+  --vscode-editor-foreground: #1c1c1c;
+  --vscode-editor-background: #f6f5f0;
+  --vscode-editorWidget-background: #ffffff;
+  --vscode-editorWidget-border: #cfcac1;
+  --vscode-button-background: #2f6d5f;
+  --vscode-button-foreground: #f8f8f8;
+  --vscode-button-hoverBackground: #25584d;
+  --vscode-dropdown-background: #ffffff;
+  --vscode-dropdown-foreground: #1c1c1c;
+  --vscode-dropdown-border: #bdb6ab;
+  --vscode-descriptionForeground: #5a5a5a;
+  --vscode-textCodeBlock-background: #faf9f6;
+  --vscode-editor-selectionBackground: rgba(71, 138, 118, 0.32);
+  --vscode-editor-findMatchHighlightBackground: rgba(238, 182, 99, 0.45);
+  --vscode-editor-findMatchBorder: #e0a444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.desktopActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.activePath {
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.82rem;
+  margin: 0 0 10px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

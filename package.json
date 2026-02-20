@@ -121,7 +121,9 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "npm run compile && node ./dist/test/runTest.js",
-    "package:vsix": "vsce package --no-dependencies --allow-missing-repository"
+    "package:vsix": "vsce package --no-dependencies --allow-missing-repository",
+    "desktop:start": "npm --prefix apps/diskscribe-2026-desktop run start",
+    "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
