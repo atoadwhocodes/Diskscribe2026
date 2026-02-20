@@ -33,6 +33,19 @@ npm install
 npm run compile
 ```
 
+During development, you can run:
+
+```bash
+npm run watch
+```
+
+Build scripts:
+
+- `npm run compile:ext` compiles extension host TypeScript
+- `npm run compile:webview` bundles webview script with webpack
+- `npm run compile` runs both steps
+- `npm run package` creates a `.vsix`
+
 Run with VS Code extension host:
 
 1. Open this folder in VS Code
@@ -54,8 +67,11 @@ npm run make
 - `src/core/hex/pagedFileByteReader.ts`: shared paged/LRU byte reader
 - `src/diskParsers.ts`: extension compatibility re-export
 - `src/diskSummary.ts`: VS Code URI wrapper over shared summary builder
-- `media/editor.js`: webview frontend logic
+- `media-src/editor.ts`: webview source entrypoint
+- `media/editor.js`: generated webview bundle output
 - `media/editor.css`: webview styles
+- `webpack.webview.config.js`: webview bundling config
+- `tsconfig.webview.json`: webview TypeScript config
 - `apps/diskscribe-2026-desktop/src/index.ts`: Electron main process host and byte service
 - `apps/diskscribe-2026-desktop/src/preload.ts`: IPC bridge for renderer
 - `apps/diskscribe-2026-desktop/src/renderer.ts`: desktop controls + webview protocol shim
