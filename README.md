@@ -7,7 +7,7 @@ DiskScribe2026 now ships with two shells over shared disk logic:
 
 ## Included Features
 
-- File association for `.hdi`, `.nhd`, `.d88`, `.hdm` with a custom editor
+- File association for `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd` with a custom editor
 - `PC-98: Jump to Partition` command (`pc98.jumpToPartition`)
 - `PC-98: Jump to LBA` command (`pc98.jumpToLba`)
 - `PC-98: Jump to Offset (Hex/Dec)` command (`pc98.jumpToOffset`)
@@ -16,7 +16,7 @@ DiskScribe2026 now ships with two shells over shared disk logic:
 - `PC-98: Extract Selected Bytes` command (`pc98.extractSelection`)
 - `PC-98: Open Disk via Virtual Document` command (`pc98.openVirtualDisk`)
 - Shift-JIS preview support via `iconv-lite`
-- Parser entry points: `parseHDI`, `parseNHD`, `parseD88`, `parseHDM`
+- Parser entry points: `parseHDI`, `parseNHD`, `parseD88`, `parseHDM`, `parseHDD`, `parseFDI`, `parseFDD`
 - Partition table inspection (MBR-style entries where present)
 - Virtualized hex view with disk/raw mode toggle and persistent selection highlight
 - Extension-host paged byte reads (64 KiB default pages) with per-session LRU cache

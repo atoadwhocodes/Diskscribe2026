@@ -1,7 +1,7 @@
 {
   "name": "diskscribe-2026",
   "displayName": "DiskScribe2026",
-  "description": "Custom editor for PC-98 disk images (.hdi, .nhd, .d88, .hdm) with partition/FAT inspector and Shift-JIS preview.",
+  "description": "Custom editor for PC-98 disk images (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd) with partition/FAT inspector and Shift-JIS preview.",
   "version": "0.0.1",
   "publisher": "your-name-or-handle",
   "repository": {
@@ -53,6 +53,15 @@
           },
           {
             "filenamePattern": "*.hdm"
+          },
+          {
+            "filenamePattern": "*.hdd"
+          },
+          {
+            "filenamePattern": "*.fdi"
+          },
+          {
+            "filenamePattern": "*.fdd"
           }
         ],
         "priority": "default"
@@ -92,7 +101,7 @@
       {
         "command": "pc98.jumpToPartition",
         "key": "ctrl+alt+p",
-        "when": "editorFocus && resourceExtname =~ /\\.(hdi|nhd|d88|hdm)$/"
+        "when": "editorFocus && resourceExtname =~ /\\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/"
       }
     ],
     "configuration": {

@@ -88,7 +88,7 @@ ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefin
     filters: [
       {
         name: 'PC-98 Disk Images',
-        extensions: ['hdi', 'nhd', 'd88', 'hdm']
+        extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
       }
     ]
   });
@@ -182,7 +182,7 @@ async function handleRendererReady(session: DesktopSession): Promise<void> {
   if (!session.summary || !session.filePath) {
     postRendererMessage(session, {
       type: 'desktop.notice',
-      message: 'Open a .hdi, .nhd, .d88, or .hdm disk image to begin.'
+      message: 'Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to begin.'
     });
     return;
   }
@@ -203,7 +203,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   }
 
   if (!isSupportedDiskPath(normalizedPath)) {
-    postError(session, 'Unsupported extension. Use .hdi, .nhd, .d88, or .hdm.');
+    postError(session, 'Unsupported extension. Use .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd.');
     return;
   }
 

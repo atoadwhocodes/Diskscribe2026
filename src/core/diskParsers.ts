@@ -24,7 +24,7 @@ const MBR_TYPE_LABELS = new Map<number, string>([
   [0xef, 'EFI System']
 ]);
 
-export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'Generic';
+export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Generic';
 
 export interface PartitionEntry {
   index: number;
@@ -190,6 +190,36 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
   };
 }
 
+export function parseHDD(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
+  const parsed = parseHDI(imagePrefix, imageSizeBytes);
+  return {
+    ...parsed,
+    parserKind: 'HDD',
+    parserId: 'parseHDD',
+    headerSummary: [...parsed.headerSummary, 'HDD extension detected; using HDI-style offset detection.']
+  };
+}
+
+export function parseFDI(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
+  const parsed = parseHDM(imagePrefix, imageSizeBytes);
+  return {
+    ...parsed,
+    parserKind: 'FDI',
+    parserId: 'parseFDI',
+    headerSummary: [...parsed.headerSummary, 'FDI extension detected; using floppy-style raw parsing.']
+  };
+}
+
+export function parseFDD(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
+  const parsed = parseHDM(imagePrefix, imageSizeBytes);
+  return {
+    ...parsed,
+    parserKind: 'FDD',
+    parserId: 'parseFDD',
+    headerSummary: [...parsed.headerSummary, 'FDD extension detected; using floppy-style raw parsing.']
+  };
+}
+
 export function parseGenericByExtension(
   extension: string,
   imagePrefix: Uint8Array,
@@ -206,6 +236,15 @@ export function parseGenericByExtension(
   }
   if (extension === '.hdm') {
     return parseHDM(imagePrefix, imageSizeBytes);
+  }
+  if (extension === '.hdd') {
+    return parseHDD(imagePrefix, imageSizeBytes);
+  }
+  if (extension === '.fdi') {
+    return parseFDI(imagePrefix, imageSizeBytes);
+  }
+  if (extension === '.fdd') {
+    return parseFDD(imagePrefix, imageSizeBytes);
   }
 
   const detection = detectDataOffset(imagePrefix, imageSizeBytes, 'Unknown');
