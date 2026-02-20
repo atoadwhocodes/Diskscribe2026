@@ -28,7 +28,11 @@ const elements = {
   hexRows: document.getElementById('hexRows'),
   shiftJisPreview: document.getElementById('shiftJisPreview'),
   notes: document.getElementById('notes'),
-  refreshButton: document.getElementById('refreshButton')
+  refreshButton: document.getElementById('refreshButton'),
+  jumpOffsetButton: document.getElementById('jumpOffsetButton'),
+  jumpLbaButton: document.getElementById('jumpLbaButton'),
+  copyOffsetButton: document.getElementById('copyOffsetButton'),
+  copyLbaButton: document.getElementById('copyLbaButton')
 };
 
 const state = {
@@ -57,6 +61,30 @@ const state = {
 if (elements.refreshButton) {
   elements.refreshButton.addEventListener('click', () => {
     post({ type: 'refresh' });
+  });
+}
+
+if (elements.jumpOffsetButton) {
+  elements.jumpOffsetButton.addEventListener('click', () => {
+    void promptJumpOffset();
+  });
+}
+
+if (elements.jumpLbaButton) {
+  elements.jumpLbaButton.addEventListener('click', () => {
+    void promptJumpLba();
+  });
+}
+
+if (elements.copyOffsetButton) {
+  elements.copyOffsetButton.addEventListener('click', () => {
+    void copyOffsetToClipboard();
+  });
+}
+
+if (elements.copyLbaButton) {
+  elements.copyLbaButton.addEventListener('click', () => {
+    void copyLbaToClipboard();
   });
 }
 
@@ -130,8 +158,52 @@ if (elements.hexRows) {
   });
 }
 
+if (elements.partitionRows) {
+  elements.partitionRows.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target.closest('[data-partition-lba]') : null;
+    if (!target) {
+      return;
+    }
+
+    const lba = Number.parseInt(target.getAttribute('data-partition-lba') || '', 10);
+    if (!Number.isFinite(lba) || lba < 0) {
+      return;
+    }
+
+    const offset = lba * (state.sectorSize || 512);
+    post({
+      type: 'hex.jump',
+      mode: 'disk',
+      offset
+    });
+    setText(
+      elements.jumpResult,
+      `Jump target: partition LBA ${formatNumber(lba)} (0x${offset.toString(16).toUpperCase()} offset)`
+    );
+  });
+}
+
 window.addEventListener('resize', () => {
   renderHexViewport(false);
+});
+
+window.addEventListener('keydown', (event) => {
+  const isModifier = event.ctrlKey || event.metaKey;
+  if (!isModifier || event.altKey) {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === 'g') {
+    event.preventDefault();
+    void promptJumpOffset();
+    return;
+  }
+
+  if (key === 'l') {
+    event.preventDefault();
+    void promptJumpLba();
+  }
 });
 
 window.addEventListener('message', (event) => {
@@ -342,6 +414,10 @@ function renderPartitions(partitions) {
 
   for (const partition of partitions) {
     const row = document.createElement('tr');
+    row.className = 'partitionRow';
+    row.setAttribute('data-partition-lba', String(partition.startLba ?? 0));
+    row.title = 'Click to jump to this partition start.';
+
     const bootMarker = partition.bootable ? '*' : '';
     const typeHex = Number(partition.typeCode || 0).toString(16).padStart(2, '0');
 
@@ -684,6 +760,154 @@ function syncModeSelect() {
   }
 }
 
+async function promptJumpOffset() {
+  const modeInput = window.prompt('Offset mode (disk/raw):', state.mode);
+  if (modeInput === null) {
+    return;
+  }
+
+  const mode = modeInput.trim().toLowerCase() === 'raw' ? 'raw' : 'disk';
+  const offsetInput = window.prompt(
+    'Enter offset in decimal or hex (0x..., ...h):',
+    mode === 'disk' ? '0x0' : '0'
+  );
+  if (offsetInput === null) {
+    return;
+  }
+
+  const offset = parseOffsetInput(offsetInput);
+  if (offset === undefined || offset < 0) {
+    setText(elements.status, 'Invalid offset input.');
+    return;
+  }
+
+  post({
+    type: 'hex.jump',
+    mode,
+    offset
+  });
+}
+
+async function promptJumpLba() {
+  const lbaInput = window.prompt('Enter LBA (decimal):', '0');
+  if (lbaInput === null) {
+    return;
+  }
+
+  const lba = parseDecimalInteger(lbaInput);
+  if (lba === undefined || lba < 0) {
+    setText(elements.status, 'Invalid LBA input.');
+    return;
+  }
+
+  const offset = lba * (state.sectorSize || 512);
+  post({
+    type: 'hex.jump',
+    mode: 'disk',
+    offset
+  });
+}
+
+async function copyOffsetToClipboard() {
+  const start = clampOffset(state.selectionStart, state.mode);
+  const text = `0x${start.toString(16).toUpperCase()}`;
+  const copied = await copyText(text);
+  if (!copied) {
+    setText(elements.status, 'Unable to copy offset to clipboard.');
+    return;
+  }
+
+  setText(elements.status, `Copied offset: ${text}`);
+}
+
+async function copyLbaToClipboard() {
+  const cursor = clampOffset(state.cursorOffset, state.mode);
+  const diskOffset = toDiskOffset(state.mode, cursor);
+  if (diskOffset === undefined || diskOffset < 0) {
+    setText(elements.status, 'LBA unavailable for current selection.');
+    return;
+  }
+
+  const lba = Math.floor(diskOffset / (state.sectorSize || 512));
+  const text = String(lba);
+  const copied = await copyText(text);
+  if (!copied) {
+    setText(elements.status, 'Unable to copy LBA to clipboard.');
+    return;
+  }
+
+  setText(elements.status, `Copied LBA: ${formatNumber(lba)}`);
+}
+
+async function copyText(value) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Fall through to legacy copy.
+  }
+
+  const helper = document.createElement('textarea');
+  helper.value = value;
+  helper.setAttribute('readonly', 'readonly');
+  helper.style.position = 'absolute';
+  helper.style.left = '-9999px';
+  document.body.appendChild(helper);
+  helper.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  }
+
+  document.body.removeChild(helper);
+  return copied;
+}
+
+function parseDecimalInteger(value) {
+  const cleaned = value.trim().replace(/,/g, '');
+  if (!/^[0-9]+$/.test(cleaned)) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(cleaned, 10);
+  if (!Number.isSafeInteger(parsed)) {
+    return undefined;
+  }
+  return parsed;
+}
+
+function parseOffsetInput(value) {
+  const cleaned = value.trim().replace(/,/g, '').toLowerCase();
+  if (cleaned.length === 0) {
+    return undefined;
+  }
+
+  let parsed;
+  if (/^0x[0-9a-f]+$/.test(cleaned)) {
+    parsed = Number.parseInt(cleaned, 16);
+  } else if (/^[0-9a-f]+h$/.test(cleaned)) {
+    parsed = Number.parseInt(cleaned.slice(0, -1), 16);
+  } else if (/^[0-9]+$/.test(cleaned)) {
+    parsed = Number.parseInt(cleaned, 10);
+  } else {
+    return undefined;
+  }
+
+  if (!Number.isSafeInteger(parsed)) {
+    return undefined;
+  }
+  return parsed;
+}
+
 function decodeBase64(base64) {
   if (typeof base64 !== 'string' || base64.length === 0) {
     return new Uint8Array();
@@ -735,4 +959,6 @@ function persistState() {
     anchorOffset: state.anchorOffset
   });
 }
+
+export {};
 

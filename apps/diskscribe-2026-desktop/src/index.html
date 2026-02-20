@@ -7,81 +7,93 @@
   </head>
   <body>
     <header class="toolbar">
-      <h1>DiskScribe2026 Desktop</h1>
-      <div class="desktopActions">
-        <button id="openDiskButton" type="button">Open Disk...</button>
-        <button id="jumpOffsetButton" type="button">Jump Offset</button>
-        <button id="jumpLbaButton" type="button">Jump LBA</button>
-        <button id="copyOffsetButton" type="button">Copy Offset</button>
-        <button id="copyLbaButton" type="button">Copy LBA</button>
-        <button id="refreshButton" type="button">Refresh</button>
+      <div class="toolbarMain">
+        <div class="brand">
+          <h1>DiskScribe2026 Desktop</h1>
+          <p>PC-98 Disk Hex Workbench</p>
+        </div>
+        <div class="toolbarButtons">
+          <button id="openDiskButton" type="button">Open Disk...</button>
+          <button id="jumpOffsetButton" type="button">Jump Offset</button>
+          <button id="jumpLbaButton" type="button">Jump LBA</button>
+          <button id="copyOffsetButton" type="button">Copy Offset</button>
+          <button id="copyLbaButton" type="button">Copy LBA</button>
+          <button id="refreshButton" type="button">Refresh</button>
+        </div>
       </div>
+      <p class="toolbarHint">Shift+Click extends selection. Ctrl/Cmd+G jumps to offset, Ctrl/Cmd+L jumps to LBA.</p>
     </header>
 
     <div id="activePath" class="activePath">No disk loaded.</div>
     <div id="status" class="status">Open a .hdi, .nhd, or .d88 disk image to start.</div>
 
-    <section class="panel">
-      <h2>Disk Summary</h2>
-      <table class="summaryTable">
-        <tr><th>File</th><td id="fileName">-</td></tr>
-        <tr><th>Format</th><td id="format">-</td></tr>
-        <tr><th>Parser</th><td id="parserId">-</td></tr>
-        <tr><th>Data Offset</th><td id="dataOffsetBytes">-</td></tr>
-        <tr><th>Size</th><td id="sizeBytes">-</td></tr>
-        <tr><th>Sector Size</th><td id="sectorSize">-</td></tr>
-        <tr><th>Total Sectors</th><td id="totalSectors">-</td></tr>
-        <tr><th>Geometry Guess</th><td id="geometry">-</td></tr>
-      </table>
-    </section>
+    <div class="workspace">
+      <aside class="leftRail">
+        <section class="panel">
+          <h2>Disk Summary</h2>
+          <table class="summaryTable">
+            <tr><th>File</th><td id="fileName">-</td></tr>
+            <tr><th>Format</th><td id="format">-</td></tr>
+            <tr><th>Parser</th><td id="parserId">-</td></tr>
+            <tr><th>Data Offset</th><td id="dataOffsetBytes">-</td></tr>
+            <tr><th>Size</th><td id="sizeBytes">-</td></tr>
+            <tr><th>Sector Size</th><td id="sectorSize">-</td></tr>
+            <tr><th>Total Sectors</th><td id="totalSectors">-</td></tr>
+            <tr><th>Geometry Guess</th><td id="geometry">-</td></tr>
+          </table>
+        </section>
 
-    <section class="panel">
-      <h2>Partitions</h2>
-      <table class="summaryTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Type</th>
-            <th>Start LBA</th>
-            <th>Sectors</th>
-            <th>Start Offset</th>
-          </tr>
-        </thead>
-        <tbody id="partitionRows">
-          <tr><td colspan="5">No partition data loaded.</td></tr>
-        </tbody>
-      </table>
-    </section>
+        <section class="panel">
+          <h2>Partitions</h2>
+          <table class="summaryTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>Start LBA</th>
+                <th>Sectors</th>
+                <th>Start Offset</th>
+              </tr>
+            </thead>
+            <tbody id="partitionRows">
+              <tr><td colspan="5">No partition data loaded.</td></tr>
+            </tbody>
+          </table>
+        </section>
 
-    <section class="panel">
-      <h2>Hex View</h2>
-      <div class="hexControls">
-        <label for="hexModeSelect">Mode</label>
-        <select id="hexModeSelect">
-          <option value="disk">Disk (LBA 0 base)</option>
-          <option value="raw">Raw (file offset base)</option>
-        </select>
-        <span id="hexRangeMeta">No range selected.</span>
-      </div>
-      <div id="hexScroller" class="hexScroller">
-        <div id="hexSpacer"></div>
-        <div id="hexRows"></div>
-      </div>
-    </section>
+        <section class="panel">
+          <h2>Shift-JIS Preview</h2>
+          <pre id="shiftJisPreview">(waiting for data)</pre>
+        </section>
 
-    <section class="panel">
-      <h2>Selection</h2>
-      <p id="jumpResult">Use jump controls to move to offset or LBA.</p>
-    </section>
+        <section class="panel">
+          <h2>Notes</h2>
+          <pre id="notes">-</pre>
+        </section>
+      </aside>
 
-    <section class="panel">
-      <h2>Shift-JIS Preview</h2>
-      <pre id="shiftJisPreview">(waiting for data)</pre>
-    </section>
+      <main class="rightRail">
+        <section class="panel panelHex">
+          <h2>Hex View</h2>
+          <div class="hexControls">
+            <label for="hexModeSelect">Mode</label>
+            <select id="hexModeSelect">
+              <option value="disk">Disk (LBA 0 base)</option>
+              <option value="raw">Raw (file offset base)</option>
+            </select>
+            <span id="hexRangeMeta">No range selected.</span>
+          </div>
+          <div id="hexScroller" class="hexScroller">
+            <div id="hexSpacer"></div>
+            <div id="hexRows"></div>
+          </div>
+        </section>
 
-    <section class="panel">
-      <h2>Notes</h2>
-      <pre id="notes">-</pre>
-    </section>
+        <section class="panel">
+          <h2>Selection</h2>
+          <p id="jumpResult">Use quick controls above to jump or copy cursor context.</p>
+        </section>
+      </main>
+    </div>
   </body>
 </html>
