@@ -46,6 +46,7 @@ interface DesktopBridge {
   openDisksDialog(): Promise<string[]>;
   openDiskFolderDialog(): Promise<FolderScanResult>;
   expandDiskCandidates(paths: string[]): Promise<FolderScanResult>;
+  openFeedbackIssue(context: unknown): Promise<void>;
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
@@ -92,6 +93,7 @@ const queueState: {
 const elements = {
   brandTitle: document.getElementById('brandTitle'),
   brandVersion: document.getElementById('brandVersion'),
+  sendFeedbackButton: document.getElementById('sendFeedbackButton'),
   activePath: document.getElementById('activePath'),
   dropHint: document.getElementById('dropHint'),
   status: document.getElementById('status'),
@@ -157,6 +159,9 @@ function wireDesktopControls(): void {
       void handleOpenDisk();
     });
   }
+  elements.sendFeedbackButton?.addEventListener('click', () => {
+    void openFeedbackIssue();
+  });
 
   elements.addQueueFilesButton?.addEventListener('click', () => {
     void handleAddQueueFiles();
@@ -420,6 +425,24 @@ async function handleOpenDisk(): Promise<void> {
     },
     'Unable to open selected disk'
   );
+}
+
+async function openFeedbackIssue(): Promise<void> {
+  const context = {
+    status: elements.status?.textContent ?? '',
+    activePath: elements.activePath?.textContent ?? '',
+    queueCount: queueState.items.length,
+    queueRunning: queueState.isRunning
+  };
+
+  try {
+    await window.diskScribeDesktop.openFeedbackIssue(context);
+  } catch (error: unknown) {
+    setStatus(`Unable to open feedback page: ${toErrorMessage(error)}`, 'error');
+    return;
+  }
+
+  setStatus('Opened GitHub feedback page.', 'info');
 }
 
 async function postDesktopMessage(message: unknown, failurePrefix = 'Action failed'): Promise<boolean> {

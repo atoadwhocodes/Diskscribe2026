@@ -4,6 +4,7 @@ import {
   clipboard,
   dialog,
   ipcMain,
+  shell,
   type IpcMainInvokeEvent,
   type OpenDialogOptions,
   type OpenDialogReturnValue,
@@ -313,6 +314,44 @@ ipcMain.handle('desktop:expandDiskCandidates', async (_event, rawPaths: unknown)
     };
   }
   return collectSupportedDisksFromPaths(normalizedPaths);
+});
+
+ipcMain.handle('desktop:openFeedbackIssue', async (_event, rawContext: unknown): Promise<void> => {
+  const context = isRecord(rawContext) ? rawContext : {};
+  const statusLine = normalizeFeedbackField(context.status, 'n/a');
+  const activePath = normalizeFeedbackField(context.activePath, 'n/a');
+  const queueCount =
+    typeof context.queueCount === 'number' && Number.isFinite(context.queueCount) && context.queueCount >= 0
+      ? Math.floor(Number(context.queueCount)).toLocaleString()
+      : 'n/a';
+  const queueRunning = context.queueRunning === true ? 'yes' : 'no';
+
+  const issueUrl = new URL('https://github.com/atoadwhocodes/Diskscribe2026/issues/new');
+  issueUrl.searchParams.set('template', 'bug_report.md');
+  issueUrl.searchParams.set('title', '[bug] ');
+  issueUrl.searchParams.set(
+    'body',
+    [
+      '## Summary',
+      '',
+      'Describe the issue clearly.',
+      '',
+      '## Environment',
+      `- App version: ${app.getVersion()}`,
+      `- Platform: ${process.platform}`,
+      `- Architecture: ${process.arch}`,
+      `- Electron: ${process.versions.electron}`,
+      `- Node: ${process.version}`,
+      '',
+      '## Context',
+      `- Active path: ${activePath}`,
+      `- Queue count: ${queueCount}`,
+      `- Queue running: ${queueRunning}`,
+      `- Last status: ${statusLine}`
+    ].join('\n')
+  );
+
+  await shell.openExternal(issueUrl.toString());
 });
 
 ipcMain.handle('desktop:writeClipboard', async (_event, text: unknown): Promise<void> => {
@@ -1290,6 +1329,14 @@ function toErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+function normalizeFeedbackField(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  return normalized.length > 0 ? normalized : fallback;
 }
 
 function toJsonSafeValue(value: unknown): unknown {

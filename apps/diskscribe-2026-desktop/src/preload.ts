@@ -41,6 +41,7 @@ interface DesktopBridge {
   openDisksDialog(): Promise<string[]>;
   openDiskFolderDialog(): Promise<FolderScanResult>;
   expandDiskCandidates(paths: string[]): Promise<FolderScanResult>;
+  openFeedbackIssue(context: unknown): Promise<void>;
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
@@ -63,6 +64,9 @@ const bridge: DesktopBridge = {
   },
   async expandDiskCandidates(paths: string[]): Promise<FolderScanResult> {
     return ipcRenderer.invoke('desktop:expandDiskCandidates', paths);
+  },
+  async openFeedbackIssue(context: unknown): Promise<void> {
+    await ipcRenderer.invoke('desktop:openFeedbackIssue', context);
   },
   async writeClipboard(text: string): Promise<void> {
     await ipcRenderer.invoke('desktop:writeClipboard', text);

@@ -8,6 +8,7 @@
 ## Local Development
 
 ```bash
+npm run doctor
 npm run desktop:install
 npm run desktop:start
 ```

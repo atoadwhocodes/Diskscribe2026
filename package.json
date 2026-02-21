@@ -18,6 +18,7 @@
     "desktop:lint": "npm --prefix apps/diskscribe-2026-desktop run lint",
     "desktop:package": "npm --prefix apps/diskscribe-2026-desktop run package",
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
+    "doctor": "node scripts/doctor.mjs",
     "check:versions": "node scripts/check-version-consistency.mjs",
     "check:ui-wiring": "node scripts/check-ui-wiring.mjs",
     "start": "npm run desktop:start",

@@ -19,6 +19,7 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Recursive folder queue import with scan safety limits
 - Save/load batch plans as JSON
 - Diagnostics bundle export for support/debug (`Ctrl+Shift+D`)
+- In-app feedback launcher with prefilled GitHub bug report context
 
 ## Supported Formats
 
@@ -45,6 +46,7 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 ## Development
 
 ```bash
+npm run doctor
 npm run desktop:install
 npm run desktop:start
 ```
