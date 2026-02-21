@@ -19,6 +19,7 @@ permissions:
 jobs:
   analyze:
     name: CodeQL
+    if: ${{ github.event.repository.private == false }}
     runs-on: ubuntu-latest
     env:
       CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
