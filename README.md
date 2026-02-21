@@ -5,6 +5,12 @@ DiskScribe2026 now ships with two shells over shared disk logic:
 - VS Code extension (`pc98.dskedit`) for in-editor workflows
 - Electron desktop app (`apps/diskscribe-2026-desktop`) for standalone use
 
+Project policies:
+
+- Security reporting: `SECURITY.md`
+- Contributing guide: `CONTRIBUTING.md`
+- Community expectations: `CODE_OF_CONDUCT.md`
+
 ## Included Features
 
 - File association for `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd` with a custom editor
@@ -21,6 +27,8 @@ DiskScribe2026 now ships with two shells over shared disk logic:
 - Virtualized hex view with disk/raw mode toggle and persistent selection highlight
 - Extension-host paged byte reads (64 KiB default pages) with per-session LRU cache
 - Status bar sync for Offset, LBA, and CHS (when geometry is available)
+- Translator workspace with character-set decoding, draft notes, and copy helpers
+- Character-set framing panel for Shift-JIS byte role inspection
 - Standalone desktop shell with:
   - Open Disk dialog
   - Jump to Offset / Jump to LBA
@@ -47,6 +55,14 @@ Build scripts:
 - `npm run compile:webview` bundles webview script with webpack
 - `npm run compile` runs both steps
 - `npm run package` creates a `.vsix`
+
+## CodeQL Upload Toggle
+
+- CodeQL analysis runs in CI for public repos.
+- By default, upload to GitHub code scanning is disabled to avoid failing runs before the repository has code scanning enabled.
+- Enable upload by setting repository variable `CODEQL_UPLOAD=true`.
+- When upload is disabled, SARIF output is published as a workflow artifact.
+- Secret scanning runs on push/PR via Gitleaks (`.github/workflows/secret-scan.yml`).
 
 Run with VS Code extension host:
 

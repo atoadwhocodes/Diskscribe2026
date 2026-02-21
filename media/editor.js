@@ -1,9 +1,564 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./media-src/necCharsets.ts"
+/*!**********************************!*\
+  !*** ./media-src/necCharsets.ts ***!
+  \**********************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CHARSET_PROFILES: () => (/* binding */ CHARSET_PROFILES),
+/* harmony export */   DEFAULT_CHARSET_ID: () => (/* binding */ DEFAULT_CHARSET_ID),
+/* harmony export */   classifyByteForCharset: () => (/* binding */ classifyByteForCharset),
+/* harmony export */   decodeBytesByCharset: () => (/* binding */ decodeBytesByCharset),
+/* harmony export */   getCharsetLegend: () => (/* binding */ getCharsetLegend),
+/* harmony export */   getCharsetProfile: () => (/* binding */ getCharsetProfile),
+/* harmony export */   glyphForByteForCharset: () => (/* binding */ glyphForByteForCharset),
+/* harmony export */   normalizeCharsetId: () => (/* binding */ normalizeCharsetId)
+/* harmony export */ });
+const DEFAULT_CHARSET_ID = 'pc98-cp932';
+const CHARSET_PROFILES = [
+    {
+        id: 'pc98-cp932',
+        label: 'PC-98 CP932 (Windows-31J)',
+        description: 'Primary NEC PC-98 game/disk text encoding (Shift-JIS with NEC/IBM extensions).',
+        legend: 'PC-98 CP932 byte roles: lead 0x81-0x9F/0xE0-0xFC, half-width kana 0xA1-0xDF, trail 0x40-0x7E/0x80-0xFC.'
+    },
+    {
+        id: 'pc98-shift-jis',
+        label: 'PC-98 Shift-JIS (strict)',
+        description: 'Shift-JIS decode path without explicit CP932 preference hints.',
+        legend: 'Shift-JIS byte roles: lead 0x81-0x9F/0xE0-0xFC, half-width kana 0xA1-0xDF, trail 0x40-0x7E/0x80-0xFC.'
+    },
+    {
+        id: 'pc88-shift-jis',
+        label: 'PC-88 Shift-JIS (N88)',
+        description: 'Common late-era PC-88 text encoding for N88-BASIC and DOS tools.',
+        legend: 'PC-88 Shift-JIS roles match standard Shift-JIS; high leads can include NEC/IBM extension regions.'
+    },
+    {
+        id: 'pc88-jis7',
+        label: 'PC-88 JIS 7-bit (ESC)',
+        description: 'ISO-2022-JP/JIS escape-sequence text seen in some PC-88 materials.',
+        legend: 'JIS 7-bit roles: ESC (0x1B) switches sets, SO/SI (0x0E/0x0F) shift kana, 0x21-0x7E payload bytes.'
+    },
+    {
+        id: 'pc88-ank',
+        label: 'PC-88 ANK + Kana + Graphics',
+        description: 'Single-byte PC-88 text/label bytes: ANK ASCII, half-width kana, and graphics/gaiji candidates.',
+        legend: 'PC-88 ANK roles: ANK 0x20-0x7E, kana 0xA1-0xDF, graphics/gaiji candidates 0x80-0x9F and 0xE0-0xFF.'
+    },
+    {
+        id: 'jis-x-0201-roman',
+        label: 'JIS X 0201 Roman',
+        description: 'Roman set with yen at 0x5C and overline at 0x7E.',
+        legend: 'JIS X 0201 Roman roles: printable 0x20-0x7E with 0x5C=>\u00A5 and 0x7E=>\u203E, controls below 0x20.'
+    },
+    {
+        id: 'jis-x-0201-kana',
+        label: 'JIS X 0201 Kana',
+        description: 'Single-byte half-width katakana extension over Roman bytes.',
+        legend: 'JIS X 0201 Kana roles: Roman bytes 0x20-0x7E and half-width kana 0xA1-0xDF.'
+    },
+    {
+        id: 'euc-jp',
+        label: 'EUC-JP',
+        description: 'UNIX-oriented Japanese multibyte encoding.',
+        legend: 'EUC-JP roles: ASCII 0x00-0x7F, kana lead 0x8E, plane-2 lead 0x8F, multibyte bytes 0xA1-0xFE.'
+    },
+    {
+        id: 'iso-2022-jp',
+        label: 'ISO-2022-JP',
+        description: 'Email/transport-safe Japanese encoding with escape sequences.',
+        legend: 'ISO-2022-JP roles: ESC (0x1B) and shift bytes manage state; payload uses 7-bit JIS bytes.'
+    },
+    {
+        id: 'utf-8',
+        label: 'UTF-8',
+        description: 'Unicode UTF-8 for modern tooling artifacts.',
+        legend: 'UTF-8 roles: lead bytes 0xC2-0xF4, continuation bytes 0x80-0xBF, ASCII at 0x00-0x7F.'
+    },
+    {
+        id: 'utf-16le',
+        label: 'UTF-16 LE',
+        description: 'Unicode UTF-16 little-endian.',
+        legend: 'UTF-16 roles are code-unit based; frame view shows byte-level hints only.'
+    },
+    {
+        id: 'utf-16be',
+        label: 'UTF-16 BE',
+        description: 'Unicode UTF-16 big-endian.',
+        legend: 'UTF-16 roles are code-unit based; frame view shows byte-level hints only.'
+    },
+    {
+        id: 'ascii',
+        label: 'ASCII',
+        description: '7-bit ASCII display.',
+        legend: 'ASCII roles: printable bytes 0x20-0x7E, control bytes below 0x20 and 0x7F.'
+    },
+    {
+        id: 'latin1',
+        label: 'Latin-1',
+        description: 'Single-byte ISO-8859-1 pass-through.',
+        legend: 'Latin-1 roles: single-byte codepoints with C0/C1 control regions.'
+    }
+];
+const PROFILE_BY_ID = new Map(CHARSET_PROFILES.map((profile) => [profile.id, profile]));
+const LEGACY_ALIASES = new Map([
+    ['cp932', 'pc98-cp932'],
+    ['shift-jis', 'pc98-cp932'],
+    ['shift_jis', 'pc98-cp932'],
+    ['windows-31j', 'pc98-cp932'],
+    ['ms932', 'pc98-cp932'],
+    ['sjis', 'pc98-cp932'],
+    ['pc98', 'pc98-cp932'],
+    ['pc-98', 'pc98-cp932'],
+    ['pc88', 'pc88-ank'],
+    ['pc-88', 'pc88-ank'],
+    ['jis0201-roman', 'jis-x-0201-roman'],
+    ['jis0201-kana', 'jis-x-0201-kana'],
+    ['jis-x-0201', 'jis-x-0201-kana'],
+    ['iso2022jp', 'iso-2022-jp'],
+    ['eucjp', 'euc-jp'],
+    ['utf8', 'utf-8'],
+    ['utf16le', 'utf-16le'],
+    ['utf16be', 'utf-16be']
+]);
+function normalizeCharsetId(value) {
+    var _a;
+    const raw = String(value !== null && value !== void 0 ? value : '')
+        .trim()
+        .toLowerCase();
+    if (PROFILE_BY_ID.has(raw)) {
+        return raw;
+    }
+    return (_a = LEGACY_ALIASES.get(raw)) !== null && _a !== void 0 ? _a : DEFAULT_CHARSET_ID;
+}
+function getCharsetProfile(value) {
+    var _a;
+    return (_a = PROFILE_BY_ID.get(normalizeCharsetId(value))) !== null && _a !== void 0 ? _a : PROFILE_BY_ID.get(DEFAULT_CHARSET_ID);
+}
+function getCharsetLegend(value) {
+    return getCharsetProfile(value).legend;
+}
+function decodeBytesByCharset(bytes, value) {
+    const charset = normalizeCharsetId(value);
+    switch (charset) {
+        case 'pc98-cp932':
+            return decodeWithTextDecoder(bytes, 'shift-jis');
+        case 'pc98-shift-jis':
+        case 'pc88-shift-jis':
+            return decodeWithTextDecoder(bytes, 'shift-jis');
+        case 'pc88-jis7':
+            return decodeWithTextDecoder(bytes, 'iso-2022-jp');
+        case 'pc88-ank':
+            return decodePc88Ank(bytes);
+        case 'jis-x-0201-roman':
+            return decodeJisX0201Roman(bytes);
+        case 'jis-x-0201-kana':
+            return decodeJisX0201Kana(bytes);
+        case 'euc-jp':
+            return decodeWithTextDecoder(bytes, 'euc-jp');
+        case 'iso-2022-jp':
+            return decodeWithTextDecoder(bytes, 'iso-2022-jp');
+        case 'utf-8':
+        case 'utf-16le':
+        case 'utf-16be':
+            return decodeWithTextDecoder(bytes, charset);
+        case 'latin1':
+            return decodeLatin1(bytes);
+        case 'ascii':
+        default:
+            return decodeAscii(bytes);
+    }
+}
+function glyphForByteForCharset(byte, value) {
+    const charset = normalizeCharsetId(value);
+    switch (charset) {
+        case 'pc98-cp932':
+        case 'pc98-shift-jis':
+        case 'pc88-shift-jis':
+            return glyphForShiftJisSingleByte(byte);
+        case 'pc88-ank':
+            return glyphForPc88Ank(byte);
+        case 'jis-x-0201-roman':
+            return glyphForJisX0201Roman(byte);
+        case 'jis-x-0201-kana':
+            return glyphForJisX0201Kana(byte);
+        case 'latin1':
+            return glyphForLatin1(byte);
+        case 'ascii':
+            return glyphForAscii(byte);
+        default:
+            return glyphForAscii(byte);
+    }
+}
+function classifyByteForCharset(byte, value) {
+    const charset = normalizeCharsetId(value);
+    switch (charset) {
+        case 'pc98-cp932':
+            return classifyCp932Byte(byte);
+        case 'pc98-shift-jis':
+        case 'pc88-shift-jis':
+            return classifyShiftJisByte(byte);
+        case 'pc88-jis7':
+        case 'iso-2022-jp':
+            return classifyIso2022Byte(byte);
+        case 'pc88-ank':
+            return classifyPc88AnkByte(byte);
+        case 'jis-x-0201-roman':
+            return classifyJisX0201RomanByte(byte);
+        case 'jis-x-0201-kana':
+            return classifyJisX0201KanaByte(byte);
+        case 'euc-jp':
+            return classifyEucJpByte(byte);
+        case 'utf-8':
+            return classifyUtf8Byte(byte);
+        case 'utf-16le':
+        case 'utf-16be':
+            return classifyUtf16Byte(byte);
+        case 'latin1':
+            return classifyLatin1Byte(byte);
+        case 'ascii':
+        default:
+            return classifyAsciiByte(byte);
+    }
+}
+function decodeWithTextDecoder(bytes, label) {
+    try {
+        return new TextDecoder(label, { fatal: false }).decode(bytes);
+    }
+    catch (_a) {
+        return decodeAscii(bytes);
+    }
+}
+function decodeAscii(bytes) {
+    const out = [];
+    for (const byte of bytes) {
+        out.push(glyphForAscii(byte));
+    }
+    return out.join('');
+}
+function decodeLatin1(bytes) {
+    const out = [];
+    for (const byte of bytes) {
+        if (byte === 0x0a || byte === 0x0d || byte === 0x09) {
+            out.push(String.fromCharCode(byte));
+            continue;
+        }
+        out.push(String.fromCharCode(byte));
+    }
+    return out.join('');
+}
+function decodeJisX0201Roman(bytes) {
+    const out = [];
+    for (const byte of bytes) {
+        out.push(glyphForJisX0201Roman(byte));
+    }
+    return out.join('');
+}
+function decodeJisX0201Kana(bytes) {
+    const out = [];
+    for (const byte of bytes) {
+        out.push(glyphForJisX0201Kana(byte));
+    }
+    return out.join('');
+}
+function decodePc88Ank(bytes) {
+    const out = [];
+    for (const byte of bytes) {
+        out.push(glyphForPc88Ank(byte));
+    }
+    return out.join('');
+}
+function glyphForAscii(byte) {
+    if (byte === 0x0a || byte === 0x0d || byte === 0x09) {
+        return String.fromCharCode(byte);
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return String.fromCharCode(byte);
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return '.';
+    }
+    return '.';
+}
+function glyphForLatin1(byte) {
+    if (byte === 0x0a || byte === 0x0d || byte === 0x09) {
+        return String.fromCharCode(byte);
+    }
+    if (byte >= 0x20) {
+        return String.fromCharCode(byte);
+    }
+    return '.';
+}
+function glyphForJisX0201Roman(byte) {
+    if (byte === 0x0a || byte === 0x0d || byte === 0x09) {
+        return String.fromCharCode(byte);
+    }
+    if (byte === 0x5c) {
+        return '\u00A5';
+    }
+    if (byte === 0x7e) {
+        return '\u203E';
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return String.fromCharCode(byte);
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return '.';
+    }
+    return '.';
+}
+function glyphForJisX0201Kana(byte) {
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return String.fromCharCode(0xff61 + (byte - 0xa1));
+    }
+    return glyphForJisX0201Roman(byte);
+}
+function glyphForShiftJisSingleByte(byte) {
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return String.fromCharCode(byte);
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return String.fromCharCode(0xff61 + (byte - 0xa1));
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return '(ctrl)';
+    }
+    return '.';
+}
+function glyphForPc88Ank(byte) {
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return glyphForJisX0201Roman(byte);
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return String.fromCharCode(0xff61 + (byte - 0xa1));
+    }
+    if ((byte >= 0x80 && byte <= 0x9f) || byte >= 0xe0) {
+        return '\u3013';
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return '(ctrl)';
+    }
+    return '.';
+}
+function classifyAsciiByte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte <= 0x7e) {
+        return 'ASCII printable';
+    }
+    return 'outside ASCII';
+}
+function classifyLatin1Byte(byte) {
+    if (byte <= 0x1f || byte === 0x7f || (byte >= 0x80 && byte <= 0x9f)) {
+        return 'control';
+    }
+    return 'Latin-1 printable';
+}
+function classifyUtf8Byte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte <= 0x7e) {
+        return 'ASCII';
+    }
+    if (byte >= 0x80 && byte <= 0xbf) {
+        return 'UTF-8 continuation';
+    }
+    if (byte >= 0xc2 && byte <= 0xdf) {
+        return 'UTF-8 lead (2-byte)';
+    }
+    if (byte >= 0xe0 && byte <= 0xef) {
+        return 'UTF-8 lead (3-byte)';
+    }
+    if (byte >= 0xf0 && byte <= 0xf4) {
+        return 'UTF-8 lead (4-byte)';
+    }
+    return 'invalid UTF-8 byte';
+}
+function classifyUtf16Byte(byte) {
+    if (byte === 0x00) {
+        return 'UTF-16 null/high-byte candidate';
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control/code-unit byte';
+    }
+    return 'UTF-16 code-unit byte';
+}
+function classifyJisX0201RomanByte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        if (byte === 0x5c) {
+            return 'yen sign (\u00A5)';
+        }
+        if (byte === 0x7e) {
+            return 'overline (\u203E)';
+        }
+        return 'Roman printable';
+    }
+    return 'outside JIS X 0201 Roman';
+}
+function classifyJisX0201KanaByte(byte) {
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return 'half-width katakana';
+    }
+    return classifyJisX0201RomanByte(byte);
+}
+function classifyCp932Byte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return 'ASCII / trail candidate';
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return 'half-width kana';
+    }
+    if ((byte >= 0x81 && byte <= 0x9f) || (byte >= 0xe0 && byte <= 0xec)) {
+        return 'Shift-JIS lead byte';
+    }
+    if (byte >= 0xed && byte <= 0xee) {
+        return 'NEC extension lead byte';
+    }
+    if (byte >= 0xfa && byte <= 0xfc) {
+        return 'IBM/NEC extension lead byte';
+    }
+    if ((byte >= 0x40 && byte <= 0x7e) || (byte >= 0x80 && byte <= 0xfc)) {
+        return 'Shift-JIS trail candidate';
+    }
+    return 'unclassified';
+}
+function classifyShiftJisByte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return 'ASCII / trail candidate';
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return 'half-width kana';
+    }
+    if ((byte >= 0x81 && byte <= 0x9f) || (byte >= 0xe0 && byte <= 0xfc)) {
+        return 'Shift-JIS lead byte';
+    }
+    if ((byte >= 0x40 && byte <= 0x7e) || (byte >= 0x80 && byte <= 0xfc)) {
+        return 'Shift-JIS trail candidate';
+    }
+    return 'unclassified';
+}
+function classifyPc88AnkByte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte >= 0x20 && byte <= 0x7e) {
+        return 'ANK printable';
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+        return 'half-width kana';
+    }
+    if ((byte >= 0x80 && byte <= 0x9f) || byte >= 0xe0) {
+        return 'PC-88 graphics/gaiji candidate';
+    }
+    return 'unclassified';
+}
+function classifyEucJpByte(byte) {
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte <= 0x7e) {
+        return 'ASCII';
+    }
+    if (byte === 0x8e) {
+        return 'kana lead (SS2)';
+    }
+    if (byte === 0x8f) {
+        return 'plane-2 lead (SS3)';
+    }
+    if (byte >= 0xa1 && byte <= 0xfe) {
+        return 'EUC-JP multibyte byte';
+    }
+    return 'invalid EUC-JP byte';
+}
+function classifyIso2022Byte(byte) {
+    if (byte === 0x1b) {
+        return 'escape sequence marker';
+    }
+    if (byte === 0x0e) {
+        return 'SO shift-out (kana)';
+    }
+    if (byte === 0x0f) {
+        return 'SI shift-in (Roman)';
+    }
+    if (byte < 0x20 || byte === 0x7f) {
+        return 'control';
+    }
+    if (byte >= 0x21 && byte <= 0x7e) {
+        return 'JIS payload (7-bit)';
+    }
+    return 'outside 7-bit transport range';
+}
+
+
+/***/ }
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Check if module exists (development only)
+/******/ 		if (__webpack_modules__[moduleId] === undefined) {
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -17,17 +572,23 @@
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+(() => {
 /*!*****************************!*\
   !*** ./media-src/editor.ts ***!
   \*****************************/
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _necCharsets__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./necCharsets */ "./media-src/necCharsets.ts");
 // @ts-nocheck
+
 const vscode = acquireVsCodeApi();
 const BYTES_PER_ROW = 16;
 const ROW_HEIGHT = 20;
 const OVERSCAN_ROWS = 24;
 const CHUNK_BYTES = 65536;
 const MAX_CHUNKS_PER_MODE = 128;
+const MAX_TRANSLATION_BYTES = 8192;
+const MAX_CHAR_FRAME_BYTES = 192;
 const persisted = vscode.getState() || {};
 const elements = {
     status: document.getElementById('status'),
@@ -53,8 +614,18 @@ const elements = {
     jumpLbaButton: document.getElementById('jumpLbaButton'),
     copyOffsetButton: document.getElementById('copyOffsetButton'),
     copyLbaButton: document.getElementById('copyLbaButton'),
-    extractSelectionButton: document.getElementById('extractSelectionButton')
+    extractSelectionButton: document.getElementById('extractSelectionButton'),
+    translationEncoding: document.getElementById('translationEncoding'),
+    translationMeta: document.getElementById('translationMeta'),
+    decodedSelection: document.getElementById('decodedSelection'),
+    translationDraft: document.getElementById('translationDraft'),
+    copyDecodedButton: document.getElementById('copyDecodedButton'),
+    copyDraftButton: document.getElementById('copyDraftButton'),
+    clearDraftButton: document.getElementById('clearDraftButton'),
+    charsetLegend: document.getElementById('charsetLegend'),
+    charFrameRows: document.getElementById('charFrameRows')
 };
+const hasPersistedTranslationEncoding = typeof persisted.translationEncoding === 'string' && persisted.translationEncoding.length > 0;
 const state = {
     summary: undefined,
     defaultMode: persisted.defaultMode === 'raw' ? 'raw' : 'disk',
@@ -63,6 +634,8 @@ const state = {
     dataOffset: 0,
     sectorSize: 512,
     geometry: undefined,
+    translationEncoding: (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.normalizeCharsetId)(persisted.translationEncoding),
+    translationDraft: typeof persisted.translationDraft === 'string' ? persisted.translationDraft : '',
     selectionStart: Number.isInteger(persisted.selectionStart) ? persisted.selectionStart : 0,
     selectionEnd: Number.isInteger(persisted.selectionEnd) ? persisted.selectionEnd : 0,
     cursorOffset: Number.isInteger(persisted.cursorOffset) ? persisted.cursorOffset : 0,
@@ -105,6 +678,35 @@ if (elements.copyLbaButton) {
 if (elements.extractSelectionButton) {
     elements.extractSelectionButton.addEventListener('click', () => {
         void requestExtractSelection();
+    });
+}
+if (elements.translationEncoding) {
+    elements.translationEncoding.addEventListener('change', () => {
+        const value = (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.normalizeCharsetId)(elements.translationEncoding.value);
+        state.translationEncoding = value;
+        persistState();
+        refreshTranslationPanels();
+    });
+}
+if (elements.translationDraft) {
+    elements.translationDraft.addEventListener('input', () => {
+        state.translationDraft = elements.translationDraft.value || '';
+        persistState();
+    });
+}
+if (elements.copyDecodedButton) {
+    elements.copyDecodedButton.addEventListener('click', () => {
+        void copyDecodedToClipboard();
+    });
+}
+if (elements.copyDraftButton) {
+    elements.copyDraftButton.addEventListener('click', () => {
+        void copyDraftToClipboard();
+    });
+}
+if (elements.clearDraftButton) {
+    elements.clearDraftButton.addEventListener('click', () => {
+        clearDraft();
     });
 }
 if (elements.hexModeSelect) {
@@ -187,6 +789,8 @@ if (elements.partitionRows) {
         setText(elements.jumpResult, `Jump target: partition LBA ${formatNumber(lba)} (0x${offset.toString(16).toUpperCase()} offset)`);
     });
 }
+syncTranslatorInputs();
+refreshTranslationPanels();
 window.addEventListener('resize', () => {
     renderHexViewport(false);
 });
@@ -273,11 +877,15 @@ function renderSummary(summary) {
     syncModeSelect();
     persistState();
     renderHexViewport(true);
+    refreshTranslationPanels();
 }
 function handleHexInit(message) {
     const nextDefault = message.defaultMode === 'raw' ? 'raw' : 'disk';
     state.defaultMode = nextDefault;
     state.mode = chooseMode(state.mode || nextDefault);
+    if (!hasPersistedTranslationEncoding && typeof message.defaultCharset === 'string') {
+        state.translationEncoding = (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.normalizeCharsetId)(message.defaultCharset);
+    }
     if (Number.isFinite(message.fileSize)) {
         state.fileSize = Number(message.fileSize);
     }
@@ -294,6 +902,7 @@ function handleHexInit(message) {
     syncModeSelect();
     persistState();
     renderHexViewport(true);
+    refreshTranslationPanels();
 }
 function handleHexData(message) {
     if (typeof message.requestId !== 'string') {
@@ -310,6 +919,7 @@ function handleHexData(message) {
     if (bytes.length === 0) {
         if (mode === state.mode) {
             renderHexViewport(false);
+            refreshTranslationPanels();
         }
         return;
     }
@@ -319,6 +929,7 @@ function handleHexData(message) {
     trimChunkCache(cache);
     if (mode === state.mode) {
         renderHexViewport(false);
+        refreshTranslationPanels();
     }
 }
 function handleHexJumpAck(message) {
@@ -336,6 +947,7 @@ function handleHexJumpAck(message) {
     persistState();
     renderHexViewport(true);
     scrollToOffset(offset, true);
+    refreshTranslationPanels();
 }
 function handleHexSelectAck(message) {
     const mode = message.mode === 'raw' ? 'raw' : 'disk';
@@ -349,6 +961,7 @@ function handleHexSelectAck(message) {
     state.anchorOffset = state.selectionStart;
     persistState();
     renderHexViewport(false);
+    refreshTranslationPanels();
 }
 function renderError(message) {
     setText(elements.status, 'Unable to load disk image.');
@@ -362,6 +975,7 @@ function renderError(message) {
         elements.hexSpacer.style.height = '0px';
     }
     setText(elements.notes, `- ${message || 'Unknown error'}`);
+    refreshTranslationPanels();
 }
 function renderPartitions(partitions) {
     var _a;
@@ -750,6 +1364,203 @@ async function requestExtractSelection() {
         end
     });
 }
+function refreshTranslationPanels() {
+    syncTranslatorInputs();
+    syncCharsetLegend();
+    const viewLength = getViewLength(state.mode);
+    if (viewLength <= 0) {
+        setText(elements.translationMeta, 'No bytes available in current view.');
+        setText(elements.decodedSelection, '(no bytes available)');
+        renderCharFramePlaceholder('No bytes available in current view.');
+        return;
+    }
+    const start = clampOffset(state.selectionStart, state.mode);
+    const end = clampOffset(state.selectionEnd, state.mode);
+    const range = normalizeRange(start, end);
+    const totalLength = range.end - range.start + 1;
+    if (totalLength <= 0) {
+        setText(elements.translationMeta, 'No byte selection.');
+        setText(elements.decodedSelection, '(select bytes in hex view)');
+        renderCharFramePlaceholder('Select bytes to inspect character framing.');
+        return;
+    }
+    ensureBytesForOffsetRange(range.start, range.end);
+    const selection = collectSelectionBytes(range.start, range.end, MAX_TRANSLATION_BYTES);
+    if (!selection) {
+        setText(elements.translationMeta, 'Selection is outside available bytes.');
+        setText(elements.decodedSelection, '(selection out of range)');
+        renderCharFramePlaceholder('Selection is outside available bytes.');
+        return;
+    }
+    if (selection.missing) {
+        setText(elements.translationMeta, `Loading bytes for ${formatNumber(totalLength)} selected byte(s)...`);
+        setText(elements.decodedSelection, '(loading selected bytes from disk...)');
+    }
+    else {
+        const profile = (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.getCharsetProfile)(state.translationEncoding);
+        const decoded = decodeSelectionBytes(selection.bytes, state.translationEncoding);
+        const detail = selection.total > selection.readLength
+            ? `, showing first ${formatNumber(selection.readLength)}`
+            : '';
+        setText(elements.translationMeta, `Decode ${formatNumber(selection.total)} byte(s) as ${profile.label}${detail}.`);
+        setText(elements.decodedSelection, decoded.length > 0 ? decoded : '(decoded text is empty)');
+    }
+    renderCharFrameRows(range.start, range.end);
+}
+function syncTranslatorInputs() {
+    if (elements.translationEncoding) {
+        const normalized = (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.normalizeCharsetId)(state.translationEncoding);
+        if (elements.translationEncoding.value !== normalized) {
+            elements.translationEncoding.value = normalized;
+        }
+    }
+    if (elements.translationDraft && elements.translationDraft.value !== state.translationDraft) {
+        elements.translationDraft.value = state.translationDraft;
+    }
+}
+function syncCharsetLegend() {
+    setText(elements.charsetLegend, (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.getCharsetLegend)(state.translationEncoding));
+}
+async function copyDecodedToClipboard() {
+    const text = elements.decodedSelection ? elements.decodedSelection.textContent || '' : '';
+    if (!text || text.startsWith('(loading')) {
+        setText(elements.status, 'No decoded selection text to copy yet.');
+        return;
+    }
+    const copied = await copyText(text);
+    if (!copied) {
+        setText(elements.status, 'Unable to copy decoded text.');
+        return;
+    }
+    setText(elements.status, 'Copied decoded selection text.');
+}
+async function copyDraftToClipboard() {
+    const text = (elements.translationDraft ? elements.translationDraft.value : state.translationDraft) || '';
+    if (!text) {
+        setText(elements.status, 'Translation draft is empty.');
+        return;
+    }
+    const copied = await copyText(text);
+    if (!copied) {
+        setText(elements.status, 'Unable to copy translation draft.');
+        return;
+    }
+    setText(elements.status, 'Copied translation draft.');
+}
+function clearDraft() {
+    state.translationDraft = '';
+    if (elements.translationDraft) {
+        elements.translationDraft.value = '';
+    }
+    persistState();
+    setText(elements.status, 'Cleared translation draft.');
+}
+function renderCharFrameRows(start, end) {
+    if (!elements.charFrameRows) {
+        return;
+    }
+    elements.charFrameRows.innerHTML = '';
+    const range = normalizeRange(start, end);
+    const totalLength = range.end - range.start + 1;
+    const rowCount = Math.min(totalLength, MAX_CHAR_FRAME_BYTES);
+    for (let i = 0; i < rowCount; i += 1) {
+        const offset = range.start + i;
+        const row = document.createElement('tr');
+        const byte = getByte(offset, state.mode);
+        appendCell(row, `0x${offset.toString(16).toUpperCase().padStart(8, '0')}`);
+        if (byte === undefined) {
+            appendCell(row, '..');
+            appendCell(row, '(loading)');
+            appendCell(row, 'pending');
+            elements.charFrameRows.appendChild(row);
+            continue;
+        }
+        appendCell(row, `0x${byte.toString(16).toUpperCase().padStart(2, '0')}`);
+        appendCell(row, toGlyph(byte, state.translationEncoding));
+        appendCell(row, classifyByteRole(byte, state.translationEncoding));
+        elements.charFrameRows.appendChild(row);
+    }
+    if (rowCount === 0) {
+        renderCharFramePlaceholder('Select bytes to inspect character framing.');
+        return;
+    }
+    if (totalLength > rowCount) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        cell.textContent = `Showing first ${formatNumber(rowCount)} of ${formatNumber(totalLength)} selected bytes.`;
+        row.appendChild(cell);
+        elements.charFrameRows.appendChild(row);
+    }
+}
+function renderCharFramePlaceholder(message) {
+    if (!elements.charFrameRows) {
+        return;
+    }
+    elements.charFrameRows.innerHTML = '';
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.textContent = message;
+    row.appendChild(cell);
+    elements.charFrameRows.appendChild(row);
+}
+function decodeSelectionBytes(bytes, encoding) {
+    return (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.decodeBytesByCharset)(bytes, encoding);
+}
+function toGlyph(byte, encoding) {
+    return (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.glyphForByteForCharset)(byte, encoding);
+}
+function classifyByteRole(byte, encoding) {
+    return (0,_necCharsets__WEBPACK_IMPORTED_MODULE_0__.classifyByteForCharset)(byte, encoding);
+}
+function collectSelectionBytes(start, end, maxBytes) {
+    const range = normalizeRange(start, end);
+    const viewLength = getViewLength(state.mode);
+    if (range.start < 0 || range.start >= viewLength) {
+        return undefined;
+    }
+    const safeEnd = Math.min(range.end, viewLength - 1);
+    const total = safeEnd - range.start + 1;
+    const readLength = Math.min(total, maxBytes);
+    const bytes = new Uint8Array(readLength);
+    let missing = false;
+    for (let i = 0; i < readLength; i += 1) {
+        const byte = getByte(range.start + i, state.mode);
+        if (byte === undefined) {
+            missing = true;
+            continue;
+        }
+        bytes[i] = byte;
+    }
+    return {
+        bytes,
+        total,
+        readLength,
+        missing
+    };
+}
+function ensureBytesForOffsetRange(start, end) {
+    const viewLength = getViewLength(state.mode);
+    if (viewLength <= 0) {
+        return;
+    }
+    const range = normalizeRange(start, end);
+    const clampedStart = clampOffset(range.start, state.mode);
+    const clampedEnd = clampOffset(range.end, state.mode);
+    const firstChunk = Math.floor(clampedStart / CHUNK_BYTES);
+    const lastChunk = Math.floor(clampedEnd / CHUNK_BYTES);
+    for (let chunkIndex = firstChunk; chunkIndex <= lastChunk; chunkIndex += 1) {
+        const chunkStart = chunkIndex * CHUNK_BYTES;
+        const chunkLength = Math.min(CHUNK_BYTES, viewLength - chunkStart);
+        if (chunkLength > 0) {
+            requestChunk(state.mode, chunkStart, chunkLength);
+        }
+    }
+}
+function normalizeRange(start, end) {
+    return start <= end ? { start, end } : { start: end, end: start };
+}
 async function copyText(value) {
     if (!value) {
         return false;
@@ -853,6 +1664,8 @@ function persistState() {
     vscode.setState({
         defaultMode: state.defaultMode,
         mode: state.mode,
+        translationEncoding: state.translationEncoding,
+        translationDraft: state.translationDraft,
         selectionStart: state.selectionStart,
         selectionEnd: state.selectionEnd,
         cursorOffset: state.cursorOffset,
@@ -860,6 +1673,7 @@ function persistState() {
     });
 }
 
+})();
 
 /******/ })()
 ;

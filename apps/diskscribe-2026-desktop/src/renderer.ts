@@ -1,10 +1,34 @@
 import './desktopTheme.css';
 import '../../../media/editor.css';
+import { APP_DESKTOP_NAME } from '../../../src/appMeta';
+
+type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
+
+interface BatchPlanEntryPayload {
+  id: string;
+  filePath: string;
+}
+
+interface BatchPlanSaveResult {
+  saved: boolean;
+  filePath?: string;
+  error?: string;
+}
+
+interface BatchPlanLoadResult {
+  filePath?: string;
+  entries: BatchPlanEntryPayload[];
+  error?: string;
+}
 
 interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
+  openDisksDialog(): Promise<string[]>;
+  openDiskFolderDialog(): Promise<string[]>;
   writeClipboard(text: string): Promise<void>;
+  saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
+  loadBatchPlan(): Promise<BatchPlanLoadResult>;
   onHostMessage(handler: (message: unknown) => void): () => void;
 }
 
@@ -21,8 +45,48 @@ declare global {
   }
 }
 
+interface QueueItem {
+  id: string;
+  filePath: string;
+  status: QueueItemStatus;
+  parserId?: string;
+  sizeBytes?: number;
+  message?: string;
+}
+
 const stateStore: { value: unknown } = {
   value: {}
+};
+
+const queueState: {
+  items: QueueItem[];
+  selectedId: string | undefined;
+  isRunning: boolean;
+} = {
+  items: [],
+  selectedId: undefined,
+  isRunning: false
+};
+
+const elements = {
+  brandTitle: document.getElementById('brandTitle'),
+  activePath: document.getElementById('activePath'),
+  status: document.getElementById('status'),
+  statusProgressWrap: document.getElementById('statusProgressWrap'),
+  statusProgress: document.getElementById('statusProgress') as HTMLProgressElement | null,
+  statusProgressLabel: document.getElementById('statusProgressLabel'),
+  queueRows: document.getElementById('queueRows'),
+  queueMeta: document.getElementById('queueMeta'),
+  addQueueFilesButton: document.getElementById('addQueueFilesButton'),
+  addQueueFolderButton: document.getElementById('addQueueFolderButton'),
+  removeQueueItemButton: document.getElementById('removeQueueItemButton'),
+  clearQueueButton: document.getElementById('clearQueueButton'),
+  moveQueueUpButton: document.getElementById('moveQueueUpButton'),
+  moveQueueDownButton: document.getElementById('moveQueueDownButton'),
+  saveQueueButton: document.getElementById('saveQueueButton'),
+  loadQueueButton: document.getElementById('loadQueueButton'),
+  runQueueButton: document.getElementById('runQueueButton'),
+  stopQueueButton: document.getElementById('stopQueueButton')
 };
 
 const vscodeApi: VsCodeApi = {
@@ -39,6 +103,10 @@ const vscodeApi: VsCodeApi = {
 };
 
 window.acquireVsCodeApi = () => vscodeApi;
+document.title = APP_DESKTOP_NAME;
+if (elements.brandTitle) {
+  elements.brandTitle.textContent = APP_DESKTOP_NAME;
+}
 
 window.diskScribeDesktop.onHostMessage((message) => {
   window.dispatchEvent(new MessageEvent('message', { data: message }));
@@ -62,6 +130,72 @@ function wireDesktopControls(): void {
       void handleOpenDisk();
     });
   }
+
+  elements.addQueueFilesButton?.addEventListener('click', () => {
+    void handleAddQueueFiles();
+  });
+  elements.addQueueFolderButton?.addEventListener('click', () => {
+    void handleAddQueueFolder();
+  });
+  elements.removeQueueItemButton?.addEventListener('click', () => {
+    removeSelectedQueueItem();
+  });
+  elements.clearQueueButton?.addEventListener('click', () => {
+    clearQueue();
+  });
+  elements.moveQueueUpButton?.addEventListener('click', () => {
+    moveSelectedQueueItem(-1);
+  });
+  elements.moveQueueDownButton?.addEventListener('click', () => {
+    moveSelectedQueueItem(1);
+  });
+  elements.saveQueueButton?.addEventListener('click', () => {
+    void saveQueuePlan();
+  });
+  elements.loadQueueButton?.addEventListener('click', () => {
+    void loadQueuePlan();
+  });
+  elements.runQueueButton?.addEventListener('click', () => {
+    void runQueue();
+  });
+  elements.stopQueueButton?.addEventListener('click', () => {
+    stopQueue();
+  });
+  elements.queueRows?.addEventListener('click', (event) => {
+    const row = event.target instanceof Element ? event.target.closest('[data-queue-id]') : null;
+    if (!row) {
+      return;
+    }
+
+    const queueId = row.getAttribute('data-queue-id');
+    if (!queueId) {
+      return;
+    }
+
+    queueState.selectedId = queueId;
+    renderQueue();
+  });
+  elements.queueRows?.addEventListener('dblclick', (event) => {
+    const row = event.target instanceof Element ? event.target.closest('[data-queue-id]') : null;
+    if (!row) {
+      return;
+    }
+
+    const queueId = row.getAttribute('data-queue-id');
+    if (!queueId) {
+      return;
+    }
+
+    const item = queueState.items.find((candidate) => candidate.id === queueId);
+    if (!item) {
+      return;
+    }
+
+    void openQueueItem(item.filePath);
+  });
+
+  renderQueue();
+  updateQueueButtons();
 }
 
 async function handleOpenDisk(): Promise<void> {
@@ -77,33 +211,414 @@ async function handleOpenDisk(): Promise<void> {
   });
 }
 
+async function handleAddQueueFiles(): Promise<void> {
+  const selectedPaths = await window.diskScribeDesktop.openDisksDialog();
+  if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+    return;
+  }
+
+  addQueueItems(selectedPaths);
+  setStatus(`Added ${selectedPaths.length} file(s) to batch queue.`);
+}
+
+async function handleAddQueueFolder(): Promise<void> {
+  const selectedPaths = await window.diskScribeDesktop.openDiskFolderDialog();
+  if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+    setStatus('No supported disk images found in selected folder.');
+    return;
+  }
+
+  addQueueItems(selectedPaths);
+  setStatus(`Added ${selectedPaths.length} file(s) from folder.`);
+}
+
+function addQueueItems(filePaths: string[]): void {
+  const seen = new Set(queueState.items.map((item) => item.filePath.toLowerCase()));
+  for (const filePath of filePaths) {
+    if (!filePath || seen.has(filePath.toLowerCase())) {
+      continue;
+    }
+
+    seen.add(filePath.toLowerCase());
+    queueState.items.push({
+      id: createQueueItemId(),
+      filePath,
+      status: 'queued'
+    });
+  }
+
+  if (!queueState.selectedId && queueState.items.length > 0) {
+    queueState.selectedId = queueState.items[0].id;
+  }
+
+  renderQueue();
+  updateQueueButtons();
+}
+
+function removeSelectedQueueItem(): void {
+  if (!queueState.selectedId || queueState.isRunning) {
+    return;
+  }
+
+  const index = queueState.items.findIndex((item) => item.id === queueState.selectedId);
+  if (index < 0) {
+    return;
+  }
+
+  queueState.items.splice(index, 1);
+  queueState.selectedId = queueState.items[index]?.id ?? queueState.items[index - 1]?.id;
+  renderQueue();
+  updateQueueButtons();
+}
+
+function clearQueue(): void {
+  if (queueState.isRunning) {
+    return;
+  }
+
+  queueState.items = [];
+  queueState.selectedId = undefined;
+  renderQueue();
+  updateQueueButtons();
+  setStatus('Cleared batch queue.');
+}
+
+function moveSelectedQueueItem(delta: -1 | 1): void {
+  if (!queueState.selectedId || queueState.isRunning) {
+    return;
+  }
+
+  const index = queueState.items.findIndex((item) => item.id === queueState.selectedId);
+  if (index < 0) {
+    return;
+  }
+
+  const nextIndex = index + delta;
+  if (nextIndex < 0 || nextIndex >= queueState.items.length) {
+    return;
+  }
+
+  const [item] = queueState.items.splice(index, 1);
+  queueState.items.splice(nextIndex, 0, item);
+  renderQueue();
+  updateQueueButtons();
+}
+
+async function saveQueuePlan(): Promise<void> {
+  const entries: BatchPlanEntryPayload[] = queueState.items.map((item) => ({
+    id: item.id,
+    filePath: item.filePath
+  }));
+  const result = await window.diskScribeDesktop.saveBatchPlan(entries);
+  if (!result.saved) {
+    if (result.error) {
+      setStatus(`Failed to save batch plan: ${result.error}`);
+    }
+    return;
+  }
+
+  setStatus(`Saved batch plan to ${result.filePath ?? 'selected path'}.`);
+}
+
+async function loadQueuePlan(): Promise<void> {
+  if (queueState.isRunning) {
+    return;
+  }
+
+  const result = await window.diskScribeDesktop.loadBatchPlan();
+  if (result.error) {
+    setStatus(`Failed to load batch plan: ${result.error}`);
+    return;
+  }
+
+  queueState.items = [];
+  addQueueItems(result.entries.map((entry) => entry.filePath));
+  if (result.filePath) {
+    setStatus(`Loaded ${queueState.items.length} queue item(s) from ${result.filePath}.`);
+  }
+}
+
+async function runQueue(): Promise<void> {
+  if (queueState.isRunning) {
+    return;
+  }
+  if (queueState.items.length === 0) {
+    setStatus('Batch queue is empty.');
+    return;
+  }
+
+  queueState.isRunning = true;
+  queueState.items = queueState.items.map((item) => ({
+    ...item,
+    status: 'queued',
+    parserId: undefined,
+    sizeBytes: undefined,
+    message: undefined
+  }));
+  renderQueue();
+  updateQueueButtons();
+
+  setStatus(`Running ${queueState.items.length} queued item(s)...`);
+  setProgress(0, queueState.items.length, true);
+
+  await window.diskScribeDesktop.postMessage({
+    type: 'desktop.batchRun',
+    items: queueState.items.map((item) => ({
+      id: item.id,
+      filePath: item.filePath
+    }))
+  });
+}
+
+function stopQueue(): void {
+  if (!queueState.isRunning) {
+    return;
+  }
+
+  void window.diskScribeDesktop.postMessage({ type: 'desktop.batchStop' });
+}
+
+async function openQueueItem(filePath: string): Promise<void> {
+  setActivePath(filePath);
+  await window.diskScribeDesktop.postMessage({
+    type: 'desktop.openDisk',
+    filePath
+  });
+}
+
 function handleDesktopMessage(message: unknown): void {
   if (!isRecord(message) || typeof message.type !== 'string') {
     return;
   }
 
-  if (message.type === 'desktop.fileOpened' && typeof message.filePath === 'string') {
-    setActivePath(message.filePath);
-    return;
-  }
-
-  if (message.type === 'desktop.notice' && typeof message.message === 'string') {
-    setStatus(message.message);
+  switch (message.type) {
+    case 'desktop.appMeta':
+      if (typeof message.appDesktopName === 'string' && elements.brandTitle) {
+        elements.brandTitle.textContent = message.appDesktopName;
+        document.title = message.appDesktopName;
+      }
+      return;
+    case 'desktop.fileOpened':
+      if (typeof message.filePath === 'string') {
+        setActivePath(message.filePath);
+      }
+      return;
+    case 'desktop.notice':
+      if (typeof message.message === 'string') {
+        setStatus(message.message);
+      }
+      return;
+    case 'desktop.status':
+      if (typeof message.message === 'string') {
+        setStatus(message.message);
+      }
+      setProgress(numberOrUndefined(message.current), numberOrUndefined(message.total), message.busy === true);
+      return;
+    case 'desktop.batchItemUpdate':
+      applyBatchItemUpdate(message);
+      return;
+    case 'desktop.batchProgress':
+      if (typeof message.message === 'string') {
+        setStatus(message.message);
+      }
+      setProgress(numberOrUndefined(message.processed), numberOrUndefined(message.total), message.running === true);
+      return;
+    case 'desktop.batchComplete':
+      queueState.isRunning = false;
+      updateQueueButtons();
+      if (typeof message.total === 'number' && typeof message.completed === 'number') {
+        if (message.canceled === true) {
+          setStatus(`Batch canceled (${message.completed}/${message.total} completed).`);
+        } else {
+          setStatus(
+            `Batch complete (${message.completed} succeeded, ${numberOrUndefined(message.failed) ?? 0} failed).`
+          );
+        }
+      }
+      setProgress(undefined, undefined, false);
+      return;
+    default:
+      return;
   }
 }
 
 function setStatus(text: string): void {
-  const status = document.getElementById('status');
-  if (status) {
-    status.textContent = text;
+  if (elements.status) {
+    elements.status.textContent = text;
   }
 }
 
 function setActivePath(filePath: string): void {
-  const activePath = document.getElementById('activePath');
-  if (activePath) {
-    activePath.textContent = filePath;
+  if (elements.activePath) {
+    elements.activePath.textContent = filePath;
   }
+}
+
+function setProgress(current: number | undefined, total: number | undefined, busy: boolean): void {
+  const progress = elements.statusProgress;
+  const wrap = elements.statusProgressWrap;
+  if (!progress || !wrap) {
+    return;
+  }
+
+  if (typeof current === 'number' && typeof total === 'number' && total > 0) {
+    progress.max = total;
+    progress.value = Math.max(0, Math.min(current, total));
+    wrap.classList.remove('isHidden');
+    if (elements.statusProgressLabel) {
+      elements.statusProgressLabel.textContent = `${Math.max(0, Math.min(current, total))}/${total}`;
+    }
+    return;
+  }
+
+  if (busy) {
+    progress.removeAttribute('value');
+    wrap.classList.remove('isHidden');
+    if (elements.statusProgressLabel) {
+      elements.statusProgressLabel.textContent = 'Working...';
+    }
+    return;
+  }
+
+  progress.value = 0;
+  wrap.classList.add('isHidden');
+  if (elements.statusProgressLabel) {
+    elements.statusProgressLabel.textContent = '';
+  }
+}
+
+function applyBatchItemUpdate(message: Record<string, unknown>): void {
+  if (typeof message.id !== 'string') {
+    return;
+  }
+
+  const target = queueState.items.find((item) => item.id === message.id);
+  if (!target) {
+    return;
+  }
+
+  if (isQueueStatus(message.status)) {
+    target.status = message.status;
+  }
+  if (typeof message.message === 'string') {
+    target.message = message.message;
+  }
+  if (typeof message.parserId === 'string') {
+    target.parserId = message.parserId;
+  }
+  if (typeof message.sizeBytes === 'number') {
+    target.sizeBytes = message.sizeBytes;
+  }
+
+  if (target.status === 'running') {
+    queueState.isRunning = true;
+  }
+
+  renderQueue();
+  updateQueueButtons();
+}
+
+function renderQueue(): void {
+  if (!elements.queueRows) {
+    return;
+  }
+
+  elements.queueRows.innerHTML = '';
+  if (queueState.items.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.textContent = 'Queue is empty.';
+    row.appendChild(cell);
+    elements.queueRows.appendChild(row);
+    if (elements.queueMeta) {
+      elements.queueMeta.textContent = '0 items';
+    }
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const item of queueState.items) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-queue-id', item.id);
+    row.classList.add('queueRow', `queueRow--${item.status}`);
+    if (item.id === queueState.selectedId) {
+      row.classList.add('is-selected');
+    }
+
+    appendCell(row, item.status.toUpperCase());
+    appendCell(row, item.filePath);
+    appendCell(row, item.parserId ?? '-');
+    appendCell(row, typeof item.sizeBytes === 'number' ? formatBytes(item.sizeBytes) : '-');
+    appendCell(row, item.message ?? '-');
+    fragment.appendChild(row);
+  }
+
+  elements.queueRows.appendChild(fragment);
+  if (elements.queueMeta) {
+    elements.queueMeta.textContent = `${queueState.items.length} item(s)`;
+  }
+}
+
+function updateQueueButtons(): void {
+  const selectedIndex = queueState.selectedId
+    ? queueState.items.findIndex((item) => item.id === queueState.selectedId)
+    : -1;
+  const hasSelection = selectedIndex >= 0;
+  const hasItems = queueState.items.length > 0;
+  const running = queueState.isRunning;
+
+  setDisabled(elements.addQueueFilesButton, running);
+  setDisabled(elements.addQueueFolderButton, running);
+  setDisabled(elements.removeQueueItemButton, running || !hasSelection);
+  setDisabled(elements.clearQueueButton, running || !hasItems);
+  setDisabled(elements.moveQueueUpButton, running || !hasSelection || selectedIndex <= 0);
+  setDisabled(
+    elements.moveQueueDownButton,
+    running || !hasSelection || selectedIndex >= queueState.items.length - 1
+  );
+  setDisabled(elements.saveQueueButton, running || !hasItems);
+  setDisabled(elements.loadQueueButton, running);
+  setDisabled(elements.runQueueButton, running || !hasItems);
+  setDisabled(elements.stopQueueButton, !running);
+}
+
+function appendCell(row: HTMLTableRowElement, text: string): void {
+  const cell = document.createElement('td');
+  cell.textContent = text;
+  row.appendChild(cell);
+}
+
+function setDisabled(element: HTMLElement | null, disabled: boolean): void {
+  if (!(element instanceof HTMLButtonElement)) {
+    return;
+  }
+  element.disabled = disabled;
+}
+
+function createQueueItemId(): string {
+  return `queue-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return value;
+}
+
+function formatBytes(value: number): string {
+  return `${value.toLocaleString()} B`;
+}
+
+function isQueueStatus(value: unknown): value is QueueItemStatus {
+  return (
+    value === 'queued' ||
+    value === 'running' ||
+    value === 'done' ||
+    value === 'error' ||
+    value === 'canceled'
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

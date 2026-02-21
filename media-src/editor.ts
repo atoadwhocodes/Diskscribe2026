@@ -1,4 +1,13 @@
 // @ts-nocheck
+import {
+  decodeBytesByCharset,
+  classifyByteForCharset,
+  getCharsetLegend,
+  getCharsetProfile,
+  glyphForByteForCharset,
+  normalizeCharsetId
+} from './necCharsets';
+
 const vscode = acquireVsCodeApi();
 
 const BYTES_PER_ROW = 16;
@@ -6,6 +15,8 @@ const ROW_HEIGHT = 20;
 const OVERSCAN_ROWS = 24;
 const CHUNK_BYTES = 65536;
 const MAX_CHUNKS_PER_MODE = 128;
+const MAX_TRANSLATION_BYTES = 8192;
+const MAX_CHAR_FRAME_BYTES = 192;
 
 const persisted = vscode.getState() || {};
 
@@ -33,8 +44,20 @@ const elements = {
   jumpLbaButton: document.getElementById('jumpLbaButton'),
   copyOffsetButton: document.getElementById('copyOffsetButton'),
   copyLbaButton: document.getElementById('copyLbaButton'),
-  extractSelectionButton: document.getElementById('extractSelectionButton')
+  extractSelectionButton: document.getElementById('extractSelectionButton'),
+  translationEncoding: document.getElementById('translationEncoding'),
+  translationMeta: document.getElementById('translationMeta'),
+  decodedSelection: document.getElementById('decodedSelection'),
+  translationDraft: document.getElementById('translationDraft'),
+  copyDecodedButton: document.getElementById('copyDecodedButton'),
+  copyDraftButton: document.getElementById('copyDraftButton'),
+  clearDraftButton: document.getElementById('clearDraftButton'),
+  charsetLegend: document.getElementById('charsetLegend'),
+  charFrameRows: document.getElementById('charFrameRows')
 };
+
+const hasPersistedTranslationEncoding =
+  typeof persisted.translationEncoding === 'string' && persisted.translationEncoding.length > 0;
 
 const state = {
   summary: undefined,
@@ -44,6 +67,8 @@ const state = {
   dataOffset: 0,
   sectorSize: 512,
   geometry: undefined,
+  translationEncoding: normalizeCharsetId(persisted.translationEncoding),
+  translationDraft: typeof persisted.translationDraft === 'string' ? persisted.translationDraft : '',
   selectionStart: Number.isInteger(persisted.selectionStart) ? persisted.selectionStart : 0,
   selectionEnd: Number.isInteger(persisted.selectionEnd) ? persisted.selectionEnd : 0,
   cursorOffset: Number.isInteger(persisted.cursorOffset) ? persisted.cursorOffset : 0,
@@ -92,6 +117,40 @@ if (elements.copyLbaButton) {
 if (elements.extractSelectionButton) {
   elements.extractSelectionButton.addEventListener('click', () => {
     void requestExtractSelection();
+  });
+}
+
+if (elements.translationEncoding) {
+  elements.translationEncoding.addEventListener('change', () => {
+    const value = normalizeCharsetId(elements.translationEncoding.value);
+    state.translationEncoding = value;
+    persistState();
+    refreshTranslationPanels();
+  });
+}
+
+if (elements.translationDraft) {
+  elements.translationDraft.addEventListener('input', () => {
+    state.translationDraft = elements.translationDraft.value || '';
+    persistState();
+  });
+}
+
+if (elements.copyDecodedButton) {
+  elements.copyDecodedButton.addEventListener('click', () => {
+    void copyDecodedToClipboard();
+  });
+}
+
+if (elements.copyDraftButton) {
+  elements.copyDraftButton.addEventListener('click', () => {
+    void copyDraftToClipboard();
+  });
+}
+
+if (elements.clearDraftButton) {
+  elements.clearDraftButton.addEventListener('click', () => {
+    clearDraft();
   });
 }
 
@@ -189,6 +248,9 @@ if (elements.partitionRows) {
     );
   });
 }
+
+syncTranslatorInputs();
+refreshTranslationPanels();
 
 window.addEventListener('resize', () => {
   renderHexViewport(false);
@@ -293,12 +355,16 @@ function renderSummary(summary) {
   syncModeSelect();
   persistState();
   renderHexViewport(true);
+  refreshTranslationPanels();
 }
 
 function handleHexInit(message) {
   const nextDefault = message.defaultMode === 'raw' ? 'raw' : 'disk';
   state.defaultMode = nextDefault;
   state.mode = chooseMode(state.mode || nextDefault);
+  if (!hasPersistedTranslationEncoding && typeof message.defaultCharset === 'string') {
+    state.translationEncoding = normalizeCharsetId(message.defaultCharset);
+  }
 
   if (Number.isFinite(message.fileSize)) {
     state.fileSize = Number(message.fileSize);
@@ -317,6 +383,7 @@ function handleHexInit(message) {
   syncModeSelect();
   persistState();
   renderHexViewport(true);
+  refreshTranslationPanels();
 }
 
 function handleHexData(message) {
@@ -336,6 +403,7 @@ function handleHexData(message) {
   if (bytes.length === 0) {
     if (mode === state.mode) {
       renderHexViewport(false);
+      refreshTranslationPanels();
     }
     return;
   }
@@ -347,6 +415,7 @@ function handleHexData(message) {
 
   if (mode === state.mode) {
     renderHexViewport(false);
+    refreshTranslationPanels();
   }
 }
 
@@ -371,6 +440,7 @@ function handleHexJumpAck(message) {
   persistState();
   renderHexViewport(true);
   scrollToOffset(offset, true);
+  refreshTranslationPanels();
 }
 
 function handleHexSelectAck(message) {
@@ -386,6 +456,7 @@ function handleHexSelectAck(message) {
   state.anchorOffset = state.selectionStart;
   persistState();
   renderHexViewport(false);
+  refreshTranslationPanels();
 }
 
 function renderError(message) {
@@ -400,6 +471,7 @@ function renderError(message) {
     elements.hexSpacer.style.height = '0px';
   }
   setText(elements.notes, `- ${message || 'Unknown error'}`);
+  refreshTranslationPanels();
 }
 
 function renderPartitions(partitions) {
@@ -857,6 +929,246 @@ async function requestExtractSelection() {
   });
 }
 
+function refreshTranslationPanels() {
+  syncTranslatorInputs();
+  syncCharsetLegend();
+
+  const viewLength = getViewLength(state.mode);
+  if (viewLength <= 0) {
+    setText(elements.translationMeta, 'No bytes available in current view.');
+    setText(elements.decodedSelection, '(no bytes available)');
+    renderCharFramePlaceholder('No bytes available in current view.');
+    return;
+  }
+
+  const start = clampOffset(state.selectionStart, state.mode);
+  const end = clampOffset(state.selectionEnd, state.mode);
+  const range = normalizeRange(start, end);
+  const totalLength = range.end - range.start + 1;
+  if (totalLength <= 0) {
+    setText(elements.translationMeta, 'No byte selection.');
+    setText(elements.decodedSelection, '(select bytes in hex view)');
+    renderCharFramePlaceholder('Select bytes to inspect character framing.');
+    return;
+  }
+
+  ensureBytesForOffsetRange(range.start, range.end);
+
+  const selection = collectSelectionBytes(range.start, range.end, MAX_TRANSLATION_BYTES);
+  if (!selection) {
+    setText(elements.translationMeta, 'Selection is outside available bytes.');
+    setText(elements.decodedSelection, '(selection out of range)');
+    renderCharFramePlaceholder('Selection is outside available bytes.');
+    return;
+  }
+
+  if (selection.missing) {
+    setText(
+      elements.translationMeta,
+      `Loading bytes for ${formatNumber(totalLength)} selected byte(s)...`
+    );
+    setText(elements.decodedSelection, '(loading selected bytes from disk...)');
+  } else {
+    const profile = getCharsetProfile(state.translationEncoding);
+    const decoded = decodeSelectionBytes(selection.bytes, state.translationEncoding);
+    const detail =
+      selection.total > selection.readLength
+        ? `, showing first ${formatNumber(selection.readLength)}`
+        : '';
+    setText(
+      elements.translationMeta,
+      `Decode ${formatNumber(selection.total)} byte(s) as ${profile.label}${detail}.`
+    );
+    setText(elements.decodedSelection, decoded.length > 0 ? decoded : '(decoded text is empty)');
+  }
+
+  renderCharFrameRows(range.start, range.end);
+}
+
+function syncTranslatorInputs() {
+  if (elements.translationEncoding) {
+    const normalized = normalizeCharsetId(state.translationEncoding);
+    if (elements.translationEncoding.value !== normalized) {
+      elements.translationEncoding.value = normalized;
+    }
+  }
+
+  if (elements.translationDraft && elements.translationDraft.value !== state.translationDraft) {
+    elements.translationDraft.value = state.translationDraft;
+  }
+}
+
+function syncCharsetLegend() {
+  setText(elements.charsetLegend, getCharsetLegend(state.translationEncoding));
+}
+
+async function copyDecodedToClipboard() {
+  const text = elements.decodedSelection ? elements.decodedSelection.textContent || '' : '';
+  if (!text || text.startsWith('(loading')) {
+    setText(elements.status, 'No decoded selection text to copy yet.');
+    return;
+  }
+
+  const copied = await copyText(text);
+  if (!copied) {
+    setText(elements.status, 'Unable to copy decoded text.');
+    return;
+  }
+
+  setText(elements.status, 'Copied decoded selection text.');
+}
+
+async function copyDraftToClipboard() {
+  const text = (elements.translationDraft ? elements.translationDraft.value : state.translationDraft) || '';
+  if (!text) {
+    setText(elements.status, 'Translation draft is empty.');
+    return;
+  }
+
+  const copied = await copyText(text);
+  if (!copied) {
+    setText(elements.status, 'Unable to copy translation draft.');
+    return;
+  }
+
+  setText(elements.status, 'Copied translation draft.');
+}
+
+function clearDraft() {
+  state.translationDraft = '';
+  if (elements.translationDraft) {
+    elements.translationDraft.value = '';
+  }
+  persistState();
+  setText(elements.status, 'Cleared translation draft.');
+}
+
+function renderCharFrameRows(start, end) {
+  if (!elements.charFrameRows) {
+    return;
+  }
+
+  elements.charFrameRows.innerHTML = '';
+
+  const range = normalizeRange(start, end);
+  const totalLength = range.end - range.start + 1;
+  const rowCount = Math.min(totalLength, MAX_CHAR_FRAME_BYTES);
+  for (let i = 0; i < rowCount; i += 1) {
+    const offset = range.start + i;
+    const row = document.createElement('tr');
+
+    const byte = getByte(offset, state.mode);
+    appendCell(row, `0x${offset.toString(16).toUpperCase().padStart(8, '0')}`);
+    if (byte === undefined) {
+      appendCell(row, '..');
+      appendCell(row, '(loading)');
+      appendCell(row, 'pending');
+      elements.charFrameRows.appendChild(row);
+      continue;
+    }
+
+    appendCell(row, `0x${byte.toString(16).toUpperCase().padStart(2, '0')}`);
+    appendCell(row, toGlyph(byte, state.translationEncoding));
+    appendCell(row, classifyByteRole(byte, state.translationEncoding));
+    elements.charFrameRows.appendChild(row);
+  }
+
+  if (rowCount === 0) {
+    renderCharFramePlaceholder('Select bytes to inspect character framing.');
+    return;
+  }
+
+  if (totalLength > rowCount) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.textContent = `Showing first ${formatNumber(rowCount)} of ${formatNumber(totalLength)} selected bytes.`;
+    row.appendChild(cell);
+    elements.charFrameRows.appendChild(row);
+  }
+}
+
+function renderCharFramePlaceholder(message) {
+  if (!elements.charFrameRows) {
+    return;
+  }
+
+  elements.charFrameRows.innerHTML = '';
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.colSpan = 4;
+  cell.textContent = message;
+  row.appendChild(cell);
+  elements.charFrameRows.appendChild(row);
+}
+
+function decodeSelectionBytes(bytes, encoding) {
+  return decodeBytesByCharset(bytes, encoding);
+}
+
+function toGlyph(byte, encoding) {
+  return glyphForByteForCharset(byte, encoding);
+}
+
+function classifyByteRole(byte, encoding) {
+  return classifyByteForCharset(byte, encoding);
+}
+
+function collectSelectionBytes(start, end, maxBytes) {
+  const range = normalizeRange(start, end);
+  const viewLength = getViewLength(state.mode);
+  if (range.start < 0 || range.start >= viewLength) {
+    return undefined;
+  }
+
+  const safeEnd = Math.min(range.end, viewLength - 1);
+  const total = safeEnd - range.start + 1;
+  const readLength = Math.min(total, maxBytes);
+  const bytes = new Uint8Array(readLength);
+  let missing = false;
+
+  for (let i = 0; i < readLength; i += 1) {
+    const byte = getByte(range.start + i, state.mode);
+    if (byte === undefined) {
+      missing = true;
+      continue;
+    }
+    bytes[i] = byte;
+  }
+
+  return {
+    bytes,
+    total,
+    readLength,
+    missing
+  };
+}
+
+function ensureBytesForOffsetRange(start, end) {
+  const viewLength = getViewLength(state.mode);
+  if (viewLength <= 0) {
+    return;
+  }
+
+  const range = normalizeRange(start, end);
+  const clampedStart = clampOffset(range.start, state.mode);
+  const clampedEnd = clampOffset(range.end, state.mode);
+  const firstChunk = Math.floor(clampedStart / CHUNK_BYTES);
+  const lastChunk = Math.floor(clampedEnd / CHUNK_BYTES);
+
+  for (let chunkIndex = firstChunk; chunkIndex <= lastChunk; chunkIndex += 1) {
+    const chunkStart = chunkIndex * CHUNK_BYTES;
+    const chunkLength = Math.min(CHUNK_BYTES, viewLength - chunkStart);
+    if (chunkLength > 0) {
+      requestChunk(state.mode, chunkStart, chunkLength);
+    }
+  }
+}
+
+function normalizeRange(start, end) {
+  return start <= end ? { start, end } : { start: end, end: start };
+}
+
 async function copyText(value) {
   if (!value) {
     return false;
@@ -971,6 +1283,8 @@ function persistState() {
   vscode.setState({
     defaultMode: state.defaultMode,
     mode: state.mode,
+    translationEncoding: state.translationEncoding,
+    translationDraft: state.translationDraft,
     selectionStart: state.selectionStart,
     selectionEnd: state.selectionEnd,
     cursorOffset: state.cursorOffset,

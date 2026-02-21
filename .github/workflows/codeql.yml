@@ -43,3 +43,13 @@ jobs:
         uses: github/codeql-action/analyze@9e907b5e64f6b83e7804b09294d44122997950d6
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+        with:
+          upload: ${{ vars.CODEQL_UPLOAD == 'true' }}
+      - name: Upload SARIF artifact
+        if: ${{ vars.CODEQL_UPLOAD != 'true' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: codeql-sarif-${{ github.run_id }}
+          path: results/*.sarif
+          if-no-files-found: error
+          retention-days: 14

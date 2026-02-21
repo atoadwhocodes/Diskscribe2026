@@ -5,3 +5,15 @@ dist/
 .env
 .env.*
 !.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+*.crt
+*.log
+tmp/
+out/
+build/
+apps/diskscribe-2026-desktop/out/
+apps/diskscribe-2026-desktop/.webpack/
+*.code-workspace

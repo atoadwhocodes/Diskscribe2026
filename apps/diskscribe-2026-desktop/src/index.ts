@@ -1,6 +1,7 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
 import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
+import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from '../../../src/appMeta';
 import type { DiskSummary } from '../../../src/core/diskSummary';
 import { buildDiskSummaryFromPath, isSupportedDiskPath } from '../../../src/core/diskSummary';
 import { PagedFileByteReader } from '../../../src/core/hex/pagedFileByteReader';
@@ -16,6 +17,19 @@ interface HexSelection {
   end: number;
 }
 
+type BatchItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
+
+interface BatchQueueItemPayload {
+  id: string;
+  filePath: string;
+}
+
+interface BatchRunState {
+  activeRunId: number;
+  running: boolean;
+  cancelRequested: boolean;
+}
+
 interface DesktopSession {
   windowId: number;
   rendererReady: boolean;
@@ -25,6 +39,7 @@ interface DesktopSession {
   mode: HexMode;
   selection: HexSelection | undefined;
   cursorOffset: number | undefined;
+  batch: BatchRunState;
 }
 
 const HEX_SETTINGS = {
@@ -34,13 +49,23 @@ const HEX_SETTINGS = {
 };
 
 const sessionsByWindowId = new Map<number, DesktopSession>();
+const DISK_IMAGE_FILTERS = [
+  {
+    name: 'PC-98 Disk Images',
+    extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
+  }
+];
+const APP_BATCH_PLAN_VERSION = 1;
 
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+app.setName(APP_DESKTOP_NAME);
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
+    title: APP_DESKTOP_NAME,
     width: 1400,
     height: 920,
     minWidth: 980,
@@ -60,9 +85,15 @@ function createWindow(): void {
     reader: undefined,
     mode: HEX_SETTINGS.defaultMode,
     selection: undefined,
-    cursorOffset: undefined
+    cursorOffset: undefined,
+    batch: {
+      activeRunId: 0,
+      running: false,
+      cancelRequested: false
+    }
   };
   sessionsByWindowId.set(mainWindow.id, session);
+  setWindowTitle(session);
 
   mainWindow.on('closed', () => {
     disposeSession(mainWindow.id);
@@ -85,18 +116,84 @@ ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefin
   const result = await dialog.showOpenDialog(ownerWindow, {
     title: 'Open PC-98 Disk Image',
     properties: ['openFile'],
-    filters: [
-      {
-        name: 'PC-98 Disk Images',
-        extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
-      }
-    ]
+    filters: DISK_IMAGE_FILTERS
   });
 
   if (result.canceled || result.filePaths.length === 0) {
     return undefined;
   }
   return result.filePaths[0];
+});
+
+ipcMain.handle('desktop:openDisksDialog', async (event): Promise<string[]> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const result = await dialog.showOpenDialog(ownerWindow, {
+    title: 'Add Disk Images to Batch Queue',
+    properties: ['openFile', 'multiSelections'],
+    filters: DISK_IMAGE_FILTERS
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return [];
+  }
+  return result.filePaths;
+});
+
+ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<string[]> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const result = await dialog.showOpenDialog(ownerWindow, {
+    title: 'Add Folder to Batch Queue',
+    properties: ['openDirectory']
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return [];
+  }
+  return collectSupportedDisksFromFolder(result.filePaths[0]);
+});
+
+ipcMain.handle('desktop:saveBatchPlan', async (event, rawEntries: unknown) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const entries = normalizeBatchQueueItems(rawEntries);
+  const saveResult = await dialog.showSaveDialog(ownerWindow, {
+    title: 'Save Batch Plan',
+    defaultPath: 'diskscribe2026-batch-plan.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { saved: false };
+  }
+
+  const payload = {
+    appName: APP_NAME,
+    appVendor: APP_VENDOR,
+    planVersion: APP_BATCH_PLAN_VERSION,
+    createdAt: new Date().toISOString(),
+    entries
+  };
+
+  await fs.writeFile(saveResult.filePath, JSON.stringify(payload, null, 2), 'utf8');
+  return { saved: true, filePath: saveResult.filePath };
+});
+
+ipcMain.handle('desktop:loadBatchPlan', async (event) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const loadResult = await dialog.showOpenDialog(ownerWindow, {
+    title: 'Load Batch Plan',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (loadResult.canceled || loadResult.filePaths.length === 0) {
+    return { entries: [] };
+  }
+
+  const filePath = loadResult.filePaths[0];
+  try {
+    const text = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(text) as { entries?: unknown };
+    const entries = normalizeBatchQueueItems(parsed?.entries);
+    return { filePath, entries };
+  } catch (error: unknown) {
+    return { filePath, entries: [], error: toErrorMessage(error) };
+  }
 });
 
 ipcMain.handle('desktop:writeClipboard', async (_event, text: unknown): Promise<void> => {
@@ -159,6 +256,12 @@ async function handleIncomingMessage(session: DesktopSession, rawMessage: unknow
     case 'refresh':
       await refreshSession(session);
       return;
+    case 'desktop.batchRun':
+      await runBatchQueue(session, rawMessage.items);
+      return;
+    case 'desktop.batchStop':
+      requestBatchStop(session);
+      return;
     case 'hex.read':
       await handleHexRead(session, rawMessage);
       return;
@@ -178,12 +281,15 @@ async function handleIncomingMessage(session: DesktopSession, rawMessage: unknow
 
 async function handleRendererReady(session: DesktopSession): Promise<void> {
   session.rendererReady = true;
+  postRendererMessage(session, {
+    type: 'desktop.appMeta',
+    appName: APP_NAME,
+    appDesktopName: APP_DESKTOP_NAME,
+    appVersion: app.getVersion()
+  });
 
   if (!session.summary || !session.filePath) {
-    postRendererMessage(session, {
-      type: 'desktop.notice',
-      message: 'Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to begin.'
-    });
+    postStatus(session, 'Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to begin.');
     return;
   }
 
@@ -208,6 +314,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   }
 
   try {
+    postStatus(session, `Loading ${path.basename(normalizedPath)}...`, { busy: true });
     const summary = await buildDiskSummaryFromPath(normalizedPath);
 
     disposeReader(session);
@@ -228,25 +335,161 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
       filePath: normalizedPath,
       fileName: path.basename(normalizedPath)
     });
+    setWindowTitle(session, path.basename(normalizedPath));
     pushSummaryAndInit(session, true);
     postRendererMessage(session, {
       type: 'desktop.notice',
       message: `Loaded ${path.basename(normalizedPath)} (${summary.sizeBytes.toLocaleString()} bytes).`
     });
+    postStatus(session, `Loaded ${path.basename(normalizedPath)}.`, { busy: false });
   } catch (error: unknown) {
     postError(session, toErrorMessage(error));
+    postStatus(session, `Failed to load ${path.basename(normalizedPath)}.`, { busy: false });
   }
 }
 
 async function refreshSession(session: DesktopSession): Promise<void> {
   if (!session.filePath) {
-    postRendererMessage(session, {
-      type: 'desktop.notice',
-      message: 'No disk is open yet.'
-    });
+    postStatus(session, 'No disk is open yet.');
     return;
   }
   await openDisk(session, session.filePath);
+}
+
+async function runBatchQueue(session: DesktopSession, rawItems: unknown): Promise<void> {
+  if (session.batch.running) {
+    postStatus(session, 'A batch run is already active.');
+    return;
+  }
+
+  const items = normalizeBatchQueueItems(rawItems);
+  if (items.length === 0) {
+    postStatus(session, 'Batch queue is empty.');
+    return;
+  }
+
+  session.batch.running = true;
+  session.batch.cancelRequested = false;
+  session.batch.activeRunId += 1;
+  const runId = session.batch.activeRunId;
+
+  let processed = 0;
+  let completed = 0;
+  let failed = 0;
+  let canceled = false;
+  let lastSuccessfulPath: string | undefined;
+
+  try {
+    postBatchProgress(session, {
+      processed,
+      total: items.length,
+      completed,
+      failed,
+      running: true,
+      message: `Running queue: 0/${items.length}`
+    });
+
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+
+      if (runId !== session.batch.activeRunId || session.batch.cancelRequested) {
+        canceled = true;
+        for (let pending = index; pending < items.length; pending += 1) {
+          postBatchItemUpdate(session, {
+            id: items[pending].id,
+            filePath: items[pending].filePath,
+            status: 'canceled',
+            message: 'Canceled before processing.'
+          });
+        }
+        break;
+      }
+
+      postBatchItemUpdate(session, {
+        id: item.id,
+        filePath: item.filePath,
+        status: 'running',
+        message: `Processing ${path.basename(item.filePath)}...`
+      });
+
+      try {
+        const normalizedPath = path.resolve(item.filePath);
+        if (!existsSync(normalizedPath)) {
+          throw new Error(`File not found: ${normalizedPath}`);
+        }
+        if (!isSupportedDiskPath(normalizedPath)) {
+          throw new Error(`Unsupported extension: ${path.extname(normalizedPath) || '(none)'}`);
+        }
+
+        const summary = await buildDiskSummaryFromPath(normalizedPath);
+        completed += 1;
+        lastSuccessfulPath = normalizedPath;
+        postBatchItemUpdate(session, {
+          id: item.id,
+          filePath: normalizedPath,
+          status: 'done',
+          parserId: summary.parserId,
+          sizeBytes: summary.sizeBytes,
+          message: `Parsed ${summary.sizeBytes.toLocaleString()} bytes.`
+        });
+      } catch (error: unknown) {
+        failed += 1;
+        postBatchItemUpdate(session, {
+          id: item.id,
+          filePath: item.filePath,
+          status: 'error',
+          message: toErrorMessage(error)
+        });
+      }
+
+      processed += 1;
+      postBatchProgress(session, {
+        processed,
+        total: items.length,
+        completed,
+        failed,
+        running: true,
+        message: `Running queue: ${processed}/${items.length}`
+      });
+    }
+
+    if (!canceled && !session.batch.cancelRequested && lastSuccessfulPath) {
+      await openDisk(session, lastSuccessfulPath);
+    }
+  } finally {
+    if (runId === session.batch.activeRunId) {
+      session.batch.running = false;
+      canceled = canceled || session.batch.cancelRequested;
+      session.batch.cancelRequested = false;
+    }
+
+    postBatchProgress(session, {
+      processed,
+      total: items.length,
+      completed,
+      failed,
+      running: false,
+      message: canceled
+        ? `Batch canceled (${processed}/${items.length} processed).`
+        : `Batch complete (${completed} succeeded, ${failed} failed).`
+    });
+    postBatchComplete(session, {
+      processed,
+      total: items.length,
+      completed,
+      failed,
+      canceled
+    });
+  }
+}
+
+function requestBatchStop(session: DesktopSession): void {
+  if (!session.batch.running) {
+    postStatus(session, 'No active batch run.');
+    return;
+  }
+  session.batch.cancelRequested = true;
+  postStatus(session, 'Stopping batch queue after current file...');
 }
 
 function pushSummaryAndInit(session: DesktopSession, forceInitialJump: boolean): void {
@@ -483,9 +726,79 @@ function postSelectAck(session: DesktopSession, selection: HexSelection): void {
 
 function postError(session: DesktopSession, message: string): void {
   postRendererMessage(session, { type: 'error', message });
+  postStatus(session, `Error: ${message}`, { busy: false });
+}
+
+function postStatus(
+  session: DesktopSession,
+  message: string,
+  options: { busy?: boolean; current?: number; total?: number } = {}
+): void {
   postRendererMessage(session, {
     type: 'desktop.notice',
-    message: `Error: ${message}`
+    message
+  });
+  postRendererMessage(session, {
+    type: 'desktop.status',
+    message,
+    busy: options.busy === true,
+    current: Number.isFinite(options.current) ? options.current : undefined,
+    total: Number.isFinite(options.total) ? options.total : undefined
+  });
+}
+
+function postBatchItemUpdate(
+  session: DesktopSession,
+  payload: {
+    id: string;
+    filePath: string;
+    status: BatchItemStatus;
+    message?: string;
+    parserId?: string;
+    sizeBytes?: number;
+  }
+): void {
+  postRendererMessage(session, {
+    type: 'desktop.batchItemUpdate',
+    ...payload
+  });
+}
+
+function postBatchProgress(
+  session: DesktopSession,
+  payload: {
+    processed: number;
+    total: number;
+    completed: number;
+    failed: number;
+    running: boolean;
+    message: string;
+  }
+): void {
+  postRendererMessage(session, {
+    type: 'desktop.batchProgress',
+    ...payload
+  });
+  postStatus(session, payload.message, {
+    busy: payload.running,
+    current: payload.total > 0 ? payload.processed : undefined,
+    total: payload.total > 0 ? payload.total : undefined
+  });
+}
+
+function postBatchComplete(
+  session: DesktopSession,
+  payload: {
+    processed: number;
+    total: number;
+    completed: number;
+    failed: number;
+    canceled: boolean;
+  }
+): void {
+  postRendererMessage(session, {
+    type: 'desktop.batchComplete',
+    ...payload
   });
 }
 
@@ -550,6 +863,16 @@ function postRendererMessage(session: DesktopSession, message: unknown): void {
   }
 
   window.webContents.send('desktop:hostMessage', message);
+}
+
+function setWindowTitle(session: DesktopSession, fileName?: string): void {
+  const window = BrowserWindow.fromId(session.windowId);
+  if (!window || window.isDestroyed()) {
+    return;
+  }
+
+  const title = fileName ? `${APP_DESKTOP_NAME} - ${fileName}` : APP_DESKTOP_NAME;
+  window.setTitle(title);
 }
 
 function getViewLength(session: DesktopSession, mode: HexMode): number {
@@ -632,6 +955,54 @@ function disposeSession(windowId: number): void {
 function disposeReader(session: DesktopSession): void {
   session.reader?.dispose();
   session.reader = undefined;
+}
+
+function normalizeBatchQueueItems(rawItems: unknown): BatchQueueItemPayload[] {
+  if (!Array.isArray(rawItems)) {
+    return [];
+  }
+
+  const normalized: BatchQueueItemPayload[] = [];
+  const seen = new Set<string>();
+  for (const candidate of rawItems) {
+    if (!isRecord(candidate)) {
+      continue;
+    }
+
+    const id = typeof candidate.id === 'string' ? candidate.id.trim() : '';
+    const rawPath = typeof candidate.filePath === 'string' ? candidate.filePath.trim() : '';
+    if (!id || !rawPath) {
+      continue;
+    }
+
+    const resolvedPath = path.resolve(rawPath);
+    const dedupeKey = `${id}::${resolvedPath.toLowerCase()}`;
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+    seen.add(dedupeKey);
+    normalized.push({
+      id,
+      filePath: resolvedPath
+    });
+  }
+  return normalized;
+}
+
+async function collectSupportedDisksFromFolder(folderPath: string): Promise<string[]> {
+  const normalized = path.resolve(folderPath);
+  if (!existsSync(normalized)) {
+    return [];
+  }
+
+  const entries = await fs.readdir(normalized, { withFileTypes: true });
+  const filePaths = entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(normalized, entry.name))
+    .filter((candidate) => isSupportedDiskPath(candidate))
+    .sort((a, b) => a.localeCompare(b));
+
+  return filePaths;
 }
 
 function toErrorMessage(error: unknown): string {

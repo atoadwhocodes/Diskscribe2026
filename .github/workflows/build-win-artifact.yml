@@ -1,0 +1,49 @@
+name: Build Windows Artifact
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+permissions: {}
+
+jobs:
+  build-win:
+    name: Build Windows Artifact
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            apps/diskscribe-2026-desktop/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install desktop dependencies
+        run: npm --prefix apps/diskscribe-2026-desktop ci
+
+      - name: Build VSIX
+        run: npm run package:vsix
+
+      - name: Build desktop packages
+        run: npm run desktop:make
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: DiskScribe2026-Windows
+          path: |
+            diskscribe-2026-*.vsix
+            apps/diskscribe-2026-desktop/out/make/**
