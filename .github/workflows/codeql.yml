@@ -10,6 +10,7 @@ on:
 
 env:
   CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+  CODEQL_ACTION_SKIP_SARIF_UPLOAD: "true"
 
 permissions:
   actions: read
@@ -23,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+      CODEQL_ACTION_SKIP_SARIF_UPLOAD: "true"
     permissions:
       actions: read
       contents: read
@@ -35,6 +37,7 @@ jobs:
         uses: github/codeql-action/init@9e907b5e64f6b83e7804b09294d44122997950d6
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+          CODEQL_ACTION_SKIP_SARIF_UPLOAD: "true"
         with:
           languages: javascript-typescript
           queries: security-extended
@@ -44,5 +47,6 @@ jobs:
         uses: github/codeql-action/analyze@9e907b5e64f6b83e7804b09294d44122997950d6
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+          CODEQL_ACTION_SKIP_SARIF_UPLOAD: "true"
         with:
           upload: never
