@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.1] - 2026-02-21
+
+### Added
+
+- UI button wiring guard script (`npm run check:ui-wiring`) with CI enforcement
+- Version consistency guard script (`npm run check:versions`) with CI/release enforcement
+- Recursive folder scanning for queue imports with safety limits and truncation reporting
+- Drag-and-drop path expansion that supports dropped folders and mixed file/folder payloads
+- Diagnostics bundle export action from the desktop app
+- In-app feedback launcher that opens a prefilled GitHub bug report
+- `npm run doctor` environment and repository health command
+
+### Changed
+
+- Improved queue add/load/drop status messaging with duplicate and limit awareness
+- Hardened keyboard shortcut handling to avoid triggering while typing in editable controls
+- Updated toolbar and README shortcut/help text to match actual behavior
+
 ## [1.0.0] - 2026-02-21
 
 ### Added
