@@ -73,7 +73,7 @@ Build output:
 - Pushes to `main` build and upload Windows installer artifacts in GitHub Actions.
 - Tags matching `v*` trigger the same Windows build and publish a GitHub Release automatically.
 - Tag versions are validated against `apps/diskscribe-2026-desktop/package.json`.
-- Release assets include SHA256 checksums.
+- Release assets include setup exe, full nupkg, portable ZIP, and SHA256 checksums.
 
 Example release:
 

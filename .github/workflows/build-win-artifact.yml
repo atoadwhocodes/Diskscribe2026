@@ -53,6 +53,34 @@ jobs:
       - name: Build desktop packages
         run: npm --prefix apps/diskscribe-2026-desktop run make
 
+      - name: Build portable ZIP
+        shell: pwsh
+        run: |
+          $outRoot = "apps/diskscribe-2026-desktop/out"
+          $artifactDir = Join-Path $outRoot "make/squirrel.windows/x64"
+          $portableZip = Join-Path $artifactDir "DiskScribe2026Desktop-win32-x64-portable.zip"
+
+          $packagedDir = Get-ChildItem $outRoot -Directory | Where-Object {
+            $_.Name -like "*-win32-x64"
+          } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+
+          if (-not $packagedDir) {
+            throw "Packaged app directory not found under $outRoot."
+          }
+
+          if (Test-Path $portableZip) {
+            Remove-Item $portableZip -Force
+          }
+
+          Compress-Archive `
+            -Path (Join-Path $packagedDir.FullName "*") `
+            -DestinationPath $portableZip `
+            -CompressionLevel Optimal
+
+          if (-not (Test-Path $portableZip)) {
+            throw "Portable ZIP was not generated."
+          }
+
       - name: Generate SHA256 checksums
         shell: pwsh
         run: |
@@ -63,7 +91,7 @@ jobs:
           }
 
           Get-ChildItem $artifactDir | Where-Object {
-            $_.Name -match "Setup\\.exe$|-full\\.nupkg$|^RELEASES$"
+            $_.Name -match "Setup\\.exe$|-full\\.nupkg$|^RELEASES$|portable\\.zip$"
           } | ForEach-Object {
             $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
             "$hash *$($_.Name)" | Out-File -FilePath $checksumFile -Encoding ascii -Append
@@ -80,6 +108,7 @@ jobs:
           path: |
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg
+            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*portable.zip
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt
           if-no-files-found: error
@@ -93,6 +122,7 @@ jobs:
           $tag = "${{ github.ref_name }}"
           $setupExe = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe" | Select-Object -First 1).FullName
           $fullNupkg = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg" | Select-Object -First 1).FullName
+          $portableZip = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*portable.zip" | Select-Object -First 1).FullName
           $releasesFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES"
           $checksumsFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt"
 
@@ -104,6 +134,7 @@ jobs:
               --notes "Automated desktop release for $tag." `
               $setupExe `
               $fullNupkg `
+              $portableZip `
               $releasesFile `
               $checksumsFile
           } else {
@@ -112,6 +143,7 @@ jobs:
               --clobber `
               $setupExe `
               $fullNupkg `
+              $portableZip `
               $releasesFile `
               $checksumsFile
           }
