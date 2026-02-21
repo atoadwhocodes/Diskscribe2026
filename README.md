@@ -48,6 +48,18 @@ Build output:
 
 - `apps/diskscribe-2026-desktop/out/make/**`
 
+## Release Flow
+
+- Pushes to `main` build and upload Windows installer artifacts in GitHub Actions.
+- Tags matching `v*` trigger the same Windows build and publish a GitHub Release automatically.
+- Tag versions are validated against `apps/diskscribe-2026-desktop/package.json`.
+
+Example release:
+
+1. Update `apps/diskscribe-2026-desktop/package.json` version (for example `1.1.0`).
+2. Commit and push to `main`.
+3. Create and push tag `v1.1.0`.
+
 ## Project Layout
 
 - `apps/diskscribe-2026-desktop/src/index.ts`: Electron main process host and byte service

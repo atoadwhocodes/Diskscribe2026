@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: ["main"]
+    tags: ["v*"]
 
 permissions: {}
 
@@ -12,7 +13,7 @@ jobs:
     name: Build Windows Artifact
     runs-on: windows-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -29,11 +30,61 @@ jobs:
       - name: Install desktop dependencies
         run: npm --prefix apps/diskscribe-2026-desktop ci
 
+      - name: Validate tag matches app version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $tagVersion = "${{ github.ref_name }}".Substring(1)
+          $appVersion = node -p "require('./apps/diskscribe-2026-desktop/package.json').version"
+          if ($tagVersion -ne $appVersion) {
+            throw "Tag version ($tagVersion) does not match desktop app version ($appVersion)."
+          }
+
+      - name: Capture app version
+        id: app_version
+        shell: pwsh
+        run: |
+          $appVersion = node -p "require('./apps/diskscribe-2026-desktop/package.json').version"
+          "value=$appVersion" >> $env:GITHUB_OUTPUT
+
       - name: Build desktop packages
         run: npm --prefix apps/diskscribe-2026-desktop run make
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: DiskScribe2026-Windows
-          path: apps/diskscribe-2026-desktop/out/make/**
+          name: DiskScribe2026-Windows-v${{ steps.app_version.outputs.value }}
+          path: |
+            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe
+            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg
+            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $setupExe = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe" | Select-Object -First 1).FullName
+          $fullNupkg = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg" | Select-Object -First 1).FullName
+          $releasesFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES"
+
+          gh release view $tag --repo $env:GITHUB_REPOSITORY 1>$null 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              --repo $env:GITHUB_REPOSITORY `
+              --title "DiskScribe2026 Desktop $tag" `
+              --notes "Automated desktop release for $tag." `
+              $setupExe `
+              $fullNupkg `
+              $releasesFile
+          } else {
+            gh release upload $tag `
+              --repo $env:GITHUB_REPOSITORY `
+              --clobber `
+              $setupExe `
+              $fullNupkg `
+              $releasesFile
+          }
