@@ -3,6 +3,10 @@ import './webview/editor.css';
 import { APP_DESKTOP_NAME } from './appMeta';
 
 type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
+type StatusTone = 'info' | 'success' | 'warning' | 'error' | 'busy';
+
+const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/i;
+const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
 
 interface BatchPlanEntryPayload {
   id: string;
@@ -70,8 +74,11 @@ const queueState: {
 
 const elements = {
   brandTitle: document.getElementById('brandTitle'),
+  brandVersion: document.getElementById('brandVersion'),
   activePath: document.getElementById('activePath'),
+  dropHint: document.getElementById('dropHint'),
   status: document.getElementById('status'),
+  statusBar: document.getElementById('statusBar'),
   statusProgressWrap: document.getElementById('statusProgressWrap'),
   statusProgress: document.getElementById('statusProgress') as HTMLProgressElement | null,
   statusProgressLabel: document.getElementById('statusProgressLabel'),
@@ -114,6 +121,8 @@ window.diskScribeDesktop.onHostMessage((message) => {
 });
 
 wireDesktopControls();
+wireGlobalShortcuts();
+wireDragAndDrop();
 
 void import('./webview/editor')
   .then(async () => {
@@ -198,6 +207,125 @@ function wireDesktopControls(): void {
   updateQueueButtons();
 }
 
+function wireGlobalShortcuts(): void {
+  window.addEventListener('keydown', (event) => {
+    if (!(event.ctrlKey || event.metaKey)) {
+      if (event.key === 'Escape' && queueState.isRunning) {
+        event.preventDefault();
+        stopQueue();
+      }
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+    if (key === 'o' && !event.shiftKey) {
+      event.preventDefault();
+      void handleOpenDisk();
+      return;
+    }
+    if (key === 'o' && event.shiftKey) {
+      event.preventDefault();
+      void handleAddQueueFiles();
+      return;
+    }
+    if (key === 'enter') {
+      event.preventDefault();
+      void runQueue();
+    }
+  });
+}
+
+function wireDragAndDrop(): void {
+  let dragDepth = 0;
+
+  const showDropHint = (): void => {
+    document.body.classList.add('is-dropping');
+    elements.dropHint?.classList.remove('isHidden');
+  };
+
+  const hideDropHint = (): void => {
+    dragDepth = 0;
+    document.body.classList.remove('is-dropping');
+    elements.dropHint?.classList.add('isHidden');
+  };
+
+  const hasFilePayload = (event: DragEvent): boolean =>
+    Array.from(event.dataTransfer?.types ?? []).includes('Files');
+
+  window.addEventListener('dragenter', (event) => {
+    if (!hasFilePayload(event)) {
+      return;
+    }
+    dragDepth += 1;
+    showDropHint();
+    event.preventDefault();
+  });
+
+  window.addEventListener('dragover', (event) => {
+    if (!hasFilePayload(event)) {
+      return;
+    }
+    event.preventDefault();
+  });
+
+  window.addEventListener('dragleave', (event) => {
+    if (!hasFilePayload(event)) {
+      return;
+    }
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) {
+      hideDropHint();
+    }
+    event.preventDefault();
+  });
+
+  window.addEventListener('drop', (event) => {
+    if (!hasFilePayload(event)) {
+      return;
+    }
+    event.preventDefault();
+
+    const dropped = extractDroppedPaths(event);
+    hideDropHint();
+    void handleDroppedPaths(dropped);
+  });
+}
+
+function extractDroppedPaths(event: DragEvent): string[] {
+  const paths = new Set<string>();
+  const files = event.dataTransfer?.files;
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files.item(i) as (File & { path?: string }) | null;
+    const filePath = file?.path?.trim();
+    if (!filePath) {
+      continue;
+    }
+    paths.add(filePath);
+  }
+  return Array.from(paths);
+}
+
+async function handleDroppedPaths(filePaths: string[]): Promise<void> {
+  const supported = filePaths.filter(isSupportedDiskPath);
+  if (supported.length === 0) {
+    setStatus('Dropped files contained no supported PC-98 disk images.', 'warning');
+    return;
+  }
+
+  if (supported.length === 1 && !queueState.isRunning) {
+    await openQueueItem(supported[0]);
+    setStatus(`Opened ${supported[0]}.`, 'success');
+    return;
+  }
+
+  addQueueItems(supported);
+  setStatus(`Added ${supported.length} file(s) from drag-and-drop.`, 'success');
+}
+
 async function handleOpenDisk(): Promise<void> {
   const selectedPath = await window.diskScribeDesktop.openDiskDialog();
   if (!selectedPath) {
@@ -205,6 +333,7 @@ async function handleOpenDisk(): Promise<void> {
   }
 
   setActivePath(selectedPath);
+  setStatus(`Opening ${selectedPath}...`, 'busy');
   await window.diskScribeDesktop.postMessage({
     type: 'desktop.openDisk',
     filePath: selectedPath
@@ -218,18 +347,18 @@ async function handleAddQueueFiles(): Promise<void> {
   }
 
   addQueueItems(selectedPaths);
-  setStatus(`Added ${selectedPaths.length} file(s) to batch queue.`);
+  setStatus(`Added ${selectedPaths.length} file(s) to batch queue.`, 'success');
 }
 
 async function handleAddQueueFolder(): Promise<void> {
   const selectedPaths = await window.diskScribeDesktop.openDiskFolderDialog();
   if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
-    setStatus('No supported disk images found in selected folder.');
+    setStatus('No supported disk images found in selected folder.', 'warning');
     return;
   }
 
   addQueueItems(selectedPaths);
-  setStatus(`Added ${selectedPaths.length} file(s) from folder.`);
+  setStatus(`Added ${selectedPaths.length} file(s) from folder.`, 'success');
 }
 
 function addQueueItems(filePaths: string[]): void {
@@ -280,7 +409,7 @@ function clearQueue(): void {
   queueState.selectedId = undefined;
   renderQueue();
   updateQueueButtons();
-  setStatus('Cleared batch queue.');
+  setStatus('Cleared batch queue.', 'info');
 }
 
 function moveSelectedQueueItem(delta: -1 | 1): void {
@@ -312,12 +441,12 @@ async function saveQueuePlan(): Promise<void> {
   const result = await window.diskScribeDesktop.saveBatchPlan(entries);
   if (!result.saved) {
     if (result.error) {
-      setStatus(`Failed to save batch plan: ${result.error}`);
+      setStatus(`Failed to save batch plan: ${result.error}`, 'error');
     }
     return;
   }
 
-  setStatus(`Saved batch plan to ${result.filePath ?? 'selected path'}.`);
+  setStatus(`Saved batch plan to ${result.filePath ?? 'selected path'}.`, 'success');
 }
 
 async function loadQueuePlan(): Promise<void> {
@@ -327,14 +456,14 @@ async function loadQueuePlan(): Promise<void> {
 
   const result = await window.diskScribeDesktop.loadBatchPlan();
   if (result.error) {
-    setStatus(`Failed to load batch plan: ${result.error}`);
+    setStatus(`Failed to load batch plan: ${result.error}`, 'error');
     return;
   }
 
   queueState.items = [];
   addQueueItems(result.entries.map((entry) => entry.filePath));
   if (result.filePath) {
-    setStatus(`Loaded ${queueState.items.length} queue item(s) from ${result.filePath}.`);
+    setStatus(`Loaded ${queueState.items.length} queue item(s) from ${result.filePath}.`, 'success');
   }
 }
 
@@ -343,7 +472,7 @@ async function runQueue(): Promise<void> {
     return;
   }
   if (queueState.items.length === 0) {
-    setStatus('Batch queue is empty.');
+    setStatus('Batch queue is empty.', 'warning');
     return;
   }
 
@@ -358,7 +487,7 @@ async function runQueue(): Promise<void> {
   renderQueue();
   updateQueueButtons();
 
-  setStatus(`Running ${queueState.items.length} queued item(s)...`);
+  setStatus(`Running ${queueState.items.length} queued item(s)...`, 'busy');
   setProgress(0, queueState.items.length, true);
 
   await window.diskScribeDesktop.postMessage({
@@ -375,6 +504,7 @@ function stopQueue(): void {
     return;
   }
 
+  setStatus('Stopping batch queue after current file...', 'busy');
   void window.diskScribeDesktop.postMessage({ type: 'desktop.batchStop' });
 }
 
@@ -397,6 +527,9 @@ function handleDesktopMessage(message: unknown): void {
         elements.brandTitle.textContent = message.appDesktopName;
         document.title = message.appDesktopName;
       }
+      if (typeof message.appVersion === 'string' && elements.brandVersion) {
+        elements.brandVersion.textContent = `Version ${message.appVersion}`;
+      }
       return;
     case 'desktop.fileOpened':
       if (typeof message.filePath === 'string') {
@@ -410,7 +543,7 @@ function handleDesktopMessage(message: unknown): void {
       return;
     case 'desktop.status':
       if (typeof message.message === 'string') {
-        setStatus(message.message);
+        setStatus(message.message, message.busy === true ? 'busy' : undefined);
       }
       setProgress(numberOrUndefined(message.current), numberOrUndefined(message.total), message.busy === true);
       return;
@@ -419,7 +552,7 @@ function handleDesktopMessage(message: unknown): void {
       return;
     case 'desktop.batchProgress':
       if (typeof message.message === 'string') {
-        setStatus(message.message);
+        setStatus(message.message, message.running === true ? 'busy' : undefined);
       }
       setProgress(numberOrUndefined(message.processed), numberOrUndefined(message.total), message.running === true);
       return;
@@ -428,10 +561,11 @@ function handleDesktopMessage(message: unknown): void {
       updateQueueButtons();
       if (typeof message.total === 'number' && typeof message.completed === 'number') {
         if (message.canceled === true) {
-          setStatus(`Batch canceled (${message.completed}/${message.total} completed).`);
+          setStatus(`Batch canceled (${message.completed}/${message.total} completed).`, 'warning');
         } else {
           setStatus(
-            `Batch complete (${message.completed} succeeded, ${numberOrUndefined(message.failed) ?? 0} failed).`
+            `Batch complete (${message.completed} succeeded, ${numberOrUndefined(message.failed) ?? 0} failed).`,
+            'success'
           );
         }
       }
@@ -442,16 +576,44 @@ function handleDesktopMessage(message: unknown): void {
   }
 }
 
-function setStatus(text: string): void {
+function setStatus(text: string, tone?: StatusTone): void {
   if (elements.status) {
     elements.status.textContent = text;
   }
+  setStatusTone(tone ?? inferStatusTone(text));
 }
 
 function setActivePath(filePath: string): void {
   if (elements.activePath) {
     elements.activePath.textContent = filePath;
+    elements.activePath.setAttribute('title', filePath);
   }
+}
+
+function setStatusTone(tone: StatusTone): void {
+  if (!elements.statusBar) {
+    return;
+  }
+
+  elements.statusBar.classList.remove(...STATUS_TONE_CLASSES);
+  elements.statusBar.classList.add(`tone-${tone}`);
+}
+
+function inferStatusTone(message: string): StatusTone {
+  const text = message.toLowerCase();
+  if (text.includes('error') || text.includes('failed') || text.includes('unable')) {
+    return 'error';
+  }
+  if (text.includes('warning') || text.includes('canceled') || text.includes('empty')) {
+    return 'warning';
+  }
+  if (text.includes('running') || text.includes('loading') || text.includes('opening') || text.includes('stopping')) {
+    return 'busy';
+  }
+  if (text.includes('loaded') || text.includes('saved') || text.includes('copied') || text.includes('complete')) {
+    return 'success';
+  }
+  return 'info';
 }
 
 function setProgress(current: number | undefined, total: number | undefined, busy: boolean): void {
@@ -609,6 +771,10 @@ function numberOrUndefined(value: unknown): number | undefined {
 
 function formatBytes(value: number): string {
   return `${value.toLocaleString()} B`;
+}
+
+function isSupportedDiskPath(filePath: string): boolean {
+  return SUPPORTED_DISK_EXTENSIONS.test(filePath);
 }
 
 function isQueueStatus(value: unknown): value is QueueItemStatus {

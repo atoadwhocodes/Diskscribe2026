@@ -1,198 +1,386 @@
 :root {
-  --vscode-font-family: "Segoe UI", "Noto Sans", sans-serif;
-  --vscode-editor-font-family: "Cascadia Mono", "Consolas", "Courier New", monospace;
-  --vscode-editor-foreground: #1c1c1c;
-  --vscode-editor-background: #f6f5f0;
-  --vscode-editorWidget-background: #ffffff;
-  --vscode-editorWidget-border: #cfcac1;
-  --vscode-button-background: #2f6d5f;
-  --vscode-button-foreground: #f8f8f8;
-  --vscode-button-hoverBackground: #25584d;
-  --vscode-dropdown-background: #ffffff;
-  --vscode-dropdown-foreground: #1c1c1c;
-  --vscode-dropdown-border: #bdb6ab;
-  --vscode-descriptionForeground: #5a5a5a;
-  --vscode-textCodeBlock-background: #faf9f6;
-  --vscode-editor-selectionBackground: rgba(71, 138, 118, 0.32);
-  --vscode-editor-findMatchHighlightBackground: rgba(238, 182, 99, 0.45);
-  --vscode-editor-findMatchBorder: #e0a444;
+  --app-font-sans: "Aptos", "Bahnschrift", "Segoe UI", sans-serif;
+  --app-font-head: "Bahnschrift", "Aptos Display", "Franklin Gothic Medium", sans-serif;
+  --app-font-mono: "Cascadia Mono", "JetBrains Mono", "Consolas", monospace;
+
+  --app-bg-0: #f6f2e8;
+  --app-bg-1: #e9e1cf;
+  --app-panel: rgba(255, 252, 245, 0.84);
+  --app-panel-strong: rgba(255, 250, 238, 0.95);
+  --app-panel-border: rgba(35, 65, 71, 0.2);
+
+  --app-ink: #1b2a31;
+  --app-ink-soft: #5b6a70;
+  --app-accent: #0f7a69;
+  --app-accent-strong: #0b5f52;
+  --app-accent-warm: #cf7b2f;
+
+  --app-status-info: #365f6d;
+  --app-status-success: #0f7a69;
+  --app-status-warning: #9f631e;
+  --app-status-error: #a33b2f;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  padding-bottom: 64px;
+  min-height: 100%;
 }
 
-.desktopActions {
+body {
+  background:
+    radial-gradient(850px 360px at 0% -10%, rgba(66, 133, 148, 0.28), transparent 72%),
+    radial-gradient(820px 420px at 105% -5%, rgba(215, 136, 61, 0.2), transparent 68%),
+    linear-gradient(180deg, var(--app-bg-0) 0%, var(--app-bg-1) 100%);
+  color: var(--app-ink);
+  font-family: var(--app-font-sans);
+  overflow-x: hidden;
+  padding: 14px 14px 92px;
+}
+
+.atmosphere {
+  background:
+    repeating-linear-gradient(
+      -30deg,
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.09) 2px,
+      transparent 2px,
+      transparent 10px
+    );
+  inset: 0;
+  opacity: 0.3;
+  pointer-events: none;
+  position: fixed;
+  z-index: -1;
+}
+
+.panelSurface,
+.panel,
+.statusBar {
+  backdrop-filter: blur(8px);
+}
+
+.masthead {
+  align-items: center;
+  animation: fadeSlide 260ms ease both;
+  background: var(--app-panel);
+  border: 1px solid var(--app-panel-border);
+  border-radius: 16px;
+  box-shadow: 0 16px 42px rgba(20, 34, 42, 0.12);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+
+.brandCluster {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brandMark {
+  align-items: center;
+  background: linear-gradient(140deg, #1d6f7f, #d07f30);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  color: #fff;
+  display: inline-flex;
+  font-family: var(--app-font-head);
+  font-size: 1.12rem;
+  font-weight: 700;
+  height: 46px;
+  justify-content: center;
+  letter-spacing: 0.08em;
+  min-width: 52px;
+}
+
+.brandText h1 {
+  font-family: var(--app-font-head);
+  font-size: 1.18rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.brandTagline {
+  color: var(--app-ink-soft);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  margin: 2px 0 0;
+  text-transform: uppercase;
+}
+
+.brandVersion {
+  color: color-mix(in srgb, var(--app-ink-soft), transparent 20%);
+  font-family: var(--app-font-mono);
+  font-size: 0.74rem;
+  margin: 3px 0 0;
+}
+
+.commandDeck {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commandGroup {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  justify-content: flex-end;
+}
+
+button {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(236, 227, 209, 0.95));
+  border: 1px solid rgba(29, 57, 64, 0.2);
+  border-radius: 8px;
+  color: var(--app-ink);
+  cursor: pointer;
+  font-family: var(--app-font-head);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  min-height: 30px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+button:hover:enabled {
+  background: linear-gradient(180deg, #ffffff, #f2dfc4);
+  box-shadow: 0 6px 16px rgba(26, 41, 48, 0.16);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.btnPrimary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--app-accent), white 8%), var(--app-accent));
+  border-color: color-mix(in srgb, var(--app-accent-strong), black 8%);
+  color: #fff;
+}
+
+.btnPrimary:hover:enabled {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--app-accent), white 4%), var(--app-accent-strong));
+}
+
+.toolbarHint {
+  color: var(--app-ink-soft);
+  font-size: 0.75rem;
+  margin: 0;
+  max-width: 760px;
+  text-align: right;
 }
 
 .activePath {
-  color: var(--vscode-descriptionForeground);
-  font-family: var(--vscode-editor-font-family);
-  font-size: 0.82rem;
-  margin: 0 0 10px 0;
+  background: rgba(255, 252, 244, 0.75);
+  border: 1px solid rgba(33, 54, 62, 0.16);
+  border-radius: 12px;
+  color: color-mix(in srgb, var(--app-ink-soft), black 8%);
+  font-family: var(--app-font-mono);
+  font-size: 0.78rem;
+  margin-bottom: 10px;
   overflow: hidden;
+  padding: 8px 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dropHint {
+  align-items: center;
+  background: rgba(15, 122, 105, 0.15);
+  border: 2px dashed rgba(15, 122, 105, 0.55);
+  border-radius: 14px;
+  color: var(--app-accent-strong);
+  display: flex;
+  font-family: var(--app-font-head);
+  font-size: 0.9rem;
+  font-weight: 700;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  min-height: 58px;
+  text-transform: uppercase;
+}
+
+body.is-dropping .workspace {
+  filter: saturate(0.78) blur(1px);
+  pointer-events: none;
+}
+
+.isHidden {
+  display: none !important;
+}
+
+.workspace {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(338px, 420px) minmax(0, 1fr);
+}
+
+.leftRail,
+.rightRail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panelRow {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  animation: fadeSlide 220ms ease both;
+  background: var(--app-panel);
+  border: 1px solid var(--app-panel-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(21, 35, 42, 0.08);
+  padding: 10px;
 }
 
 .panelHeaderRow {
   align-items: baseline;
   display: flex;
-  justify-content: space-between;
   gap: 8px;
+  justify-content: space-between;
 }
 
 .panelHeaderRow > span {
-  color: var(--vscode-descriptionForeground);
-  font-family: var(--vscode-editor-font-family);
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-mono);
   font-size: 0.74rem;
-}
-
-.queueButtons {
-  display: grid;
-  gap: 6px;
-  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
-  margin: 0 0 8px 0;
-}
-
-.queueButtons button {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--vscode-button-background), white 8%),
-    var(--vscode-button-background)
-  );
-  border: 1px solid color-mix(in srgb, var(--vscode-button-background), black 18%);
-  border-radius: 6px;
-  color: var(--vscode-button-foreground);
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  min-height: 28px;
-  padding: 4px 8px;
-}
-
-.queueButtons button:hover:enabled {
-  background: var(--vscode-button-hoverBackground);
-}
-
-.queueButtons button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-}
-
-.queueTableWrap {
-  max-height: 220px;
-  overflow: auto;
-}
-
-.queueTable th,
-.queueTable td {
-  font-size: 0.73rem;
-  white-space: nowrap;
-}
-
-.queueTable td:nth-child(2),
-.queueTable td:nth-child(5) {
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.queueRow {
-  cursor: pointer;
-}
-
-.queueRow.is-selected td {
-  background: color-mix(in srgb, var(--vscode-editor-selectionBackground), transparent 22%);
-}
-
-.queueRow--running td:first-child {
-  color: #1f7f59;
-  font-weight: 700;
-}
-
-.queueRow--done td:first-child {
-  color: #2f6d5f;
-  font-weight: 700;
-}
-
-.queueRow--error td:first-child {
-  color: #b23a3a;
-  font-weight: 700;
-}
-
-.queueRow--canceled td:first-child {
-  color: #8b6f2f;
-  font-weight: 700;
 }
 
 .statusBar {
   align-items: center;
-  backdrop-filter: blur(8px);
-  background: color-mix(in srgb, var(--vscode-editorWidget-background) 92%, white 8%);
-  border-top: 1px solid var(--vscode-editorWidget-border);
-  bottom: 0;
+  background: var(--app-panel-strong);
+  border: 1px solid var(--app-panel-border);
+  border-radius: 12px;
+  bottom: 10px;
+  box-shadow: 0 12px 30px rgba(16, 29, 36, 0.18);
   display: flex;
   gap: 12px;
-  left: 0;
-  min-height: 52px;
-  padding: 8px 12px;
+  left: 14px;
+  min-height: 50px;
+  padding: 9px 12px;
   position: fixed;
-  right: 0;
-  z-index: 30;
+  right: 14px;
+  z-index: 50;
+}
+
+.statusBar::before {
+  border-radius: 6px;
+  content: "";
+  height: 32px;
+  width: 5px;
+}
+
+.statusBar.tone-info::before {
+  background: var(--app-status-info);
+}
+
+.statusBar.tone-success::before {
+  background: var(--app-status-success);
+}
+
+.statusBar.tone-warning::before {
+  background: var(--app-status-warning);
+}
+
+.statusBar.tone-error::before {
+  background: var(--app-status-error);
+}
+
+.statusBar.tone-busy::before {
+  background: var(--app-accent-warm);
 }
 
 .statusText {
-  color: var(--vscode-editor-foreground);
   flex: 1 1 auto;
   font-size: 0.82rem;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .statusProgressWrap {
   align-items: center;
   display: inline-flex;
-  flex: 0 0 auto;
   gap: 8px;
-  transition: opacity 120ms ease;
-}
-
-.statusProgressWrap.isHidden {
-  opacity: 0;
-  pointer-events: none;
 }
 
 #statusProgress {
-  height: 12px;
-  max-width: 280px;
-  min-width: 220px;
+  accent-color: var(--app-accent);
+  height: 11px;
+  min-width: 180px;
 }
 
 #statusProgressLabel {
-  color: var(--vscode-descriptionForeground);
-  font-family: var(--vscode-editor-font-family);
-  font-size: 0.76rem;
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-mono);
+  font-size: 0.74rem;
   min-width: 74px;
   text-align: right;
 }
 
-@media (max-width: 960px) {
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1220px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panelRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .commandDeck {
+    align-items: flex-start;
+  }
+
+  .toolbarHint {
+    text-align: left;
+  }
+}
+
+@media (max-width: 860px) {
+  body {
+    padding: 10px 10px 102px;
+  }
+
+  .masthead {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .commandGroup {
+    justify-content: flex-start;
+  }
+
   .statusBar {
     align-items: flex-start;
     flex-direction: column;
-    gap: 6px;
-  }
-
-  #statusProgress {
-    min-width: 170px;
   }
 }

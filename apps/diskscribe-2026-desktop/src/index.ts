@@ -70,6 +70,9 @@ function createWindow(): void {
     height: 920,
     minWidth: 980,
     minHeight: 720,
+    show: false,
+    autoHideMenuBar: true,
+    backgroundColor: '#162128',
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,
@@ -97,6 +100,10 @@ function createWindow(): void {
 
   mainWindow.on('closed', () => {
     disposeSession(mainWindow.id);
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
   void mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
