@@ -9,7 +9,21 @@ import {
   normalizeCharsetId
 } from './necCharsets';
 
-const vscode = acquireVsCodeApi();
+const fallbackState: { value: unknown } = { value: {} };
+const fallbackVsCodeApi = {
+  postMessage() {
+    // no-op in fallback mode
+  },
+  getState() {
+    return fallbackState.value;
+  },
+  setState(value) {
+    fallbackState.value = value;
+    return value;
+  }
+};
+const vscode =
+  typeof window.acquireVsCodeApi === 'function' ? window.acquireVsCodeApi() : fallbackVsCodeApi;
 
 const BYTES_PER_ROW = 16;
 const ROW_HEIGHT = 20;

@@ -5,7 +5,20 @@ import * as iconv from 'iconv-lite';
 import { parseGenericByExtension, type PartitionEntry } from './diskParsers';
 
 const MAX_PREVIEW_BYTES = 262144;
-const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm', '.hdd', '.fdi', '.fdd']);
+export const SUPPORTED_DISK_EXTENSIONS = ['.hdi', '.nhd', '.d88', '.hdm', '.hdd', '.fdi', '.fdd'];
+export const OPENABLE_DISK_EXTENSIONS = [
+  ...SUPPORTED_DISK_EXTENSIONS,
+  '.img',
+  '.ima',
+  '.vfd',
+  '.xdf',
+  '.raw',
+  '.bin',
+  '.iso'
+];
+
+const SUPPORTED_EXTENSIONS = new Set(SUPPORTED_DISK_EXTENSIONS);
+const OPENABLE_EXTENSIONS = new Set(OPENABLE_DISK_EXTENSIONS);
 
 const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 2, sectorsPerTrack: 8 },
@@ -48,6 +61,11 @@ export interface DiskSummary {
 export function isSupportedDiskPath(filePath: string): boolean {
   const ext = path.extname(filePath).toLowerCase();
   return SUPPORTED_EXTENSIONS.has(ext);
+}
+
+export function isLikelyDiskPath(filePath: string): boolean {
+  const ext = path.extname(filePath).toLowerCase();
+  return OPENABLE_EXTENSIONS.has(ext);
 }
 
 export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSummary> {

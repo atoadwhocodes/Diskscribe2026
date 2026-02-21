@@ -15,7 +15,12 @@ import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
 import type { DiskSummary } from './core/diskSummary';
-import { buildDiskSummaryFromPath, isSupportedDiskPath } from './core/diskSummary';
+import {
+  buildDiskSummaryFromPath,
+  isLikelyDiskPath,
+  OPENABLE_DISK_EXTENSIONS,
+  SUPPORTED_DISK_EXTENSIONS
+} from './core/diskSummary';
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -76,10 +81,24 @@ const FOLDER_SCAN_LIMITS = {
 };
 
 const sessionsByWindowId = new Map<number, DesktopSession>();
+const stripExtensionDot = (extension: string): string =>
+  extension.startsWith('.') ? extension.slice(1) : extension;
+const PC98_DISK_FILTER_EXTENSIONS = SUPPORTED_DISK_EXTENSIONS.map(stripExtensionDot);
+const COMMON_DISK_FILTER_EXTENSIONS = OPENABLE_DISK_EXTENSIONS.filter(
+  (extension) => !SUPPORTED_DISK_EXTENSIONS.includes(extension)
+).map(stripExtensionDot);
 const DISK_IMAGE_FILTERS = [
   {
     name: 'PC-98 Disk Images',
-    extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
+    extensions: PC98_DISK_FILTER_EXTENSIONS
+  },
+  {
+    name: 'Common Disk Images',
+    extensions: COMMON_DISK_FILTER_EXTENSIONS
+  },
+  {
+    name: 'All files',
+    extensions: ['*']
   }
 ];
 const APP_BATCH_PLAN_VERSION = 1;
@@ -99,7 +118,7 @@ function createWindow(): void {
     minHeight: 720,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: '#162128',
+    backgroundColor: '#f8f1e3',
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,
@@ -147,7 +166,7 @@ function createWindow(): void {
 
 ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefined> => {
   const result = await showOpenDialogForEvent(event, {
-    title: 'Open PC-98 Disk Image',
+    title: 'Open Disk Image',
     properties: ['openFile'],
     filters: DISK_IMAGE_FILTERS
   });
@@ -447,7 +466,7 @@ async function handleRendererReady(session: DesktopSession): Promise<void> {
   });
 
   if (!session.summary || !session.filePath) {
-    postStatus(session, 'Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to begin.');
+    postStatus(session, `Open a disk image (${OPENABLE_DISK_EXTENSIONS.join(', ')}) to begin.`);
     return;
   }
 
@@ -463,11 +482,6 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   const normalizedPath = path.resolve(requestedPath);
   if (!existsSync(normalizedPath)) {
     postError(session, `File not found: ${normalizedPath}`);
-    return;
-  }
-
-  if (!isSupportedDiskPath(normalizedPath)) {
-    postError(session, 'Unsupported extension. Use .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd.');
     return;
   }
 
@@ -575,7 +589,7 @@ async function runBatchQueue(session: DesktopSession, rawItems: unknown): Promis
         if (!existsSync(normalizedPath)) {
           throw new Error(`File not found: ${normalizedPath}`);
         }
-        if (!isSupportedDiskPath(normalizedPath)) {
+        if (!isLikelyDiskPath(normalizedPath)) {
           throw new Error(`Unsupported extension: ${path.extname(normalizedPath) || '(none)'}`);
         }
 
@@ -1246,7 +1260,7 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<Fold
         break;
       }
 
-      if (!isSupportedDiskPath(candidatePath)) {
+      if (!isLikelyDiskPath(candidatePath)) {
         continue;
       }
 
@@ -1307,7 +1321,7 @@ async function collectSupportedDisksFromPaths(pathsToScan: string[]): Promise<Fo
 
     if (stats.isFile()) {
       scannedFiles += 1;
-      if (isSupportedDiskPath(normalized)) {
+      if (isLikelyDiskPath(normalized)) {
         dedupedMatches.add(normalized);
       }
     }
@@ -1364,7 +1378,7 @@ function getLaunchDiskPath(): string | undefined {
     }
 
     const resolved = path.resolve(arg);
-    if (isSupportedDiskPath(resolved) && existsSync(resolved)) {
+    if (isLikelyDiskPath(resolved) && existsSync(resolved)) {
       return resolved;
     }
   }

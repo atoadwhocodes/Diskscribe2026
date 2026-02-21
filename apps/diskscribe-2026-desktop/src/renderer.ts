@@ -62,8 +62,8 @@ interface VsCodeApi {
 
 declare global {
   interface Window {
-    diskScribeDesktop: DesktopBridge;
-    acquireVsCodeApi: () => VsCodeApi;
+    diskScribeDesktop?: Partial<DesktopBridge>;
+    acquireVsCodeApi?: () => VsCodeApi;
   }
 }
 
@@ -89,6 +89,9 @@ const queueState: {
   selectedId: undefined,
   isRunning: false
 };
+
+const DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE =
+  'Desktop bridge is unavailable. Restart DiskScribe2026 Desktop and try again.';
 
 const elements = {
   brandTitle: document.getElementById('brandTitle'),
@@ -129,13 +132,21 @@ const vscodeApi: VsCodeApi = {
   }
 };
 
+const rawDesktopBridge = window.diskScribeDesktop;
+const desktopBridge = resolveDesktopBridge(rawDesktopBridge);
+const desktopBridgeAvailable = desktopBridge === rawDesktopBridge;
+
 window.acquireVsCodeApi = () => vscodeApi;
 document.title = APP_DESKTOP_NAME;
 if (elements.brandTitle) {
   elements.brandTitle.textContent = APP_DESKTOP_NAME;
 }
 
-window.diskScribeDesktop.onHostMessage((message) => {
+if (!desktopBridgeAvailable) {
+  setStatus(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE, 'error');
+}
+
+desktopBridge.onHostMessage((message) => {
   window.dispatchEvent(new MessageEvent('message', { data: message }));
   handleDesktopMessage(message);
 });
@@ -146,7 +157,7 @@ wireDragAndDrop();
 
 void import('./webview/editor')
   .then(async () => {
-    await window.diskScribeDesktop.postMessage({ type: 'desktop.rendererReady' });
+    await desktopBridge.postMessage({ type: 'desktop.rendererReady' });
   })
   .catch((error: unknown) => {
     setStatus(`Failed to load editor UI: ${toErrorMessage(error)}`);
@@ -353,7 +364,7 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
 
   setStatus('Scanning dropped files and folders...', 'busy');
   const scanResult = await invokeDesktop(
-    () => window.diskScribeDesktop.expandDiskCandidates(filePaths),
+    () => desktopBridge.expandDiskCandidates(filePaths),
     'Unable to scan dropped items'
   );
   if (!scanResult) {
@@ -370,7 +381,7 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
       return;
     }
 
-    setStatus('Dropped items contained no supported PC-98 disk images.', 'warning');
+    setStatus('Dropped items contained no supported disk image files.', 'warning');
     return;
   }
 
@@ -407,7 +418,7 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
 async function handleOpenDisk(): Promise<void> {
   let selectedPath: string | undefined;
   try {
-    selectedPath = await window.diskScribeDesktop.openDiskDialog();
+    selectedPath = await desktopBridge.openDiskDialog();
   } catch (error: unknown) {
     setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
     return;
@@ -436,7 +447,7 @@ async function openFeedbackIssue(): Promise<void> {
   };
 
   try {
-    await window.diskScribeDesktop.openFeedbackIssue(context);
+    await desktopBridge.openFeedbackIssue(context);
   } catch (error: unknown) {
     setStatus(`Unable to open feedback page: ${toErrorMessage(error)}`, 'error');
     return;
@@ -447,7 +458,7 @@ async function openFeedbackIssue(): Promise<void> {
 
 async function postDesktopMessage(message: unknown, failurePrefix = 'Action failed'): Promise<boolean> {
   try {
-    await window.diskScribeDesktop.postMessage(message);
+    await desktopBridge.postMessage(message);
     return true;
   } catch (error: unknown) {
     setStatus(`${failurePrefix}: ${toErrorMessage(error)}`, 'error');
@@ -470,7 +481,7 @@ async function invokeDesktop<T>(
 async function handleAddQueueFiles(): Promise<void> {
   let selectedPaths: string[];
   try {
-    selectedPaths = await window.diskScribeDesktop.openDisksDialog();
+    selectedPaths = await desktopBridge.openDisksDialog();
   } catch (error: unknown) {
     setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
     return;
@@ -497,7 +508,7 @@ async function handleAddQueueFolder(): Promise<void> {
   let scanResult: FolderScanResult;
   setStatus('Scanning selected folder for disk images...', 'busy');
   try {
-    scanResult = await window.diskScribeDesktop.openDiskFolderDialog();
+    scanResult = await desktopBridge.openDiskFolderDialog();
   } catch (error: unknown) {
     setStatus(`Unable to open folder picker: ${toErrorMessage(error)}`, 'error');
     return;
@@ -641,7 +652,7 @@ async function exportDiagnosticsBundle(): Promise<void> {
   };
 
   const result = await invokeDesktop(
-    () => window.diskScribeDesktop.exportDiagnostics(snapshot),
+    () => desktopBridge.exportDiagnostics(snapshot),
     'Failed to export diagnostics'
   );
   if (!result?.saved) {
@@ -660,7 +671,7 @@ async function saveQueuePlan(): Promise<void> {
     filePath: item.filePath
   }));
   const result = await invokeDesktop(
-    () => window.diskScribeDesktop.saveBatchPlan(entries),
+    () => desktopBridge.saveBatchPlan(entries),
     'Failed to save batch plan'
   );
   if (!result?.saved) {
@@ -678,7 +689,7 @@ async function loadQueuePlan(): Promise<void> {
     return;
   }
 
-  const result = await invokeDesktop(() => window.diskScribeDesktop.loadBatchPlan(), 'Failed to load batch plan');
+  const result = await invokeDesktop(() => desktopBridge.loadBatchPlan(), 'Failed to load batch plan');
   if (!result) {
     return;
   }
@@ -1056,4 +1067,61 @@ function toErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+function resolveDesktopBridge(candidate: Partial<DesktopBridge> | undefined): DesktopBridge {
+  if (
+    candidate &&
+    typeof candidate.postMessage === 'function' &&
+    typeof candidate.openDiskDialog === 'function' &&
+    typeof candidate.openDisksDialog === 'function' &&
+    typeof candidate.openDiskFolderDialog === 'function' &&
+    typeof candidate.expandDiskCandidates === 'function' &&
+    typeof candidate.openFeedbackIssue === 'function' &&
+    typeof candidate.writeClipboard === 'function' &&
+    typeof candidate.saveBatchPlan === 'function' &&
+    typeof candidate.loadBatchPlan === 'function' &&
+    typeof candidate.exportDiagnostics === 'function' &&
+    typeof candidate.onHostMessage === 'function'
+  ) {
+    return candidate as DesktopBridge;
+  }
+
+  return {
+    async postMessage(): Promise<void> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async openDiskDialog(): Promise<string | undefined> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async openDisksDialog(): Promise<string[]> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async openDiskFolderDialog(): Promise<FolderScanResult> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async expandDiskCandidates(): Promise<FolderScanResult> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async openFeedbackIssue(): Promise<void> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async writeClipboard(): Promise<void> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async saveBatchPlan(): Promise<BatchPlanSaveResult> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async loadBatchPlan(): Promise<BatchPlanLoadResult> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    async exportDiagnostics(): Promise<DiagnosticsExportResult> {
+      return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
+    },
+    onHostMessage(): () => void {
+      return () => {
+        // no-op when bridge is unavailable
+      };
+    }
+  };
 }
