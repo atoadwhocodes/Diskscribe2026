@@ -15,7 +15,9 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Shift-JIS and legacy charset translation workspace
 - Character-frame byte role inspector
 - Batch queue runner for parsing multiple disk images
+- Recursive folder queue import with scan safety limits
 - Save/load batch plans as JSON
+- Diagnostics bundle export for support/debug (`Ctrl+Shift+D`)
 
 ## Supported Formats
 
@@ -35,8 +37,9 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 2. Press `Ctrl+O` to open a disk image.
 3. Use `Ctrl+G` to jump to byte offset or `Ctrl+L` to jump to LBA.
 4. Use `Ctrl+Shift+O` to queue multiple files, then `Ctrl+Enter` to run batch queue (`Esc` stops).
-5. Review partition and translation panels.
-6. Export selected bytes when needed.
+5. Use `Ctrl+Shift+D` to export diagnostics when testing/reporting issues.
+6. Review partition and translation panels.
+7. Export selected bytes when needed.
 
 ## Development
 

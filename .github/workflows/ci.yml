@@ -32,6 +32,9 @@ jobs:
       - name: Audit desktop production dependencies
         run: npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high
 
+      - name: Validate version consistency
+        run: npm run check:versions
+
       - name: Lint desktop app
         run: npm --prefix apps/diskscribe-2026-desktop run lint
 

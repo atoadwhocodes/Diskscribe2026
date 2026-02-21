@@ -30,6 +30,9 @@ jobs:
       - name: Install desktop dependencies
         run: npm --prefix apps/diskscribe-2026-desktop ci
 
+      - name: Validate version consistency
+        run: npm run check:versions
+
       - name: Validate tag matches app version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh

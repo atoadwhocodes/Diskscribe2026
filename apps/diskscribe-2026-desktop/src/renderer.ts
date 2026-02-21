@@ -25,14 +25,29 @@ interface BatchPlanLoadResult {
   error?: string;
 }
 
+interface FolderScanResult {
+  paths: string[];
+  truncated: boolean;
+  scannedDirectories: number;
+  scannedFiles: number;
+  matchedFiles: number;
+}
+
+interface DiagnosticsExportResult {
+  saved: boolean;
+  filePath?: string;
+  error?: string;
+}
+
 interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
   openDisksDialog(): Promise<string[]>;
-  openDiskFolderDialog(): Promise<string[]>;
+  openDiskFolderDialog(): Promise<FolderScanResult>;
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
+  exportDiagnostics(snapshot: unknown): Promise<DiagnosticsExportResult>;
   onHostMessage(handler: (message: unknown) => void): () => void;
 }
 
@@ -92,6 +107,7 @@ const elements = {
   moveQueueDownButton: document.getElementById('moveQueueDownButton'),
   saveQueueButton: document.getElementById('saveQueueButton'),
   loadQueueButton: document.getElementById('loadQueueButton'),
+  exportDiagnosticsButton: document.getElementById('exportDiagnosticsButton'),
   runQueueButton: document.getElementById('runQueueButton'),
   stopQueueButton: document.getElementById('stopQueueButton')
 };
@@ -164,6 +180,9 @@ function wireDesktopControls(): void {
   elements.loadQueueButton?.addEventListener('click', () => {
     void loadQueuePlan();
   });
+  elements.exportDiagnosticsButton?.addEventListener('click', () => {
+    void exportDiagnosticsBundle();
+  });
   elements.runQueueButton?.addEventListener('click', () => {
     void runQueue();
   });
@@ -231,6 +250,11 @@ function wireGlobalShortcuts(): void {
     if (key === 'o' && event.shiftKey) {
       event.preventDefault();
       void handleAddQueueFiles();
+      return;
+    }
+    if (key === 'd' && event.shiftKey) {
+      event.preventDefault();
+      void exportDiagnosticsBundle();
       return;
     }
     if (key === 'enter') {
@@ -329,8 +353,18 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
     return;
   }
 
-  addQueueItems(supported);
-  setStatus(`Added ${supported.length} file(s) from drag-and-drop.`, 'success');
+  const result = addQueueItems(supported);
+  if (result.added === 0) {
+    setStatus('Dropped files were already in the queue.', 'warning');
+    return;
+  }
+
+  if (result.duplicates > 0) {
+    setStatus(`Added ${result.added} file(s); skipped ${result.duplicates} duplicate(s).`, 'warning');
+    return;
+  }
+
+  setStatus(`Added ${result.added} file(s) from drag-and-drop.`, 'success');
 }
 
 async function handleOpenDisk(): Promise<void> {
@@ -390,31 +424,71 @@ async function handleAddQueueFiles(): Promise<void> {
     return;
   }
 
-  addQueueItems(selectedPaths);
-  setStatus(`Added ${selectedPaths.length} file(s) to batch queue.`, 'success');
+  const result = addQueueItems(selectedPaths);
+  if (result.added === 0) {
+    setStatus('All selected files were already in the queue.', 'warning');
+    return;
+  }
+
+  if (result.duplicates > 0) {
+    setStatus(`Added ${result.added} file(s); skipped ${result.duplicates} duplicate(s).`, 'warning');
+    return;
+  }
+
+  setStatus(`Added ${result.added} file(s) to batch queue.`, 'success');
 }
 
 async function handleAddQueueFolder(): Promise<void> {
-  let selectedPaths: string[];
+  let scanResult: FolderScanResult;
   try {
-    selectedPaths = await window.diskScribeDesktop.openDiskFolderDialog();
+    scanResult = await window.diskScribeDesktop.openDiskFolderDialog();
   } catch (error: unknown) {
     setStatus(`Unable to open folder picker: ${toErrorMessage(error)}`, 'error');
     return;
   }
+
+  const selectedPaths = Array.isArray(scanResult.paths) ? scanResult.paths : [];
   if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+    if (scanResult.truncated) {
+      setStatus(
+        `Folder scan reached limits after ${scanResult.scannedDirectories.toLocaleString()} directories and ${scanResult.scannedFiles.toLocaleString()} files; no supported images were added.`,
+        'warning'
+      );
+      return;
+    }
     setStatus('No supported disk images found in selected folder.', 'warning');
     return;
   }
 
-  addQueueItems(selectedPaths);
-  setStatus(`Added ${selectedPaths.length} file(s) from folder.`, 'success');
+  const result = addQueueItems(selectedPaths);
+  if (result.added === 0) {
+    setStatus('Folder scan found files, but they were already in the queue.', 'warning');
+    return;
+  }
+
+  if (scanResult.truncated) {
+    setStatus(
+      `Added ${result.added} file(s). Scan limit reached after ${scanResult.scannedDirectories.toLocaleString()} directories and ${scanResult.scannedFiles.toLocaleString()} files.`,
+      'warning'
+    );
+    return;
+  }
+
+  if (result.duplicates > 0) {
+    setStatus(`Added ${result.added} file(s); skipped ${result.duplicates} duplicate(s).`, 'warning');
+    return;
+  }
+
+  setStatus(`Added ${result.added} file(s) from folder.`, 'success');
 }
 
-function addQueueItems(filePaths: string[]): void {
+function addQueueItems(filePaths: string[]): { added: number; duplicates: number } {
   const seen = new Set(queueState.items.map((item) => item.filePath.toLowerCase()));
+  let added = 0;
+  let duplicates = 0;
   for (const filePath of filePaths) {
     if (!filePath || seen.has(filePath.toLowerCase())) {
+      duplicates += 1;
       continue;
     }
 
@@ -424,6 +498,7 @@ function addQueueItems(filePaths: string[]): void {
       filePath,
       status: 'queued'
     });
+    added += 1;
   }
 
   if (!queueState.selectedId && queueState.items.length > 0) {
@@ -432,6 +507,7 @@ function addQueueItems(filePaths: string[]): void {
 
   renderQueue();
   updateQueueButtons();
+  return { added, duplicates };
 }
 
 function removeSelectedQueueItem(): void {
@@ -483,6 +559,40 @@ function moveSelectedQueueItem(delta: -1 | 1): void {
   updateQueueButtons();
 }
 
+async function exportDiagnosticsBundle(): Promise<void> {
+  const snapshot = {
+    activePath: elements.activePath?.textContent ?? '',
+    status: elements.status?.textContent ?? '',
+    queue: queueState.items.map((item) => ({
+      id: item.id,
+      filePath: item.filePath,
+      status: item.status,
+      parserId: item.parserId,
+      sizeBytes: item.sizeBytes,
+      message: item.message
+    })),
+    queueMeta: {
+      totalItems: queueState.items.length,
+      selectedId: queueState.selectedId,
+      isRunning: queueState.isRunning
+    },
+    statusTone: STATUS_TONE_CLASSES.find((toneClass) => elements.statusBar?.classList.contains(toneClass))
+  };
+
+  const result = await invokeDesktop(
+    () => window.diskScribeDesktop.exportDiagnostics(snapshot),
+    'Failed to export diagnostics'
+  );
+  if (!result?.saved) {
+    if (result?.error) {
+      setStatus(`Failed to export diagnostics: ${result.error}`, 'error');
+    }
+    return;
+  }
+
+  setStatus(`Exported diagnostics to ${result.filePath ?? 'selected path'}.`, 'success');
+}
+
 async function saveQueuePlan(): Promise<void> {
   const entries: BatchPlanEntryPayload[] = queueState.items.map((item) => ({
     id: item.id,
@@ -517,9 +627,21 @@ async function loadQueuePlan(): Promise<void> {
   }
 
   queueState.items = [];
-  addQueueItems(result.entries.map((entry) => entry.filePath));
+  const addResult = addQueueItems(result.entries.map((entry) => entry.filePath));
   if (result.filePath) {
-    setStatus(`Loaded ${queueState.items.length} queue item(s) from ${result.filePath}.`, 'success');
+    if (addResult.added === 0) {
+      setStatus(`Loaded plan from ${result.filePath}, but all entries were duplicates.`, 'warning');
+      return;
+    }
+
+    if (addResult.duplicates > 0) {
+      setStatus(
+        `Loaded ${addResult.added} queue item(s) from ${result.filePath}; skipped ${addResult.duplicates} duplicate(s).`,
+        'warning'
+      );
+      return;
+    }
+    setStatus(`Loaded ${addResult.added} queue item(s) from ${result.filePath}.`, 'success');
   }
 }
 
@@ -808,6 +930,7 @@ function updateQueueButtons(): void {
   );
   setDisabled(elements.saveQueueButton, running || !hasItems);
   setDisabled(elements.loadQueueButton, running);
+  setDisabled(elements.exportDiagnosticsButton, false);
   setDisabled(elements.runQueueButton, running || !hasItems);
   setDisabled(elements.stopQueueButton, !running);
 }

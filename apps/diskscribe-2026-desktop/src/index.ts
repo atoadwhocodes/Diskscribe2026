@@ -41,6 +41,14 @@ interface BatchRunState {
   cancelRequested: boolean;
 }
 
+interface FolderScanResult {
+  paths: string[];
+  truncated: boolean;
+  scannedDirectories: number;
+  scannedFiles: number;
+  matchedFiles: number;
+}
+
 interface DesktopSession {
   windowId: number;
   rendererReady: boolean;
@@ -159,13 +167,19 @@ ipcMain.handle('desktop:openDisksDialog', async (event): Promise<string[]> => {
   return result.filePaths;
 });
 
-ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<string[]> => {
+ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<FolderScanResult> => {
   const result = await showOpenDialogForEvent(event, {
     title: 'Add Folder to Batch Queue',
     properties: ['openDirectory']
   });
   if (result.canceled || result.filePaths.length === 0) {
-    return [];
+    return {
+      paths: [],
+      truncated: false,
+      scannedDirectories: 0,
+      scannedFiles: 0,
+      matchedFiles: 0
+    };
   }
   return collectSupportedDisksFromFolder(result.filePaths[0]);
 });
@@ -211,6 +225,73 @@ ipcMain.handle('desktop:loadBatchPlan', async (event) => {
     return { filePath, entries };
   } catch (error: unknown) {
     return { filePath, entries: [], error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:exportDiagnostics', async (event, rawSnapshot: unknown) => {
+  const saveResult = await showSaveDialogForEvent(event, {
+    title: 'Export Diagnostics Bundle',
+    defaultPath: `diskscribe2026-diagnostics-${new Date().toISOString().replace(/[:]/g, '-')}.json`,
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { saved: false };
+  }
+
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  const session = ownerWindow ? sessionsByWindowId.get(ownerWindow.id) : undefined;
+
+  const diagnosticsPayload = {
+    generatedAt: new Date().toISOString(),
+    app: {
+      name: APP_NAME,
+      desktopName: APP_DESKTOP_NAME,
+      vendor: APP_VENDOR,
+      version: app.getVersion()
+    },
+    runtime: {
+      platform: process.platform,
+      arch: process.arch,
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron,
+      chromeVersion: process.versions.chrome,
+      v8Version: process.versions.v8
+    },
+    scanLimits: FOLDER_SCAN_LIMITS,
+    session: session
+      ? {
+          windowId: session.windowId,
+          filePath: session.filePath,
+          mode: session.mode,
+          cursorOffset: session.cursorOffset,
+          selection: session.selection
+            ? {
+                mode: session.selection.mode,
+                start: session.selection.start,
+                end: session.selection.end
+              }
+            : undefined,
+          summary: session.summary
+            ? {
+                parserId: session.summary.parserId,
+                fileName: session.summary.fileName,
+                sizeBytes: session.summary.sizeBytes,
+                format: session.summary.format,
+                dataOffsetBytes: session.summary.dataOffsetBytes,
+                sectorSize: session.summary.sectorSize,
+                totalSectors: session.summary.totalSectors
+              }
+            : undefined
+        }
+      : undefined,
+    rendererSnapshot: toJsonSafeValue(rawSnapshot)
+  };
+
+  try {
+    await fs.writeFile(saveResult.filePath, JSON.stringify(diagnosticsPayload, null, 2), 'utf8');
+    return { saved: true, filePath: saveResult.filePath };
+  } catch (error: unknown) {
+    return { saved: false, error: toErrorMessage(error), filePath: saveResult.filePath };
   }
 });
 
@@ -1021,16 +1102,23 @@ function normalizeBatchQueueItems(rawItems: unknown): BatchQueueItemPayload[] {
   return normalized;
 }
 
-async function collectSupportedDisksFromFolder(folderPath: string): Promise<string[]> {
+async function collectSupportedDisksFromFolder(folderPath: string): Promise<FolderScanResult> {
   const normalized = path.resolve(folderPath);
   if (!existsSync(normalized)) {
-    return [];
+    return {
+      paths: [],
+      truncated: false,
+      scannedDirectories: 0,
+      scannedFiles: 0,
+      matchedFiles: 0
+    };
   }
 
   const pendingDirectories: string[] = [normalized];
   const matches: string[] = [];
   let scannedDirectories = 0;
   let scannedFiles = 0;
+  let truncated = false;
 
   while (pendingDirectories.length > 0) {
     const directory = pendingDirectories.shift();
@@ -1040,6 +1128,7 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
 
     scannedDirectories += 1;
     if (scannedDirectories > FOLDER_SCAN_LIMITS.maxDirectories) {
+      truncated = true;
       break;
     }
 
@@ -1063,6 +1152,7 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
 
       scannedFiles += 1;
       if (scannedFiles > FOLDER_SCAN_LIMITS.maxFiles) {
+        truncated = true;
         break;
       }
 
@@ -1072,6 +1162,7 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
 
       matches.push(candidatePath);
       if (matches.length >= FOLDER_SCAN_LIMITS.maxMatches) {
+        truncated = true;
         break;
       }
     }
@@ -1080,11 +1171,18 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
       scannedFiles > FOLDER_SCAN_LIMITS.maxFiles ||
       matches.length >= FOLDER_SCAN_LIMITS.maxMatches
     ) {
+      truncated = true;
       break;
     }
   }
 
-  return matches.sort((a, b) => a.localeCompare(b));
+  return {
+    paths: matches.sort((a, b) => a.localeCompare(b)),
+    truncated,
+    scannedDirectories: Math.max(0, Math.min(scannedDirectories, FOLDER_SCAN_LIMITS.maxDirectories)),
+    scannedFiles: Math.max(0, Math.min(scannedFiles, FOLDER_SCAN_LIMITS.maxFiles)),
+    matchedFiles: matches.length
+  };
 }
 
 function toErrorMessage(error: unknown): string {
@@ -1092,6 +1190,19 @@ function toErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+function toJsonSafeValue(value: unknown): unknown {
+  if (value === undefined) {
+    return null;
+  }
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return {
+      error: 'Renderer snapshot could not be serialized.'
+    };
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
