@@ -1,9 +1,9 @@
 {
-  "name": "diskscribe-2026",
-  "displayName": "DiskScribe2026",
-  "description": "Custom editor for PC-98 disk images (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd) with partition/FAT inspector and Shift-JIS preview.",
-  "version": "0.0.1",
-  "publisher": "atoadwhocodes",
+  "name": "diskscribe2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone desktop app for PC-98 disk images (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd) with partition/FAT inspection and Shift-JIS tools.",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atoadwhocodes/Diskscribe2026.git"
@@ -12,154 +12,15 @@
     "url": "https://github.com/atoadwhocodes/Diskscribe2026/issues"
   },
   "homepage": "https://github.com/atoadwhocodes/Diskscribe2026#readme",
-  "engines": {
-    "vscode": "^1.90.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "files": [
-    "dist/**",
-    "media/**",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE",
-    "SECURITY.md",
-    "CONTRIBUTING.md",
-    "CODE_OF_CONDUCT.md"
-  ],
-  "activationEvents": [
-    "onCustomEditor:pc98.dskedit",
-    "onCommand:pc98.jumpToPartition",
-    "onCommand:pc98.jumpToLba",
-    "onCommand:pc98.jumpToOffset",
-    "onCommand:pc98.copyOffset",
-    "onCommand:pc98.copyLba",
-    "onCommand:pc98.extractSelection",
-    "onCommand:pc98.openVirtualDisk"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "customEditors": [
-      {
-        "viewType": "pc98.dskedit",
-        "displayName": "DiskScribe2026",
-        "selector": [
-          {
-            "filenamePattern": "*.hdi"
-          },
-          {
-            "filenamePattern": "*.nhd"
-          },
-          {
-            "filenamePattern": "*.d88"
-          },
-          {
-            "filenamePattern": "*.hdm"
-          },
-          {
-            "filenamePattern": "*.hdd"
-          },
-          {
-            "filenamePattern": "*.fdi"
-          },
-          {
-            "filenamePattern": "*.fdd"
-          }
-        ],
-        "priority": "default"
-      }
-    ],
-    "commands": [
-      {
-        "command": "pc98.jumpToPartition",
-        "title": "PC-98: Jump to Partition"
-      },
-      {
-        "command": "pc98.jumpToLba",
-        "title": "PC-98: Jump to LBA"
-      },
-      {
-        "command": "pc98.jumpToOffset",
-        "title": "PC-98: Jump to Offset (Hex/Dec)"
-      },
-      {
-        "command": "pc98.copyOffset",
-        "title": "PC-98: Copy Offset"
-      },
-      {
-        "command": "pc98.copyLba",
-        "title": "PC-98: Copy LBA"
-      },
-      {
-        "command": "pc98.extractSelection",
-        "title": "PC-98: Extract Selected Bytes"
-      },
-      {
-        "command": "pc98.openVirtualDisk",
-        "title": "PC-98: Open Disk via Virtual Document"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "pc98.jumpToPartition",
-        "key": "ctrl+alt+p",
-        "when": "editorFocus && resourceExtname =~ /\\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/"
-      }
-    ],
-    "configuration": {
-      "title": "DiskScribe2026",
-      "properties": {
-        "diskscribe2026.hex.pageBytes": {
-          "type": "integer",
-          "default": 65536,
-          "minimum": 4096,
-          "maximum": 1048576,
-          "description": "Byte page size used by the extension-host hex reader cache."
-        },
-        "diskscribe2026.hex.maxCachedPages": {
-          "type": "integer",
-          "default": 32,
-          "minimum": 1,
-          "maximum": 1024,
-          "description": "Maximum number of cached pages per open disk editor session."
-        },
-        "diskscribe2026.hex.defaultMode": {
-          "type": "string",
-          "enum": [
-            "disk",
-            "raw"
-          ],
-          "default": "disk",
-          "description": "Default hex view mode: disk (LBA0 base) or raw (file offset base)."
-        }
-      }
-    }
-  },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile:ext": "tsc -p ./tsconfig.json",
-    "compile:webview": "webpack --config webpack.webview.config.js",
-    "compile": "npm run compile:ext && npm run compile:webview",
-    "watch:ext": "tsc -watch -p ./tsconfig.json",
-    "watch:webview": "webpack --config webpack.webview.config.js --watch",
-    "watch": "node ./scripts/watch.mjs",
-    "test": "npm run compile && node ./dist/test/runTest.js",
-    "package:vsix": "npx @vscode/vsce@3.7.1 package --no-dependencies --allow-missing-repository",
-    "package": "npm run package:vsix",
-    "publish": "npx @vscode/vsce@3.7.1 publish",
+    "desktop:install": "npm --prefix apps/diskscribe-2026-desktop ci",
     "desktop:start": "npm --prefix apps/diskscribe-2026-desktop run start",
-    "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/vscode": "^1.90.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.6.0",
-    "webpack": "^5.95.0",
-    "webpack-cli": "^5.1.4"
-  },
-  "dependencies": {
-    "iconv-lite": "^0.6.3"
+    "desktop:lint": "npm --prefix apps/diskscribe-2026-desktop run lint",
+    "desktop:package": "npm --prefix apps/diskscribe-2026-desktop run package",
+    "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
+    "start": "npm run desktop:start",
+    "lint": "npm run desktop:lint",
+    "build": "npm run desktop:make",
+    "package": "npm run desktop:make"
   }
 }

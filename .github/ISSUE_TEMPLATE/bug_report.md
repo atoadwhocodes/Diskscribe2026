@@ -13,9 +13,9 @@ Describe the bug clearly.
 ## Environment
 
 - OS:
-- VS Code version:
-- Extension version:
-- Disk image type: (`.hdi`, `.nhd`, `.d88`)
+- App version:
+- Installer/package source:
+- Disk image type: (`.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`)
 
 ## Steps to Reproduce
 
@@ -33,4 +33,4 @@ What actually happened.
 
 ## Logs / Screenshots
 
-Include extension host logs, stack traces, or screenshots if available.
+Include desktop app logs, stack traces, or screenshots if available.

@@ -260,7 +260,18 @@ function decodeShiftJisPreview(bytes: Uint8Array): string {
   }
 
   const decoded = iconv.decode(Buffer.from(bytes), 'shift_jis');
-  const printable = decoded.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').trim();
+  const printable = Array.from(decoded, (char) => {
+    const code = char.charCodeAt(0);
+    if (code === 0x09 || code === 0x0a || code === 0x0d) {
+      return char;
+    }
+    if (code >= 0x20 && code !== 0x7f) {
+      return char;
+    }
+    return '';
+  })
+    .join('')
+    .trim();
   if (printable.length === 0) {
     return '(no printable Shift-JIS text in preview window)';
   }

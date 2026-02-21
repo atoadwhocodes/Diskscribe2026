@@ -127,6 +127,7 @@ export const CHARSET_PROFILES: ReadonlyArray<CharsetProfile> = [
 const PROFILE_BY_ID = new Map<CharsetId, CharsetProfile>(
   CHARSET_PROFILES.map((profile) => [profile.id, profile])
 );
+const DEFAULT_PROFILE = PROFILE_BY_ID.get(DEFAULT_CHARSET_ID) ?? CHARSET_PROFILES[0];
 
 const LEGACY_ALIASES = new Map<string, CharsetId>([
   ['cp932', 'pc98-cp932'],
@@ -161,7 +162,7 @@ export function normalizeCharsetId(value: unknown): CharsetId {
 }
 
 export function getCharsetProfile(value: unknown): CharsetProfile {
-  return PROFILE_BY_ID.get(normalizeCharsetId(value)) ?? PROFILE_BY_ID.get(DEFAULT_CHARSET_ID)!;
+  return PROFILE_BY_ID.get(normalizeCharsetId(value)) ?? DEFAULT_PROFILE;
 }
 
 export function getCharsetLegend(value: unknown): string {
@@ -556,4 +557,3 @@ function classifyIso2022Byte(byte: number): string {
   }
   return 'outside 7-bit transport range';
 }
-

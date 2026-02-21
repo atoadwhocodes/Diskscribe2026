@@ -24,26 +24,16 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            apps/diskscribe-2026-desktop/package-lock.json
-
-      - name: Install root dependencies
-        run: npm ci
+          cache-dependency-path: apps/diskscribe-2026-desktop/package-lock.json
 
       - name: Install desktop dependencies
         run: npm --prefix apps/diskscribe-2026-desktop ci
 
-      - name: Build VSIX
-        run: npm run package:vsix
-
       - name: Build desktop packages
-        run: npm run desktop:make
+        run: npm --prefix apps/diskscribe-2026-desktop run make
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: DiskScribe2026-Windows
-          path: |
-            diskscribe-2026-*.vsix
-            apps/diskscribe-2026-desktop/out/make/**
+          path: apps/diskscribe-2026-desktop/out/make/**

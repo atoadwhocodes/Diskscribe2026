@@ -1,10 +1,10 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
 import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from '../../../src/appMeta';
-import type { DiskSummary } from '../../../src/core/diskSummary';
-import { buildDiskSummaryFromPath, isSupportedDiskPath } from '../../../src/core/diskSummary';
-import { PagedFileByteReader } from '../../../src/core/hex/pagedFileByteReader';
+import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
+import type { DiskSummary } from './core/diskSummary';
+import { buildDiskSummaryFromPath, isSupportedDiskPath } from './core/diskSummary';
+import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
