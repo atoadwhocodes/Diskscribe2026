@@ -33,9 +33,10 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 
 1. Launch DiskScribe2026 Desktop.
 2. Press `Ctrl+O` to open a disk image.
-3. Use `Ctrl+Enter` to jump to a byte offset or LBA.
-4. Review partition and translation panels.
-5. Export selected bytes when needed.
+3. Use `Ctrl+G` to jump to byte offset or `Ctrl+L` to jump to LBA.
+4. Use `Ctrl+Shift+O` to queue multiple files, then `Ctrl+Enter` to run batch queue (`Esc` stops).
+5. Review partition and translation panels.
+6. Export selected bytes when needed.
 
 ## Development
 

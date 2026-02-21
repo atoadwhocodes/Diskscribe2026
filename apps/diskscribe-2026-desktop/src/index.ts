@@ -58,6 +58,11 @@ const HEX_SETTINGS = {
   maxCachedPages: 32,
   defaultMode: 'disk' as HexMode
 };
+const FOLDER_SCAN_LIMITS = {
+  maxDirectories: 2048,
+  maxFiles: 25000,
+  maxMatches: 5000
+};
 
 const sessionsByWindowId = new Map<number, DesktopSession>();
 const DISK_IMAGE_FILTERS = [
@@ -1022,14 +1027,64 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
     return [];
   }
 
-  const entries = await fs.readdir(normalized, { withFileTypes: true });
-  const filePaths = entries
-    .filter((entry) => entry.isFile())
-    .map((entry) => path.join(normalized, entry.name))
-    .filter((candidate) => isSupportedDiskPath(candidate))
-    .sort((a, b) => a.localeCompare(b));
+  const pendingDirectories: string[] = [normalized];
+  const matches: string[] = [];
+  let scannedDirectories = 0;
+  let scannedFiles = 0;
 
-  return filePaths;
+  while (pendingDirectories.length > 0) {
+    const directory = pendingDirectories.shift();
+    if (!directory) {
+      break;
+    }
+
+    scannedDirectories += 1;
+    if (scannedDirectories > FOLDER_SCAN_LIMITS.maxDirectories) {
+      break;
+    }
+
+    let entries;
+    try {
+      entries = await fs.readdir(directory, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const candidatePath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        pendingDirectories.push(candidatePath);
+        continue;
+      }
+
+      if (!entry.isFile()) {
+        continue;
+      }
+
+      scannedFiles += 1;
+      if (scannedFiles > FOLDER_SCAN_LIMITS.maxFiles) {
+        break;
+      }
+
+      if (!isSupportedDiskPath(candidatePath)) {
+        continue;
+      }
+
+      matches.push(candidatePath);
+      if (matches.length >= FOLDER_SCAN_LIMITS.maxMatches) {
+        break;
+      }
+    }
+
+    if (
+      scannedFiles > FOLDER_SCAN_LIMITS.maxFiles ||
+      matches.length >= FOLDER_SCAN_LIMITS.maxMatches
+    ) {
+      break;
+    }
+  }
+
+  return matches.sort((a, b) => a.localeCompare(b));
 }
 
 function toErrorMessage(error: unknown): string {

@@ -35,5 +35,8 @@ jobs:
       - name: Lint desktop app
         run: npm --prefix apps/diskscribe-2026-desktop run lint
 
+      - name: Validate UI button wiring
+        run: npm run check:ui-wiring
+
       - name: Package desktop app
         run: npm --prefix apps/diskscribe-2026-desktop run package

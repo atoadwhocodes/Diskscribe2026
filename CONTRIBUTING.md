@@ -22,5 +22,5 @@ npm run desktop:make
 
 - Keep changes focused and scoped.
 - Update docs/changelog for behavior changes.
-- Ensure CI passes (`desktop lint`, `desktop package`).
+- Ensure CI passes (`desktop lint`, `check:ui-wiring`, `desktop package`).
 - Follow the standards in `CODE_OF_CONDUCT.md`.

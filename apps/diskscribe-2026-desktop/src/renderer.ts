@@ -209,11 +209,16 @@ function wireDesktopControls(): void {
 
 function wireGlobalShortcuts(): void {
   window.addEventListener('keydown', (event) => {
+    const editableTarget = isEditableTarget(event.target);
     if (!(event.ctrlKey || event.metaKey)) {
-      if (event.key === 'Escape' && queueState.isRunning) {
+      if (!editableTarget && event.key === 'Escape' && queueState.isRunning) {
         event.preventDefault();
         stopQueue();
       }
+      return;
+    }
+
+    if (editableTarget) {
       return;
     }
 
@@ -837,6 +842,19 @@ function formatBytes(value: number): string {
 
 function isSupportedDiskPath(filePath: string): boolean {
   return SUPPORTED_DISK_EXTENSIONS.test(filePath);
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const tagName = target.tagName.toLowerCase();
+  return tagName === 'input' || tagName === 'textarea' || tagName === 'select';
 }
 
 function isQueueStatus(value: unknown): value is QueueItemStatus {
