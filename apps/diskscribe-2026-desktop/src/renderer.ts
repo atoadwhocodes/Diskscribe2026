@@ -134,7 +134,10 @@ const vscodeApi: VsCodeApi = {
 
 const rawDesktopBridge = window.diskScribeDesktop;
 const desktopBridge = resolveDesktopBridge(rawDesktopBridge);
-const desktopBridgeAvailable = desktopBridge === rawDesktopBridge;
+const desktopBridgeAvailable =
+  typeof rawDesktopBridge?.postMessage === 'function' &&
+  typeof rawDesktopBridge?.onHostMessage === 'function' &&
+  typeof rawDesktopBridge?.openDiskDialog === 'function';
 
 window.acquireVsCodeApi = () => vscodeApi;
 document.title = APP_DESKTOP_NAME;
@@ -1070,55 +1073,71 @@ function toErrorMessage(error: unknown): string {
 }
 
 function resolveDesktopBridge(candidate: Partial<DesktopBridge> | undefined): DesktopBridge {
-  if (
-    candidate &&
-    typeof candidate.postMessage === 'function' &&
-    typeof candidate.openDiskDialog === 'function' &&
-    typeof candidate.openDisksDialog === 'function' &&
-    typeof candidate.openDiskFolderDialog === 'function' &&
-    typeof candidate.expandDiskCandidates === 'function' &&
-    typeof candidate.openFeedbackIssue === 'function' &&
-    typeof candidate.writeClipboard === 'function' &&
-    typeof candidate.saveBatchPlan === 'function' &&
-    typeof candidate.loadBatchPlan === 'function' &&
-    typeof candidate.exportDiagnostics === 'function' &&
-    typeof candidate.onHostMessage === 'function'
-  ) {
-    return candidate as DesktopBridge;
-  }
-
   return {
-    async postMessage(): Promise<void> {
+    async postMessage(message: unknown): Promise<void> {
+      if (candidate && typeof candidate.postMessage === 'function') {
+        return candidate.postMessage(message);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
     async openDiskDialog(): Promise<string | undefined> {
+      if (candidate && typeof candidate.openDiskDialog === 'function') {
+        return candidate.openDiskDialog();
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
     async openDisksDialog(): Promise<string[]> {
+      if (candidate && typeof candidate.openDisksDialog === 'function') {
+        return candidate.openDisksDialog();
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
     async openDiskFolderDialog(): Promise<FolderScanResult> {
+      if (candidate && typeof candidate.openDiskFolderDialog === 'function') {
+        return candidate.openDiskFolderDialog();
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    async expandDiskCandidates(): Promise<FolderScanResult> {
+    async expandDiskCandidates(paths: string[]): Promise<FolderScanResult> {
+      if (candidate && typeof candidate.expandDiskCandidates === 'function') {
+        return candidate.expandDiskCandidates(paths);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    async openFeedbackIssue(): Promise<void> {
+    async openFeedbackIssue(context: unknown): Promise<void> {
+      if (candidate && typeof candidate.openFeedbackIssue === 'function') {
+        return candidate.openFeedbackIssue(context);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    async writeClipboard(): Promise<void> {
+    async writeClipboard(text: string): Promise<void> {
+      if (candidate && typeof candidate.writeClipboard === 'function') {
+        return candidate.writeClipboard(text);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    async saveBatchPlan(): Promise<BatchPlanSaveResult> {
+    async saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult> {
+      if (candidate && typeof candidate.saveBatchPlan === 'function') {
+        return candidate.saveBatchPlan(entries);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
     async loadBatchPlan(): Promise<BatchPlanLoadResult> {
+      if (candidate && typeof candidate.loadBatchPlan === 'function') {
+        return candidate.loadBatchPlan();
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    async exportDiagnostics(): Promise<DiagnosticsExportResult> {
+    async exportDiagnostics(snapshot: unknown): Promise<DiagnosticsExportResult> {
+      if (candidate && typeof candidate.exportDiagnostics === 'function') {
+        return candidate.exportDiagnostics(snapshot);
+      }
       return Promise.reject(new Error(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE));
     },
-    onHostMessage(): () => void {
+    onHostMessage(handler: (message: unknown) => void): () => void {
+      if (candidate && typeof candidate.onHostMessage === 'function') {
+        return candidate.onHostMessage(handler);
+      }
       return () => {
         // no-op when bridge is unavailable
       };

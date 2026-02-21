@@ -542,7 +542,7 @@ async function runBatchQueue(session: DesktopSession, rawItems: unknown): Promis
 
   session.batch.running = true;
   session.batch.cancelRequested = false;
-  session.batch.activeRunId += 1;
+  session.batch.activeRunId = (session.batch.activeRunId + 1) % 0x7fffffff;
   const runId = session.batch.activeRunId;
 
   let processed = 0;
@@ -583,6 +583,8 @@ async function runBatchQueue(session: DesktopSession, rawItems: unknown): Promis
         status: 'running',
         message: `Processing ${path.basename(item.filePath)}...`
       });
+
+      disposeReader(session);
 
       try {
         const normalizedPath = path.resolve(item.filePath);
@@ -838,11 +840,15 @@ async function copyOffset(session: DesktopSession): Promise<void> {
   }
 
   const copied = `0x${selection.start.toString(16).toUpperCase()}`;
-  clipboard.writeText(copied);
-  postRendererMessage(session, {
-    type: 'desktop.notice',
-    message: `Copied offset: ${copied}`
-  });
+  try {
+    clipboard.writeText(copied);
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: `Copied offset: ${copied}`
+    });
+  } catch (error: unknown) {
+    postError(session, `Failed to copy offset: ${toErrorMessage(error)}`);
+  }
 }
 
 async function copyLba(session: DesktopSession): Promise<void> {
@@ -870,11 +876,15 @@ async function copyLba(session: DesktopSession): Promise<void> {
 
   const sectorSize = session.summary.sectorSize || 512;
   const lba = Math.floor(diskOffset / sectorSize);
-  clipboard.writeText(String(lba));
-  postRendererMessage(session, {
-    type: 'desktop.notice',
-    message: `Copied LBA: ${lba.toLocaleString()}`
-  });
+  try {
+    clipboard.writeText(String(lba));
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: `Copied LBA: ${lba.toLocaleString()}`
+    });
+  } catch (error: unknown) {
+    postError(session, `Failed to copy LBA: ${toErrorMessage(error)}`);
+  }
 }
 
 function postJumpAck(session: DesktopSession, mode: HexMode, offset: number): void {
@@ -1043,8 +1053,8 @@ function postRendererMessage(session: DesktopSession, message: unknown): void {
     return;
   }
 
-  const window = BrowserWindow.fromId(session.windowId);
-  if (!window || window.isDestroyed()) {
+  const window = getSafeWindow(session);
+  if (!window) {
     return;
   }
 
@@ -1052,8 +1062,8 @@ function postRendererMessage(session: DesktopSession, message: unknown): void {
 }
 
 function setWindowTitle(session: DesktopSession, fileName?: string): void {
-  const window = BrowserWindow.fromId(session.windowId);
-  if (!window || window.isDestroyed()) {
+  const window = getSafeWindow(session);
+  if (!window) {
     return;
   }
 
@@ -1391,6 +1401,15 @@ function getDialogOwnerWindow(event: IpcMainInvokeEvent): BrowserWindow | undefi
     return undefined;
   }
   return ownerWindow;
+}
+
+function getSafeWindow(session: DesktopSession): BrowserWindow | undefined {
+  const window = BrowserWindow.fromId(session.windowId);
+  if (!window || window.isDestroyed()) {
+    console.warn(`[Session ${session.windowId}] Window no longer available for message delivery.`);
+    return undefined;
+  }
+  return window;
 }
 
 function showOpenDialogForEvent(
