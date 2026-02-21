@@ -6,74 +6,76 @@
     <title>DiskScribe2026 Desktop</title>
   </head>
   <body>
-    <header class="toolbar">
-      <div class="toolbarMain">
-        <div class="brand">
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="masthead panelSurface">
+      <div class="brandCluster">
+        <div class="brandMark" aria-hidden="true">DS</div>
+        <div class="brandText">
           <h1 id="brandTitle">DiskScribe2026 Desktop</h1>
-          <p>PC-98 Disk Hex Workbench</p>
+          <p class="brandTagline">PC-98 Disk Workbench</p>
+          <p id="brandVersion" class="brandVersion">Version --</p>
         </div>
-        <div class="toolbarButtons">
-          <button id="openDiskButton" type="button">Open Disk...</button>
+      </div>
+
+      <div class="commandDeck">
+        <div class="commandGroup">
+          <button id="openDiskButton" class="btnPrimary" type="button">Open Disk</button>
           <button id="jumpOffsetButton" type="button">Jump Offset</button>
           <button id="jumpLbaButton" type="button">Jump LBA</button>
           <button id="copyOffsetButton" type="button">Copy Offset</button>
           <button id="copyLbaButton" type="button">Copy LBA</button>
-          <button id="extractSelectionButton" type="button">Extract</button>
-          <button id="refreshButton" type="button">Refresh</button>
+          <button id="extractSelectionButton" type="button">Extract Bytes</button>
+          <button id="refreshButton" type="button">Reload</button>
         </div>
+        <p class="toolbarHint">
+          Shortcuts: Ctrl/Cmd+O open disk, Ctrl/Cmd+G jump offset, Ctrl/Cmd+L jump LBA, Shift+Click extend range.
+        </p>
       </div>
-      <p class="toolbarHint">Shift+Click extends selection. Ctrl/Cmd+G jumps to offset, Ctrl/Cmd+L jumps to LBA.</p>
     </header>
 
     <div id="activePath" class="activePath">No disk loaded.</div>
+    <div id="dropHint" class="dropHint isHidden">Drop PC-98 disk images here to open or queue</div>
 
-    <div class="workspace">
+    <main class="workspace">
       <aside class="leftRail">
-        <section class="panel">
+        <section class="panel panelSummary">
           <h2>Disk Summary</h2>
-          <table class="summaryTable">
-            <tr><th>File</th><td id="fileName">-</td></tr>
-            <tr><th>Format</th><td id="format">-</td></tr>
-            <tr><th>Parser</th><td id="parserId">-</td></tr>
-            <tr><th>Data Offset</th><td id="dataOffsetBytes">-</td></tr>
-            <tr><th>Size</th><td id="sizeBytes">-</td></tr>
-            <tr><th>Sector Size</th><td id="sectorSize">-</td></tr>
-            <tr><th>Total Sectors</th><td id="totalSectors">-</td></tr>
-            <tr><th>Geometry Guess</th><td id="geometry">-</td></tr>
-          </table>
+          <dl class="summaryGrid">
+            <div><dt>File</dt><dd id="fileName">-</dd></div>
+            <div><dt>Format</dt><dd id="format">-</dd></div>
+            <div><dt>Parser</dt><dd id="parserId">-</dd></div>
+            <div><dt>Data Offset</dt><dd id="dataOffsetBytes">-</dd></div>
+            <div><dt>Size</dt><dd id="sizeBytes">-</dd></div>
+            <div><dt>Sector Size</dt><dd id="sectorSize">-</dd></div>
+            <div><dt>Total Sectors</dt><dd id="totalSectors">-</dd></div>
+            <div><dt>Geometry Guess</dt><dd id="geometry">-</dd></div>
+          </dl>
         </section>
 
         <section class="panel">
           <h2>Partitions</h2>
-          <table class="summaryTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Type</th>
-                <th>Start LBA</th>
-                <th>Sectors</th>
-                <th>Start Offset</th>
-              </tr>
-            </thead>
-            <tbody id="partitionRows">
-              <tr><td colspan="5">No partition data loaded.</td></tr>
-            </tbody>
-          </table>
-        </section>
-
-        <section class="panel">
-          <h2>Shift-JIS Preview</h2>
-          <pre id="shiftJisPreview">(waiting for data)</pre>
-        </section>
-
-        <section class="panel">
-          <h2>Notes</h2>
-          <pre id="notes">-</pre>
+          <div class="tableWrap">
+            <table class="summaryTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Start LBA</th>
+                  <th>Sectors</th>
+                  <th>Start Offset</th>
+                </tr>
+              </thead>
+              <tbody id="partitionRows">
+                <tr><td colspan="5">No partition data loaded.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="panel panelQueue">
           <div class="panelHeaderRow">
-            <h2>Batch Planner</h2>
+            <h2>Batch Queue</h2>
             <span id="queueMeta">0 items</span>
           </div>
           <div class="queueButtons">
@@ -81,11 +83,11 @@
             <button id="addQueueFolderButton" type="button">Add Folder</button>
             <button id="removeQueueItemButton" type="button">Remove</button>
             <button id="clearQueueButton" type="button">Clear</button>
-            <button id="moveQueueUpButton" type="button">Up</button>
-            <button id="moveQueueDownButton" type="button">Down</button>
+            <button id="moveQueueUpButton" type="button">Move Up</button>
+            <button id="moveQueueDownButton" type="button">Move Down</button>
             <button id="saveQueueButton" type="button">Save Plan</button>
             <button id="loadQueueButton" type="button">Load Plan</button>
-            <button id="runQueueButton" type="button">Run Queue</button>
+            <button id="runQueueButton" class="btnPrimary" type="button">Run Queue</button>
             <button id="stopQueueButton" type="button">Stop</button>
           </div>
           <div class="queueTableWrap">
@@ -107,16 +109,18 @@
         </section>
       </aside>
 
-      <main class="rightRail">
+      <section class="rightRail">
         <section class="panel panelHex">
-          <h2>Hex View</h2>
+          <div class="panelHeaderRow">
+            <h2>Hex Stage</h2>
+            <span id="hexRangeMeta">No range selected.</span>
+          </div>
           <div class="hexControls">
-            <label for="hexModeSelect">Mode</label>
+            <label for="hexModeSelect">View Mode</label>
             <select id="hexModeSelect">
               <option value="disk">Disk (LBA 0 base)</option>
               <option value="raw">Raw (file offset base)</option>
             </select>
-            <span id="hexRangeMeta">No range selected.</span>
           </div>
           <div id="hexScroller" class="hexScroller">
             <div id="hexSpacer"></div>
@@ -124,21 +128,45 @@
           </div>
         </section>
 
-        <section class="panel">
-          <h2>Selection</h2>
-          <p id="jumpResult">Use quick controls above to jump or copy cursor context.</p>
-        </section>
+        <div class="panelRow">
+          <section class="panel">
+            <h2>Selection Context</h2>
+            <p id="jumpResult">Use controls above to jump, copy, or extract from the current cursor.</p>
+          </section>
+
+          <section class="panel">
+            <h2>Shift-JIS Preview</h2>
+            <pre id="shiftJisPreview">(waiting for data)</pre>
+          </section>
+        </div>
 
         <section class="panel panelTranslator">
           <h2>Translator Workspace</h2>
           <div class="translatorControls">
             <label for="translationEncoding">Character Set</label>
             <select id="translationEncoding">
-              <option value="shift-jis">Shift-JIS (CP932)</option>
-              <option value="utf-8">UTF-8</option>
-              <option value="utf-16le">UTF-16 LE</option>
-              <option value="ascii">ASCII</option>
-              <option value="latin1">Latin-1</option>
+              <optgroup label="NEC PC-98">
+                <option value="pc98-cp932">PC-98 CP932 (Windows-31J)</option>
+                <option value="pc98-shift-jis">PC-98 Shift-JIS (strict)</option>
+              </optgroup>
+              <optgroup label="NEC PC-88">
+                <option value="pc88-shift-jis">PC-88 Shift-JIS (N88)</option>
+                <option value="pc88-jis7">PC-88 JIS 7-bit (ESC)</option>
+                <option value="pc88-ank">PC-88 ANK + Kana + Graphics</option>
+              </optgroup>
+              <optgroup label="Japanese Standards">
+                <option value="jis-x-0201-roman">JIS X 0201 Roman</option>
+                <option value="jis-x-0201-kana">JIS X 0201 Kana</option>
+                <option value="euc-jp">EUC-JP</option>
+                <option value="iso-2022-jp">ISO-2022-JP</option>
+              </optgroup>
+              <optgroup label="Unicode / Generic">
+                <option value="utf-8">UTF-8</option>
+                <option value="utf-16le">UTF-16 LE</option>
+                <option value="utf-16be">UTF-16 BE</option>
+                <option value="ascii">ASCII</option>
+                <option value="latin1">Latin-1</option>
+              </optgroup>
             </select>
             <button id="copyDecodedButton" type="button">Copy Decoded</button>
             <button id="copyDraftButton" type="button">Copy Draft</button>
@@ -152,34 +180,47 @@
             </div>
             <div class="translatorColumn">
               <h3>Translation Draft</h3>
-              <textarea id="translationDraft" spellcheck="false" placeholder="Type translation notes or final text..."></textarea>
+              <textarea
+                id="translationDraft"
+                spellcheck="false"
+                placeholder="Type translation notes or final text..."
+              ></textarea>
             </div>
           </div>
         </section>
 
-        <section class="panel">
-          <h2>Character Set Frame</h2>
-          <p class="charsetLegend">
-            Shift-JIS quick roles: Lead bytes 0x81-0x9F/0xE0-0xFC, half-width kana 0xA1-0xDF, trail candidates 0x40-0x7E/0x80-0xFC.
-          </p>
-          <table class="summaryTable charFrameTable">
-            <thead>
-              <tr>
-                <th>Offset</th>
-                <th>Byte</th>
-                <th>Glyph</th>
-                <th>Role</th>
-              </tr>
-            </thead>
-            <tbody id="charFrameRows">
-              <tr><td colspan="4">Select bytes to inspect character framing.</td></tr>
-            </tbody>
-          </table>
-        </section>
-      </main>
-    </div>
+        <div class="panelRow">
+          <section class="panel">
+            <h2>Character Frame</h2>
+            <p id="charsetLegend" class="charsetLegend">
+              Select bytes to inspect character roles for the active encoding.
+            </p>
+            <div class="tableWrap">
+              <table class="summaryTable charFrameTable">
+                <thead>
+                  <tr>
+                    <th>Offset</th>
+                    <th>Byte</th>
+                    <th>Glyph</th>
+                    <th>Role</th>
+                  </tr>
+                </thead>
+                <tbody id="charFrameRows">
+                  <tr><td colspan="4">Select bytes to inspect character framing.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-    <footer class="statusBar">
+          <section class="panel">
+            <h2>Notes</h2>
+            <pre id="notes">-</pre>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer id="statusBar" class="statusBar tone-info">
       <div id="status" class="statusText">Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to start.</div>
       <div id="statusProgressWrap" class="statusProgressWrap isHidden">
         <progress id="statusProgress" value="0" max="100"></progress>
