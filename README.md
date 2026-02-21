@@ -1,22 +1,8 @@
 # DiskScribe2026
 
-DiskScribe2026 is now a desktop-only Electron app for inspecting and translating PC-98 disk images.
+Status: alpha / work in progress.
 
-Supported disk extensions:
-
-- `.hdi`
-- `.nhd`
-- `.d88`
-- `.hdm`
-- `.hdd`
-- `.fdi`
-- `.fdd`
-
-Project policies:
-
-- Security reporting: `SECURITY.md`
-- Contributing guide: `CONTRIBUTING.md`
-- Community expectations: `CODE_OF_CONDUCT.md`
+DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy PC-98 disk images.
 
 ## Included Features
 
@@ -30,6 +16,26 @@ Project policies:
 - Character-frame byte role inspector
 - Batch queue runner for parsing multiple disk images
 - Save/load batch plans as JSON
+
+## Supported Formats
+
+- Disk images: `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`
+- Extract output: `.bin`
+- Batch plans: `.json`
+
+## Install (Windows)
+
+- Download the latest installer from GitHub Releases:
+  `https://github.com/atoadwhocodes/Diskscribe2026/releases`
+- Run the generated `DiskScribe2026 Desktop Setup.exe`.
+
+## Quick Start
+
+1. Launch DiskScribe2026 Desktop.
+2. Press `Ctrl+O` to open a disk image.
+3. Use `Ctrl+Enter` to jump to a byte offset or LBA.
+4. Review partition and translation panels.
+5. Export selected bytes when needed.
 
 ## Development
 
@@ -48,17 +54,31 @@ Build output:
 
 - `apps/diskscribe-2026-desktop/out/make/**`
 
+## Roadmap
+
+- Improve parser reliability on edge-case and partially corrupted images
+- Expand filesystem and partition introspection depth
+- Add first-class diagnostics bundle export from the app
+- Harden installer upgrade/uninstall flow coverage in CI
+
 ## Release Flow
 
 - Pushes to `main` build and upload Windows installer artifacts in GitHub Actions.
 - Tags matching `v*` trigger the same Windows build and publish a GitHub Release automatically.
 - Tag versions are validated against `apps/diskscribe-2026-desktop/package.json`.
+- Release assets include SHA256 checksums.
 
 Example release:
 
 1. Update `apps/diskscribe-2026-desktop/package.json` version (for example `1.1.0`).
 2. Commit and push to `main`.
 3. Create and push tag `v1.1.0`.
+
+## Security and Community
+
+- Security reporting: `SECURITY.md`
+- Contributing guide: `CONTRIBUTING.md`
+- Community expectations: `CODE_OF_CONDUCT.md`
 
 ## Project Layout
 

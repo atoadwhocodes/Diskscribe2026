@@ -1,6 +1,23 @@
-# Change Log
+# Changelog
 
-## 0.0.1
+All notable changes to this project are documented in this file.
+
+## [1.0.0] - 2026-02-21
+
+### Added
+
+- Desktop-only Electron app shell under `apps/diskscribe-2026-desktop`
+- Windows installer branding assets and installer loading animation
+- Public GitHub hygiene and governance files (`LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, issue templates)
+- CI workflows for lint/package, dependency review, CodeQL, and secret scanning
+- Tag-driven release automation for Windows artifacts
+
+### Changed
+
+- Migrated from extension-first structure to desktop-first packaging flow
+- Unified root scripts around desktop app install, lint, package, and make commands
+
+## [0.0.1]
 
 - Initial scaffold for PC-98 Disk Editor extension
 - Custom editor registration for `.hdi`, `.nhd`, `.d88`

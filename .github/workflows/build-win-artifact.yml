@@ -50,6 +50,26 @@ jobs:
       - name: Build desktop packages
         run: npm --prefix apps/diskscribe-2026-desktop run make
 
+      - name: Generate SHA256 checksums
+        shell: pwsh
+        run: |
+          $artifactDir = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64"
+          $checksumFile = Join-Path $artifactDir "SHA256SUMS.txt"
+          if (Test-Path $checksumFile) {
+            Remove-Item $checksumFile -Force
+          }
+
+          Get-ChildItem $artifactDir | Where-Object {
+            $_.Name -match "Setup\\.exe$|-full\\.nupkg$|^RELEASES$"
+          } | ForEach-Object {
+            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$hash *$($_.Name)" | Out-File -FilePath $checksumFile -Encoding ascii -Append
+          }
+
+          if (-not (Test-Path $checksumFile)) {
+            throw "Checksum file was not generated."
+          }
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -58,6 +78,7 @@ jobs:
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg
             apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES
+            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -70,6 +91,7 @@ jobs:
           $setupExe = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe" | Select-Object -First 1).FullName
           $fullNupkg = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg" | Select-Object -First 1).FullName
           $releasesFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES"
+          $checksumsFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt"
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY 1>$null 2>$null
           if ($LASTEXITCODE -ne 0) {
@@ -79,12 +101,14 @@ jobs:
               --notes "Automated desktop release for $tag." `
               $setupExe `
               $fullNupkg `
-              $releasesFile
+              $releasesFile `
+              $checksumsFile
           } else {
             gh release upload $tag `
               --repo $env:GITHUB_REPOSITORY `
               --clobber `
               $setupExe `
               $fullNupkg `
-              $releasesFile
+              $releasesFile `
+              $checksumsFile
           }
