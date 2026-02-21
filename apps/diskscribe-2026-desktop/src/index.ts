@@ -44,6 +44,8 @@ interface BatchRunState {
 interface FolderScanResult {
   paths: string[];
   truncated: boolean;
+  canceled: boolean;
+  scannedRoots: number;
   scannedDirectories: number;
   scannedFiles: number;
   matchedFiles: number;
@@ -176,12 +178,14 @@ ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<FolderScan
     return {
       paths: [],
       truncated: false,
+      canceled: true,
+      scannedRoots: 0,
       scannedDirectories: 0,
       scannedFiles: 0,
       matchedFiles: 0
     };
   }
-  return collectSupportedDisksFromFolder(result.filePaths[0]);
+  return collectSupportedDisksFromPaths([result.filePaths[0]]);
 });
 
 ipcMain.handle('desktop:saveBatchPlan', async (event, rawEntries: unknown) => {
@@ -293,6 +297,22 @@ ipcMain.handle('desktop:exportDiagnostics', async (event, rawSnapshot: unknown) 
   } catch (error: unknown) {
     return { saved: false, error: toErrorMessage(error), filePath: saveResult.filePath };
   }
+});
+
+ipcMain.handle('desktop:expandDiskCandidates', async (_event, rawPaths: unknown): Promise<FolderScanResult> => {
+  const normalizedPaths = normalizeInputPaths(rawPaths);
+  if (normalizedPaths.length === 0) {
+    return {
+      paths: [],
+      truncated: false,
+      canceled: false,
+      scannedRoots: 0,
+      scannedDirectories: 0,
+      scannedFiles: 0,
+      matchedFiles: 0
+    };
+  }
+  return collectSupportedDisksFromPaths(normalizedPaths);
 });
 
 ipcMain.handle('desktop:writeClipboard', async (_event, text: unknown): Promise<void> => {
@@ -1102,12 +1122,43 @@ function normalizeBatchQueueItems(rawItems: unknown): BatchQueueItemPayload[] {
   return normalized;
 }
 
+function normalizeInputPaths(rawPaths: unknown): string[] {
+  if (!Array.isArray(rawPaths)) {
+    return [];
+  }
+
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (const candidate of rawPaths) {
+    if (typeof candidate !== 'string') {
+      continue;
+    }
+
+    const value = candidate.trim();
+    if (!value) {
+      continue;
+    }
+
+    const resolved = path.resolve(value);
+    const key = resolved.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    normalized.push(resolved);
+  }
+  return normalized;
+}
+
 async function collectSupportedDisksFromFolder(folderPath: string): Promise<FolderScanResult> {
   const normalized = path.resolve(folderPath);
   if (!existsSync(normalized)) {
     return {
       paths: [],
       truncated: false,
+      canceled: false,
+      scannedRoots: 0,
       scannedDirectories: 0,
       scannedFiles: 0,
       matchedFiles: 0
@@ -1179,9 +1230,58 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<Fold
   return {
     paths: matches.sort((a, b) => a.localeCompare(b)),
     truncated,
+    canceled: false,
+    scannedRoots: 1,
     scannedDirectories: Math.max(0, Math.min(scannedDirectories, FOLDER_SCAN_LIMITS.maxDirectories)),
     scannedFiles: Math.max(0, Math.min(scannedFiles, FOLDER_SCAN_LIMITS.maxFiles)),
     matchedFiles: matches.length
+  };
+}
+
+async function collectSupportedDisksFromPaths(pathsToScan: string[]): Promise<FolderScanResult> {
+  const dedupedMatches = new Set<string>();
+  let truncated = false;
+  let scannedRoots = 0;
+  let scannedDirectories = 0;
+  let scannedFiles = 0;
+
+  for (const candidatePath of pathsToScan) {
+    const normalized = path.resolve(candidatePath);
+    let stats;
+    try {
+      stats = await fs.stat(normalized);
+    } catch {
+      continue;
+    }
+
+    scannedRoots += 1;
+    if (stats.isDirectory()) {
+      const folderResult = await collectSupportedDisksFromFolder(normalized);
+      truncated = truncated || folderResult.truncated;
+      scannedDirectories += folderResult.scannedDirectories;
+      scannedFiles += folderResult.scannedFiles;
+      for (const matchedPath of folderResult.paths) {
+        dedupedMatches.add(path.resolve(matchedPath));
+      }
+      continue;
+    }
+
+    if (stats.isFile()) {
+      scannedFiles += 1;
+      if (isSupportedDiskPath(normalized)) {
+        dedupedMatches.add(normalized);
+      }
+    }
+  }
+
+  return {
+    paths: Array.from(dedupedMatches).sort((a, b) => a.localeCompare(b)),
+    truncated,
+    canceled: false,
+    scannedRoots,
+    scannedDirectories,
+    scannedFiles,
+    matchedFiles: dedupedMatches.size
   };
 }
 

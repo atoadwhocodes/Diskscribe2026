@@ -22,6 +22,8 @@ interface BatchPlanLoadResult {
 interface FolderScanResult {
   paths: string[];
   truncated: boolean;
+  canceled: boolean;
+  scannedRoots: number;
   scannedDirectories: number;
   scannedFiles: number;
   matchedFiles: number;
@@ -38,6 +40,7 @@ interface DesktopBridge {
   openDiskDialog(): Promise<string | undefined>;
   openDisksDialog(): Promise<string[]>;
   openDiskFolderDialog(): Promise<FolderScanResult>;
+  expandDiskCandidates(paths: string[]): Promise<FolderScanResult>;
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
@@ -57,6 +60,9 @@ const bridge: DesktopBridge = {
   },
   async openDiskFolderDialog(): Promise<FolderScanResult> {
     return ipcRenderer.invoke('desktop:openDiskFolderDialog');
+  },
+  async expandDiskCandidates(paths: string[]): Promise<FolderScanResult> {
+    return ipcRenderer.invoke('desktop:expandDiskCandidates', paths);
   },
   async writeClipboard(text: string): Promise<void> {
     await ipcRenderer.invoke('desktop:writeClipboard', text);

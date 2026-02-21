@@ -5,7 +5,6 @@ import { APP_DESKTOP_NAME } from './appMeta';
 type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
 type StatusTone = 'info' | 'success' | 'warning' | 'error' | 'busy';
 
-const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/i;
 const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
 
 interface BatchPlanEntryPayload {
@@ -28,6 +27,8 @@ interface BatchPlanLoadResult {
 interface FolderScanResult {
   paths: string[];
   truncated: boolean;
+  canceled: boolean;
+  scannedRoots: number;
   scannedDirectories: number;
   scannedFiles: number;
   matchedFiles: number;
@@ -44,6 +45,7 @@ interface DesktopBridge {
   openDiskDialog(): Promise<string | undefined>;
   openDisksDialog(): Promise<string[]>;
   openDiskFolderDialog(): Promise<FolderScanResult>;
+  expandDiskCandidates(paths: string[]): Promise<FolderScanResult>;
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
@@ -339,9 +341,31 @@ function extractDroppedPaths(event: DragEvent): string[] {
 }
 
 async function handleDroppedPaths(filePaths: string[]): Promise<void> {
-  const supported = filePaths.filter(isSupportedDiskPath);
+  if (!Array.isArray(filePaths) || filePaths.length === 0) {
+    setStatus('Dropped items were empty.', 'warning');
+    return;
+  }
+
+  setStatus('Scanning dropped files and folders...', 'busy');
+  const scanResult = await invokeDesktop(
+    () => window.diskScribeDesktop.expandDiskCandidates(filePaths),
+    'Unable to scan dropped items'
+  );
+  if (!scanResult) {
+    return;
+  }
+
+  const supported = Array.isArray(scanResult.paths) ? scanResult.paths : [];
   if (supported.length === 0) {
-    setStatus('Dropped files contained no supported PC-98 disk images.', 'warning');
+    if (scanResult.truncated) {
+      setStatus(
+        `Dropped scan reached limits after ${scanResult.scannedDirectories.toLocaleString()} directories and ${scanResult.scannedFiles.toLocaleString()} files.`,
+        'warning'
+      );
+      return;
+    }
+
+    setStatus('Dropped items contained no supported PC-98 disk images.', 'warning');
     return;
   }
 
@@ -359,12 +383,20 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
     return;
   }
 
+  if (scanResult.truncated) {
+    setStatus(
+      `Added ${result.added} file(s). Dropped scan hit limits after ${scanResult.scannedDirectories.toLocaleString()} directories and ${scanResult.scannedFiles.toLocaleString()} files.`,
+      'warning'
+    );
+    return;
+  }
+
   if (result.duplicates > 0) {
     setStatus(`Added ${result.added} file(s); skipped ${result.duplicates} duplicate(s).`, 'warning');
     return;
   }
 
-  setStatus(`Added ${result.added} file(s) from drag-and-drop.`, 'success');
+  setStatus(`Added ${result.added} file(s) from drag-and-drop scan.`, 'success');
 }
 
 async function handleOpenDisk(): Promise<void> {
@@ -440,10 +472,16 @@ async function handleAddQueueFiles(): Promise<void> {
 
 async function handleAddQueueFolder(): Promise<void> {
   let scanResult: FolderScanResult;
+  setStatus('Scanning selected folder for disk images...', 'busy');
   try {
     scanResult = await window.diskScribeDesktop.openDiskFolderDialog();
   } catch (error: unknown) {
     setStatus(`Unable to open folder picker: ${toErrorMessage(error)}`, 'error');
+    return;
+  }
+
+  if (scanResult.canceled) {
+    setStatus('Folder selection canceled.', 'info');
     return;
   }
 
@@ -961,10 +999,6 @@ function numberOrUndefined(value: unknown): number | undefined {
 
 function formatBytes(value: number): string {
   return `${value.toLocaleString()} B`;
-}
-
-function isSupportedDiskPath(filePath: string): boolean {
-  return SUPPORTED_DISK_EXTENSIONS.test(filePath);
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

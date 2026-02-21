@@ -7,6 +7,7 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 ## Included Features
 
 - Open disk image dialog and file-path launch support
+- Drag-and-drop file/folder ingestion with recursive folder scan
 - Virtualized hex view with disk/raw mode toggle
 - Jump to offset and jump to LBA
 - Copy offset and copy LBA
