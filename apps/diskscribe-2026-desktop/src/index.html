@@ -9,7 +9,7 @@
     <header class="toolbar">
       <div class="toolbarMain">
         <div class="brand">
-          <h1>DiskScribe2026 Desktop</h1>
+          <h1 id="brandTitle">DiskScribe2026 Desktop</h1>
           <p>PC-98 Disk Hex Workbench</p>
         </div>
         <div class="toolbarButtons">
@@ -26,7 +26,6 @@
     </header>
 
     <div id="activePath" class="activePath">No disk loaded.</div>
-    <div id="status" class="status">Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to start.</div>
 
     <div class="workspace">
       <aside class="leftRail">
@@ -71,6 +70,41 @@
           <h2>Notes</h2>
           <pre id="notes">-</pre>
         </section>
+
+        <section class="panel panelQueue">
+          <div class="panelHeaderRow">
+            <h2>Batch Planner</h2>
+            <span id="queueMeta">0 items</span>
+          </div>
+          <div class="queueButtons">
+            <button id="addQueueFilesButton" type="button">Add Files</button>
+            <button id="addQueueFolderButton" type="button">Add Folder</button>
+            <button id="removeQueueItemButton" type="button">Remove</button>
+            <button id="clearQueueButton" type="button">Clear</button>
+            <button id="moveQueueUpButton" type="button">Up</button>
+            <button id="moveQueueDownButton" type="button">Down</button>
+            <button id="saveQueueButton" type="button">Save Plan</button>
+            <button id="loadQueueButton" type="button">Load Plan</button>
+            <button id="runQueueButton" type="button">Run Queue</button>
+            <button id="stopQueueButton" type="button">Stop</button>
+          </div>
+          <div class="queueTableWrap">
+            <table class="summaryTable queueTable">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>File</th>
+                  <th>Parser</th>
+                  <th>Size</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="queueRows">
+                <tr><td colspan="5">Queue is empty.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </aside>
 
       <main class="rightRail">
@@ -94,7 +128,63 @@
           <h2>Selection</h2>
           <p id="jumpResult">Use quick controls above to jump or copy cursor context.</p>
         </section>
+
+        <section class="panel panelTranslator">
+          <h2>Translator Workspace</h2>
+          <div class="translatorControls">
+            <label for="translationEncoding">Character Set</label>
+            <select id="translationEncoding">
+              <option value="shift-jis">Shift-JIS (CP932)</option>
+              <option value="utf-8">UTF-8</option>
+              <option value="utf-16le">UTF-16 LE</option>
+              <option value="ascii">ASCII</option>
+              <option value="latin1">Latin-1</option>
+            </select>
+            <button id="copyDecodedButton" type="button">Copy Decoded</button>
+            <button id="copyDraftButton" type="button">Copy Draft</button>
+            <button id="clearDraftButton" type="button">Clear Draft</button>
+          </div>
+          <p id="translationMeta" class="translationMeta">Select bytes in hex view to decode text for translation.</p>
+          <div class="translatorGrid">
+            <div class="translatorColumn">
+              <h3>Decoded Source</h3>
+              <pre id="decodedSelection">(no selection)</pre>
+            </div>
+            <div class="translatorColumn">
+              <h3>Translation Draft</h3>
+              <textarea id="translationDraft" spellcheck="false" placeholder="Type translation notes or final text..."></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Character Set Frame</h2>
+          <p class="charsetLegend">
+            Shift-JIS quick roles: Lead bytes 0x81-0x9F/0xE0-0xFC, half-width kana 0xA1-0xDF, trail candidates 0x40-0x7E/0x80-0xFC.
+          </p>
+          <table class="summaryTable charFrameTable">
+            <thead>
+              <tr>
+                <th>Offset</th>
+                <th>Byte</th>
+                <th>Glyph</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody id="charFrameRows">
+              <tr><td colspan="4">Select bytes to inspect character framing.</td></tr>
+            </tbody>
+          </table>
+        </section>
       </main>
     </div>
+
+    <footer class="statusBar">
+      <div id="status" class="statusText">Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to start.</div>
+      <div id="statusProgressWrap" class="statusProgressWrap isHidden">
+        <progress id="statusProgress" value="0" max="100"></progress>
+        <span id="statusProgressLabel"></span>
+      </div>
+    </footer>
   </body>
 </html>

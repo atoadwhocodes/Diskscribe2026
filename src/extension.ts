@@ -1,11 +1,14 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { APP_NAME } from './appMeta';
 import { buildDiskSummary, formatSummaryAsText, isSupportedDiskFile, type DiskSummary } from './diskSummary';
 import { PagedByteReader } from './hex/byteReader';
 
 const CUSTOM_EDITOR_VIEW_TYPE = 'pc98.dskedit';
 const VIRTUAL_DOCUMENT_SCHEME = 'pc98disk';
 const HEX_CONFIG_SECTION = 'diskscribe2026.hex';
+const SUPPORTED_OPEN_HINT = `Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in ${APP_NAME}.`;
+const SUPPORTED_OPEN_FIRST_HINT = `${SUPPORTED_OPEN_HINT} first.`;
 
 type HexMode = 'disk' | 'raw';
 
@@ -72,9 +75,9 @@ type IncomingMessage =
 
 export function activate(context: vscode.ExtensionContext): void {
   const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 95);
-  statusBarItem.name = 'DiskScribe2026 Hex Status';
-  statusBarItem.text = 'DiskScribe2026: no selection';
-  statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026.';
+  statusBarItem.name = `${APP_NAME} Hex Status`;
+  statusBarItem.text = `${APP_NAME}: no selection`;
+  statusBarItem.tooltip = SUPPORTED_OPEN_HINT;
   statusBarItem.show();
 
   const editorProvider = new Pc98DiskEditorProvider(context, statusBarItem);
@@ -106,9 +109,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       const didJump = await editorProvider.jumpToOffset(resolved.mode, resolved.offset);
       if (!didJump) {
-        void vscode.window.showInformationMessage(
-          'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026 first.'
-        );
+        void vscode.window.showInformationMessage(SUPPORTED_OPEN_FIRST_HINT);
       }
     }),
     vscode.commands.registerCommand('pc98.copyOffset', async () => {
@@ -619,15 +620,15 @@ class Pc98DiskEditorProvider
   private updateStatusBar(): void {
     const session = this.getActiveSession();
     if (!session) {
-      this.statusBarItem.text = 'DiskScribe2026: no selection';
-      this.statusBarItem.tooltip = 'Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026.';
+      this.statusBarItem.text = `${APP_NAME}: no selection`;
+      this.statusBarItem.tooltip = SUPPORTED_OPEN_HINT;
       this.statusBarItem.show();
       return;
     }
 
     const selection = this.getSelectionForSession(session);
     if (!selection) {
-      this.statusBarItem.text = `DiskScribe2026 ${path.basename(session.uri.path)}: no selection`;
+      this.statusBarItem.text = `${APP_NAME} ${path.basename(session.uri.path)}: no selection`;
       this.statusBarItem.tooltip = 'Click a byte in hex view to select it.';
       this.statusBarItem.show();
       return;
@@ -679,13 +680,13 @@ class Pc98DiskEditorProvider
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource};" />
   <link rel="stylesheet" href="${styleUri}" />
-  <title>DiskScribe2026</title>
+  <title>${APP_NAME}</title>
 </head>
 <body>
   <header class="toolbar">
     <div class="toolbarMain">
       <div class="brand">
-        <h1>DiskScribe2026</h1>
+        <h1>${APP_NAME}</h1>
         <p>PC-98 Disk Hex Workbench</p>
       </div>
       <div class="toolbarButtons">
@@ -768,6 +769,71 @@ class Pc98DiskEditorProvider
         <h2>Selection</h2>
         <p id="jumpResult">Use quick controls above to jump or copy cursor context.</p>
       </section>
+
+        <section class="panel panelTranslator">
+          <h2>Translator Workspace</h2>
+          <div class="translatorControls">
+            <label for="translationEncoding">Character Set</label>
+            <select id="translationEncoding">
+              <optgroup label="NEC PC-98">
+                <option value="pc98-cp932">PC-98 CP932 (Windows-31J)</option>
+                <option value="pc98-shift-jis">PC-98 Shift-JIS (strict)</option>
+              </optgroup>
+              <optgroup label="NEC PC-88">
+                <option value="pc88-shift-jis">PC-88 Shift-JIS (N88)</option>
+                <option value="pc88-jis7">PC-88 JIS 7-bit (ESC)</option>
+                <option value="pc88-ank">PC-88 ANK + Kana + Graphics</option>
+              </optgroup>
+              <optgroup label="Japanese Standards">
+                <option value="jis-x-0201-roman">JIS X 0201 Roman</option>
+                <option value="jis-x-0201-kana">JIS X 0201 Kana</option>
+                <option value="euc-jp">EUC-JP</option>
+                <option value="iso-2022-jp">ISO-2022-JP</option>
+              </optgroup>
+              <optgroup label="Unicode / Generic">
+                <option value="utf-8">UTF-8</option>
+                <option value="utf-16le">UTF-16 LE</option>
+                <option value="utf-16be">UTF-16 BE</option>
+                <option value="ascii">ASCII</option>
+                <option value="latin1">Latin-1</option>
+              </optgroup>
+            </select>
+            <button id="copyDecodedButton" type="button">Copy Decoded</button>
+            <button id="copyDraftButton" type="button">Copy Draft</button>
+            <button id="clearDraftButton" type="button">Clear Draft</button>
+          </div>
+        <p id="translationMeta" class="translationMeta">Select bytes in hex view to decode text for translation.</p>
+        <div class="translatorGrid">
+          <div class="translatorColumn">
+            <h3>Decoded Source</h3>
+            <pre id="decodedSelection">(no selection)</pre>
+          </div>
+          <div class="translatorColumn">
+            <h3>Translation Draft</h3>
+            <textarea id="translationDraft" spellcheck="false" placeholder="Type translation notes or final text..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Character Set Frame</h2>
+        <p id="charsetLegend" class="charsetLegend">
+          PC-98 CP932 byte roles: lead 0x81-0x9F/0xE0-0xFC, half-width kana 0xA1-0xDF, trail 0x40-0x7E/0x80-0xFC.
+        </p>
+        <table class="summaryTable charFrameTable">
+          <thead>
+            <tr>
+              <th>Offset</th>
+              <th>Byte</th>
+              <th>Glyph</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody id="charFrameRows">
+            <tr><td colspan="4">Select bytes to inspect character framing.</td></tr>
+          </tbody>
+        </table>
+      </section>
     </main>
   </div>
 
@@ -816,7 +882,7 @@ async function runJumpToLba(editorProvider: Pc98DiskEditorProvider): Promise<voi
 
   const didJump = await editorProvider.jumpToLba(lba);
   if (!didJump) {
-    void vscode.window.showInformationMessage('Open a .hdi/.nhd/.d88/.hdm/.hdd/.fdi/.fdd file in DiskScribe2026 first.');
+    void vscode.window.showInformationMessage(SUPPORTED_OPEN_FIRST_HINT);
   }
 }
 

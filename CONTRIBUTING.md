@@ -21,3 +21,4 @@ Run extension host with `F5` in VS Code.
 - Keep changes focused and scoped.
 - Update docs/changelog for behavior changes.
 - Ensure CI passes (`compile`, `test`, `package:vsix`).
+- Follow the standards in `CODE_OF_CONDUCT.md`.

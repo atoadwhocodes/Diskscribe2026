@@ -330,6 +330,107 @@ pre {
   margin: 0;
 }
 
+.panelTranslator {
+  border-left: 3px solid color-mix(in srgb, var(--ds-button-bg), transparent 18%);
+}
+
+.translatorControls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.translatorControls label {
+  color: var(--ds-muted);
+  font-size: 0.8rem;
+}
+
+.translatorControls select {
+  background: var(--ds-dropdown-bg);
+  border: 1px solid var(--ds-dropdown-border);
+  border-radius: 6px;
+  color: var(--ds-dropdown-fg);
+  font-size: 0.8rem;
+  padding: 3px 6px;
+}
+
+.translatorControls button {
+  background: color-mix(in srgb, var(--ds-button-bg), white 6%);
+  border: 1px solid color-mix(in srgb, var(--ds-button-bg), black 18%);
+  border-radius: 6px;
+  color: var(--ds-button-fg);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 4px 8px;
+}
+
+.translatorControls button:hover {
+  background: var(--ds-button-hover);
+}
+
+.translationMeta {
+  color: var(--ds-muted);
+  font-family: var(--ds-font-mono);
+  font-size: 0.76rem;
+  margin: 0 0 8px 0;
+}
+
+.translatorGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.translatorColumn h3 {
+  color: var(--ds-muted);
+  font-family: var(--ds-font-head);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  margin: 0 0 6px 0;
+  text-transform: uppercase;
+}
+
+#decodedSelection {
+  max-height: 220px;
+}
+
+#translationDraft {
+  background: var(--ds-code-bg);
+  border: 1px solid color-mix(in srgb, var(--ds-panel-border), transparent 20%);
+  border-radius: 8px;
+  color: var(--ds-fg);
+  font-family: var(--ds-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  min-height: 220px;
+  padding: 8px;
+  resize: vertical;
+  width: 100%;
+}
+
+.charsetLegend {
+  color: var(--ds-muted);
+  font-family: var(--ds-font-mono);
+  font-size: 0.75rem;
+  margin: 0 0 8px 0;
+}
+
+.charFrameTable th:nth-child(1) {
+  width: 132px;
+}
+
+.charFrameTable th:nth-child(2) {
+  width: 80px;
+}
+
+.charFrameTable th:nth-child(3) {
+  width: 80px;
+}
+
 @keyframes panelRise {
   from {
     opacity: 0;
@@ -353,5 +454,14 @@ pre {
 
   .hexScroller {
     height: 56vh;
+  }
+
+  .translatorGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #translationDraft,
+  #decodedSelection {
+    min-height: 160px;
   }
 }

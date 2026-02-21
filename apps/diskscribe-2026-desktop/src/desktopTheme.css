@@ -24,6 +24,7 @@
 
 body {
   margin: 0;
+  padding-bottom: 64px;
 }
 
 .desktopActions {
@@ -40,4 +41,158 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.panelHeaderRow {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panelHeaderRow > span {
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.74rem;
+}
+
+.queueButtons {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
+  margin: 0 0 8px 0;
+}
+
+.queueButtons button {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--vscode-button-background), white 8%),
+    var(--vscode-button-background)
+  );
+  border: 1px solid color-mix(in srgb, var(--vscode-button-background), black 18%);
+  border-radius: 6px;
+  color: var(--vscode-button-foreground);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.queueButtons button:hover:enabled {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.queueButtons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.queueTableWrap {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.queueTable th,
+.queueTable td {
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.queueTable td:nth-child(2),
+.queueTable td:nth-child(5) {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queueRow {
+  cursor: pointer;
+}
+
+.queueRow.is-selected td {
+  background: color-mix(in srgb, var(--vscode-editor-selectionBackground), transparent 22%);
+}
+
+.queueRow--running td:first-child {
+  color: #1f7f59;
+  font-weight: 700;
+}
+
+.queueRow--done td:first-child {
+  color: #2f6d5f;
+  font-weight: 700;
+}
+
+.queueRow--error td:first-child {
+  color: #b23a3a;
+  font-weight: 700;
+}
+
+.queueRow--canceled td:first-child {
+  color: #8b6f2f;
+  font-weight: 700;
+}
+
+.statusBar {
+  align-items: center;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--vscode-editorWidget-background) 92%, white 8%);
+  border-top: 1px solid var(--vscode-editorWidget-border);
+  bottom: 0;
+  display: flex;
+  gap: 12px;
+  left: 0;
+  min-height: 52px;
+  padding: 8px 12px;
+  position: fixed;
+  right: 0;
+  z-index: 30;
+}
+
+.statusText {
+  color: var(--vscode-editor-foreground);
+  flex: 1 1 auto;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.statusProgressWrap {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  transition: opacity 120ms ease;
+}
+
+.statusProgressWrap.isHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#statusProgress {
+  height: 12px;
+  max-width: 280px;
+  min-width: 220px;
+}
+
+#statusProgressLabel {
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.76rem;
+  min-width: 74px;
+  text-align: right;
+}
+
+@media (max-width: 960px) {
+  .statusBar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #statusProgress {
+    min-width: 170px;
+  }
 }
