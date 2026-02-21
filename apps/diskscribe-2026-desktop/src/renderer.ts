@@ -98,7 +98,7 @@ const elements = {
 
 const vscodeApi: VsCodeApi = {
   postMessage(message: unknown): void {
-    void window.diskScribeDesktop.postMessage(message);
+    void postDesktopMessage(message);
   },
   getState(): unknown {
     return stateStore.value;
@@ -317,8 +317,10 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
   }
 
   if (supported.length === 1 && !queueState.isRunning) {
-    await openQueueItem(supported[0]);
-    setStatus(`Opened ${supported[0]}.`, 'success');
+    const opened = await openQueueItem(supported[0]);
+    if (opened) {
+      setStatus(`Opened ${supported[0]}.`, 'success');
+    }
     return;
   }
 
@@ -327,21 +329,58 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
 }
 
 async function handleOpenDisk(): Promise<void> {
-  const selectedPath = await window.diskScribeDesktop.openDiskDialog();
+  let selectedPath: string | undefined;
+  try {
+    selectedPath = await window.diskScribeDesktop.openDiskDialog();
+  } catch (error: unknown) {
+    setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
+    return;
+  }
   if (!selectedPath) {
     return;
   }
 
   setActivePath(selectedPath);
   setStatus(`Opening ${selectedPath}...`, 'busy');
-  await window.diskScribeDesktop.postMessage({
-    type: 'desktop.openDisk',
-    filePath: selectedPath
-  });
+  await postDesktopMessage(
+    {
+      type: 'desktop.openDisk',
+      filePath: selectedPath
+    },
+    'Unable to open selected disk'
+  );
+}
+
+async function postDesktopMessage(message: unknown, failurePrefix = 'Action failed'): Promise<boolean> {
+  try {
+    await window.diskScribeDesktop.postMessage(message);
+    return true;
+  } catch (error: unknown) {
+    setStatus(`${failurePrefix}: ${toErrorMessage(error)}`, 'error');
+    return false;
+  }
+}
+
+async function invokeDesktop<T>(
+  operation: () => Promise<T>,
+  failurePrefix: string
+): Promise<T | undefined> {
+  try {
+    return await operation();
+  } catch (error: unknown) {
+    setStatus(`${failurePrefix}: ${toErrorMessage(error)}`, 'error');
+    return undefined;
+  }
 }
 
 async function handleAddQueueFiles(): Promise<void> {
-  const selectedPaths = await window.diskScribeDesktop.openDisksDialog();
+  let selectedPaths: string[];
+  try {
+    selectedPaths = await window.diskScribeDesktop.openDisksDialog();
+  } catch (error: unknown) {
+    setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
+    return;
+  }
   if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
     return;
   }
@@ -351,7 +390,13 @@ async function handleAddQueueFiles(): Promise<void> {
 }
 
 async function handleAddQueueFolder(): Promise<void> {
-  const selectedPaths = await window.diskScribeDesktop.openDiskFolderDialog();
+  let selectedPaths: string[];
+  try {
+    selectedPaths = await window.diskScribeDesktop.openDiskFolderDialog();
+  } catch (error: unknown) {
+    setStatus(`Unable to open folder picker: ${toErrorMessage(error)}`, 'error');
+    return;
+  }
   if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
     setStatus('No supported disk images found in selected folder.', 'warning');
     return;
@@ -438,9 +483,12 @@ async function saveQueuePlan(): Promise<void> {
     id: item.id,
     filePath: item.filePath
   }));
-  const result = await window.diskScribeDesktop.saveBatchPlan(entries);
-  if (!result.saved) {
-    if (result.error) {
+  const result = await invokeDesktop(
+    () => window.diskScribeDesktop.saveBatchPlan(entries),
+    'Failed to save batch plan'
+  );
+  if (!result?.saved) {
+    if (result?.error) {
       setStatus(`Failed to save batch plan: ${result.error}`, 'error');
     }
     return;
@@ -454,7 +502,10 @@ async function loadQueuePlan(): Promise<void> {
     return;
   }
 
-  const result = await window.diskScribeDesktop.loadBatchPlan();
+  const result = await invokeDesktop(() => window.diskScribeDesktop.loadBatchPlan(), 'Failed to load batch plan');
+  if (!result) {
+    return;
+  }
   if (result.error) {
     setStatus(`Failed to load batch plan: ${result.error}`, 'error');
     return;
@@ -490,13 +541,21 @@ async function runQueue(): Promise<void> {
   setStatus(`Running ${queueState.items.length} queued item(s)...`, 'busy');
   setProgress(0, queueState.items.length, true);
 
-  await window.diskScribeDesktop.postMessage({
-    type: 'desktop.batchRun',
-    items: queueState.items.map((item) => ({
-      id: item.id,
-      filePath: item.filePath
-    }))
-  });
+  const started = await postDesktopMessage(
+    {
+      type: 'desktop.batchRun',
+      items: queueState.items.map((item) => ({
+        id: item.id,
+        filePath: item.filePath
+      }))
+    },
+    'Unable to start batch queue'
+  );
+  if (!started) {
+    queueState.isRunning = false;
+    updateQueueButtons();
+    setProgress(undefined, undefined, false);
+  }
 }
 
 function stopQueue(): void {
@@ -505,15 +564,18 @@ function stopQueue(): void {
   }
 
   setStatus('Stopping batch queue after current file...', 'busy');
-  void window.diskScribeDesktop.postMessage({ type: 'desktop.batchStop' });
+  void postDesktopMessage({ type: 'desktop.batchStop' }, 'Unable to stop batch queue');
 }
 
-async function openQueueItem(filePath: string): Promise<void> {
+async function openQueueItem(filePath: string): Promise<boolean> {
   setActivePath(filePath);
-  await window.diskScribeDesktop.postMessage({
-    type: 'desktop.openDisk',
-    filePath
-  });
+  return postDesktopMessage(
+    {
+      type: 'desktop.openDisk',
+      filePath
+    },
+    `Unable to open queued disk ${filePath}`
+  );
 }
 
 function handleDesktopMessage(message: unknown): void {

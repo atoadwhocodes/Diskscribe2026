@@ -841,6 +841,11 @@ function syncModeSelect() {
 }
 
 async function promptJumpOffset() {
+  if (getViewLength(state.mode) <= 0) {
+    setText(elements.status, 'Open a disk image before jumping.');
+    return;
+  }
+
   const modeInput = window.prompt('Offset mode (disk/raw):', state.mode);
   if (modeInput === null) {
     return;
@@ -869,6 +874,11 @@ async function promptJumpOffset() {
 }
 
 async function promptJumpLba() {
+  if (getViewLength(state.mode) <= 0) {
+    setText(elements.status, 'Open a disk image before jumping to LBA.');
+    return;
+  }
+
   const lbaInput = window.prompt('Enter LBA (decimal):', '0');
   if (lbaInput === null) {
     return;
@@ -1178,6 +1188,15 @@ async function copyText(value) {
   try {
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
       await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Fall through to legacy copy.
+  }
+
+  try {
+    if (window.diskScribeDesktop && typeof window.diskScribeDesktop.writeClipboard === 'function') {
+      await window.diskScribeDesktop.writeClipboard(value);
       return true;
     }
   } catch {

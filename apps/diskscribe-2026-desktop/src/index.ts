@@ -1,4 +1,15 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  clipboard,
+  dialog,
+  ipcMain,
+  type IpcMainInvokeEvent,
+  type OpenDialogOptions,
+  type OpenDialogReturnValue,
+  type SaveDialogOptions,
+  type SaveDialogReturnValue
+} from 'electron';
 import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
@@ -119,8 +130,7 @@ function createWindow(): void {
 }
 
 ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefined> => {
-  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
-  const result = await dialog.showOpenDialog(ownerWindow, {
+  const result = await showOpenDialogForEvent(event, {
     title: 'Open PC-98 Disk Image',
     properties: ['openFile'],
     filters: DISK_IMAGE_FILTERS
@@ -133,8 +143,7 @@ ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefin
 });
 
 ipcMain.handle('desktop:openDisksDialog', async (event): Promise<string[]> => {
-  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
-  const result = await dialog.showOpenDialog(ownerWindow, {
+  const result = await showOpenDialogForEvent(event, {
     title: 'Add Disk Images to Batch Queue',
     properties: ['openFile', 'multiSelections'],
     filters: DISK_IMAGE_FILTERS
@@ -146,8 +155,7 @@ ipcMain.handle('desktop:openDisksDialog', async (event): Promise<string[]> => {
 });
 
 ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<string[]> => {
-  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
-  const result = await dialog.showOpenDialog(ownerWindow, {
+  const result = await showOpenDialogForEvent(event, {
     title: 'Add Folder to Batch Queue',
     properties: ['openDirectory']
   });
@@ -158,9 +166,8 @@ ipcMain.handle('desktop:openDiskFolderDialog', async (event): Promise<string[]> 
 });
 
 ipcMain.handle('desktop:saveBatchPlan', async (event, rawEntries: unknown) => {
-  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
   const entries = normalizeBatchQueueItems(rawEntries);
-  const saveResult = await dialog.showSaveDialog(ownerWindow, {
+  const saveResult = await showSaveDialogForEvent(event, {
     title: 'Save Batch Plan',
     defaultPath: 'diskscribe2026-batch-plan.json',
     filters: [{ name: 'JSON', extensions: ['json'] }]
@@ -182,8 +189,7 @@ ipcMain.handle('desktop:saveBatchPlan', async (event, rawEntries: unknown) => {
 });
 
 ipcMain.handle('desktop:loadBatchPlan', async (event) => {
-  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
-  const loadResult = await dialog.showOpenDialog(ownerWindow, {
+  const loadResult = await showOpenDialogForEvent(event, {
     title: 'Load Batch Plan',
     properties: ['openFile'],
     filters: [{ name: 'JSON', extensions: ['json'] }]
@@ -579,6 +585,10 @@ async function handleHexJump(
   message: Record<string, unknown>
 ): Promise<void> {
   if (!session.summary) {
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: 'Open a disk image before jumping.'
+    });
     return;
   }
 
@@ -837,15 +847,25 @@ async function extractRangeToFile(
   );
 
   const window = BrowserWindow.fromId(session.windowId) ?? undefined;
-  const targetPath = await dialog.showSaveDialog(window, {
-    title: 'PC-98: Extract Selected Bytes',
-    defaultPath,
-    buttonLabel: 'Extract',
-    filters: [
-      { name: 'Binary', extensions: ['bin'] },
-      { name: 'All files', extensions: ['*'] }
-    ]
-  });
+  const targetPath = window
+    ? await dialog.showSaveDialog(window, {
+        title: 'PC-98: Extract Selected Bytes',
+        defaultPath,
+        buttonLabel: 'Extract',
+        filters: [
+          { name: 'Binary', extensions: ['bin'] },
+          { name: 'All files', extensions: ['*'] }
+        ]
+      })
+    : await dialog.showSaveDialog({
+        title: 'PC-98: Extract Selected Bytes',
+        defaultPath,
+        buttonLabel: 'Extract',
+        filters: [
+          { name: 'Binary', extensions: ['bin'] },
+          { name: 'All files', extensions: ['*'] }
+        ]
+      });
   if (targetPath.canceled || !targetPath.filePath) {
     return;
   }
@@ -1036,4 +1056,34 @@ function getLaunchDiskPath(): string | undefined {
     }
   }
   return undefined;
+}
+
+function getDialogOwnerWindow(event: IpcMainInvokeEvent): BrowserWindow | undefined {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  if (!ownerWindow || ownerWindow.isDestroyed()) {
+    return undefined;
+  }
+  return ownerWindow;
+}
+
+function showOpenDialogForEvent(
+  event: IpcMainInvokeEvent,
+  options: OpenDialogOptions
+): Promise<OpenDialogReturnValue> {
+  const ownerWindow = getDialogOwnerWindow(event);
+  if (ownerWindow) {
+    return dialog.showOpenDialog(ownerWindow, options);
+  }
+  return dialog.showOpenDialog(options);
+}
+
+function showSaveDialogForEvent(
+  event: IpcMainInvokeEvent,
+  options: SaveDialogOptions
+): Promise<SaveDialogReturnValue> {
+  const ownerWindow = getDialogOwnerWindow(event);
+  if (ownerWindow) {
+    return dialog.showSaveDialog(ownerWindow, options);
+  }
+  return dialog.showSaveDialog(options);
 }
