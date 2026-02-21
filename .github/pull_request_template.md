@@ -4,9 +4,9 @@ Describe what changed and why.
 
 ## Validation
 
-- [ ] `npm run compile`
-- [ ] `npm test`
-- [ ] Manual extension-host check (`F5`)
+- [ ] `npm run lint`
+- [ ] `npm run build`
+- [ ] Manual desktop app check (`npm run desktop:start`)
 
 ## Scope Notes
 

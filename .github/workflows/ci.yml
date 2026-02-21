@@ -24,21 +24,16 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
+          cache-dependency-path: apps/diskscribe-2026-desktop/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+      - name: Install desktop dependencies
+        run: npm --prefix apps/diskscribe-2026-desktop ci
 
       - name: Audit desktop production dependencies
         run: npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high
 
-      - name: Compile
-        run: npm run compile
+      - name: Lint desktop app
+        run: npm --prefix apps/diskscribe-2026-desktop run lint
 
-      - name: Test
-        run: npm test
-
-      - name: Package VSIX
-        run: npm run package:vsix
+      - name: Package desktop app
+        run: npm --prefix apps/diskscribe-2026-desktop run package

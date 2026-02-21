@@ -1,6 +1,6 @@
 import './desktopTheme.css';
-import '../../../media/editor.css';
-import { APP_DESKTOP_NAME } from '../../../src/appMeta';
+import './webview/editor.css';
+import { APP_DESKTOP_NAME } from './appMeta';
 
 type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
 
@@ -115,7 +115,7 @@ window.diskScribeDesktop.onHostMessage((message) => {
 
 wireDesktopControls();
 
-void import('../../../media-src/editor')
+void import('./webview/editor')
   .then(async () => {
     await window.diskScribeDesktop.postMessage({ type: 'desktop.rendererReady' });
   })

@@ -4,21 +4,23 @@
 
 - Node.js 22+
 - npm 11+
-- VS Code 1.90+
 
 ## Local Development
 
 ```bash
-npm ci
-npm run compile
-npm test
+npm run desktop:install
+npm run desktop:start
 ```
 
-Run extension host with `F5` in VS Code.
+Build distributables with:
+
+```bash
+npm run desktop:make
+```
 
 ## Pull Requests
 
 - Keep changes focused and scoped.
 - Update docs/changelog for behavior changes.
-- Ensure CI passes (`compile`, `test`, `package:vsix`).
+- Ensure CI passes (`desktop lint`, `desktop package`).
 - Follow the standards in `CODE_OF_CONDUCT.md`.
