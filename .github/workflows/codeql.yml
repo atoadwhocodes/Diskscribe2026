@@ -8,23 +8,39 @@ on:
   schedule:
     - cron: "23 5 * * 1"
 
+env:
+  CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+
 permissions:
+  actions: read
   contents: read
+  id-token: write
+  security-events: write
 
 jobs:
   analyze:
     name: CodeQL
     runs-on: ubuntu-latest
+    env:
+      CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
     permissions:
+      actions: read
       contents: read
+      id-token: write
       security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Initialize CodeQL
         uses: github/codeql-action/init@9e907b5e64f6b83e7804b09294d44122997950d6
+        env:
+          CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
         with:
           languages: javascript-typescript
           queries: security-extended
+      - name: Debug analysis key env
+        run: echo "CODEQL_ACTION_ANALYSIS_KEY=${CODEQL_ACTION_ANALYSIS_KEY}"
       - name: Analyze
         uses: github/codeql-action/analyze@9e907b5e64f6b83e7804b09294d44122997950d6
+        env:
+          CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
