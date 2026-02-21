@@ -44,3 +44,5 @@ jobs:
         uses: github/codeql-action/analyze@9e907b5e64f6b83e7804b09294d44122997950d6
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
+        with:
+          upload: never
