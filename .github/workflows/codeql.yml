@@ -50,6 +50,6 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: codeql-sarif-${{ github.run_id }}
-          path: results/*.sarif
+          path: ${{ env.CODEQL_ACTION_SARIF_RESULTS_OUTPUT_DIR }}/*.sarif
           if-no-files-found: error
           retention-days: 14
