@@ -84,6 +84,13 @@ interface QueueItem {
   message?: string;
 }
 
+type DialogOperationStatus = 'success' | 'error' | 'busy';
+
+interface DialogOperationResult<T> {
+  status: DialogOperationStatus;
+  value?: T;
+}
+
 const stateStore: { value: unknown } = {
   value: {}
 };
@@ -99,6 +106,10 @@ const queueState: {
 };
 
 const uiState: WorkbenchUiPrefs = loadWorkbenchUiPrefs();
+const dialogState: { active: boolean; label: string } = {
+  active: false,
+  label: ''
+};
 
 const DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE =
   'Desktop bridge is unavailable. Restart DiskScribe2026 Desktop and try again.';
@@ -111,14 +122,15 @@ const elements = {
   guidedModeButton: document.getElementById('guidedModeButton'),
   expertModeButton: document.getElementById('expertModeButton'),
   armExpertToggle: document.getElementById('armExpertToggle') as HTMLInputElement | null,
+  openDiskButton: document.getElementById('openDiskButton'),
+  quickAddQueueFilesButton: document.getElementById('quickAddQueueFilesButton'),
+  quickRunQueueButton: document.getElementById('quickRunQueueButton'),
   firstRunModal: document.getElementById('firstRunModal'),
   firstRunGuidedButton: document.getElementById('firstRunGuidedButton'),
   firstRunExpertButton: document.getElementById('firstRunExpertButton'),
   sendFeedbackButton: document.getElementById('sendFeedbackButton'),
   guidedOpenDiskButton: document.getElementById('guidedOpenDiskButton'),
   guidedAddFilesButton: document.getElementById('guidedAddFilesButton'),
-  guidedAddFolderButton: document.getElementById('guidedAddFolderButton'),
-  guidedLoadPlanButton: document.getElementById('guidedLoadPlanButton'),
   guidedRunQueueButton: document.getElementById('guidedRunQueueButton'),
   guidedExportDiagnosticsButton: document.getElementById('guidedExportDiagnosticsButton'),
   activePath: document.getElementById('activePath'),
@@ -216,23 +228,20 @@ function wireDesktopControls(): void {
     );
   });
 
-  const openButton = document.getElementById('openDiskButton');
-  if (openButton) {
-    openButton.addEventListener('click', () => {
-      void handleOpenDisk();
-    });
-  }
+  elements.openDiskButton?.addEventListener('click', () => {
+    void handleOpenDisk();
+  });
+  elements.quickAddQueueFilesButton?.addEventListener('click', () => {
+    void handleAddQueueFiles();
+  });
+  elements.quickRunQueueButton?.addEventListener('click', () => {
+    void runQueue();
+  });
   elements.guidedOpenDiskButton?.addEventListener('click', () => {
     void handleOpenDisk();
   });
   elements.guidedAddFilesButton?.addEventListener('click', () => {
     void handleAddQueueFiles();
-  });
-  elements.guidedAddFolderButton?.addEventListener('click', () => {
-    void handleAddQueueFolder();
-  });
-  elements.guidedLoadPlanButton?.addEventListener('click', () => {
-    void loadQueuePlan();
   });
   elements.guidedRunQueueButton?.addEventListener('click', () => {
     void runQueue();
@@ -517,14 +526,18 @@ async function handleDroppedPaths(filePaths: string[]): Promise<void> {
 }
 
 async function handleOpenDisk(): Promise<void> {
-  let selectedPath: string | undefined;
-  try {
-    selectedPath = await desktopBridge.openDiskDialog();
-  } catch (error: unknown) {
-    setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
+  const result = await runDialogOperation(
+    'Open volume picker',
+    'Opening volume picker...',
+    () => desktopBridge.openDiskDialog()
+  );
+  if (result.status !== 'success') {
     return;
   }
+
+  const selectedPath = typeof result.value === 'string' ? result.value : undefined;
   if (!selectedPath) {
+    setStatus('Volume selection canceled.', 'info');
     return;
   }
 
@@ -547,6 +560,7 @@ async function openFeedbackIssue(): Promise<void> {
     queueRunning: queueState.isRunning
   };
 
+  setStatus('Opening issue report page...', 'busy');
   try {
     await desktopBridge.openFeedbackIssue(context);
   } catch (error: unknown) {
@@ -579,39 +593,80 @@ async function invokeDesktop<T>(
   }
 }
 
-async function handleAddQueueFiles(): Promise<void> {
-  let selectedPaths: string[];
-  try {
-    selectedPaths = await desktopBridge.openDisksDialog();
-  } catch (error: unknown) {
-    setStatus(`Unable to open file picker: ${toErrorMessage(error)}`, 'error');
-    return;
+async function runDialogOperation<T>(
+  label: string,
+  busyMessage: string,
+  operation: () => Promise<T>
+): Promise<DialogOperationResult<T>> {
+  if (dialogState.active) {
+    setStatus(`${dialogState.label} is already active.`, 'warning');
+    return { status: 'busy' };
   }
-  if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+
+  dialogState.active = true;
+  dialogState.label = label;
+  updateQueueButtons();
+  setStatus(busyMessage, 'busy');
+
+  try {
+    const value = await operation();
+    return { status: 'success', value };
+  } catch (error: unknown) {
+    setStatus(`${label} failed: ${toErrorMessage(error)}`, 'error');
+    return { status: 'error' };
+  } finally {
+    dialogState.active = false;
+    dialogState.label = '';
+    updateQueueButtons();
+  }
+}
+
+async function handleAddQueueFiles(): Promise<void> {
+  const dialogResult = await runDialogOperation(
+    'Queue file picker',
+    'Opening multi-file picker...',
+    () => desktopBridge.openDisksDialog()
+  );
+  if (dialogResult.status !== 'success') {
     return;
   }
 
-  const result = addQueueItems(selectedPaths);
-  if (result.added === 0) {
+  const selectedPaths = Array.isArray(dialogResult.value) ? dialogResult.value : [];
+  if (!Array.isArray(selectedPaths) || selectedPaths.length === 0) {
+    setStatus('No files selected for queue.', 'info');
+    return;
+  }
+
+  const addResult = addQueueItems(selectedPaths);
+  if (addResult.added === 0) {
     setStatus('All selected files were already in the queue.', 'warning');
     return;
   }
 
-  if (result.duplicates > 0) {
-    setStatus(`Added ${result.added} file(s); skipped ${result.duplicates} duplicate(s).`, 'warning');
+  if (addResult.duplicates > 0) {
+    setStatus(
+      `Added ${addResult.added} file(s); skipped ${addResult.duplicates} duplicate(s).`,
+      'warning'
+    );
     return;
   }
 
-  setStatus(`Added ${result.added} file(s) to batch job queue.`, 'success');
+  setStatus(`Added ${addResult.added} file(s) to batch job queue.`, 'success');
 }
 
 async function handleAddQueueFolder(): Promise<void> {
-  let scanResult: FolderScanResult;
-  setStatus('Scanning selected folder for disk images...', 'busy');
-  try {
-    scanResult = await desktopBridge.openDiskFolderDialog();
-  } catch (error: unknown) {
-    setStatus(`Unable to open folder picker: ${toErrorMessage(error)}`, 'error');
+  const dialogResult = await runDialogOperation(
+    'Queue folder picker',
+    'Scanning selected folder for disk images...',
+    () => desktopBridge.openDiskFolderDialog()
+  );
+  if (dialogResult.status !== 'success') {
+    return;
+  }
+
+  const scanResult = dialogResult.value;
+  if (!scanResult) {
+    setStatus('No folder scan result returned.', 'warning');
     return;
   }
 
@@ -684,12 +739,18 @@ function addQueueItems(filePaths: string[]): { added: number; duplicates: number
 }
 
 function removeSelectedQueueItem(): void {
-  if (!queueState.selectedId || queueState.isRunning) {
+  if (queueState.isRunning) {
+    setStatus('Cannot remove queue items during an active batch run.', 'warning');
+    return;
+  }
+  if (!queueState.selectedId) {
+    setStatus('Select a queue item to remove.', 'info');
     return;
   }
 
   const index = queueState.items.findIndex((item) => item.id === queueState.selectedId);
   if (index < 0) {
+    setStatus('Selected queue item no longer exists.', 'warning');
     return;
   }
 
@@ -697,10 +758,12 @@ function removeSelectedQueueItem(): void {
   queueState.selectedId = queueState.items[index]?.id ?? queueState.items[index - 1]?.id;
   renderQueue();
   updateQueueButtons();
+  setStatus('Removed selected queue item.', 'info');
 }
 
 function clearQueue(): void {
   if (queueState.isRunning) {
+    setStatus('Cannot clear queue during an active batch run.', 'warning');
     return;
   }
   if (queueState.items.length > 0) {
@@ -721,17 +784,24 @@ function clearQueue(): void {
 }
 
 function moveSelectedQueueItem(delta: -1 | 1): void {
-  if (!queueState.selectedId || queueState.isRunning) {
+  if (queueState.isRunning) {
+    setStatus('Cannot reorder queue during an active batch run.', 'warning');
+    return;
+  }
+  if (!queueState.selectedId) {
+    setStatus('Select a queue item to reorder.', 'info');
     return;
   }
 
   const index = queueState.items.findIndex((item) => item.id === queueState.selectedId);
   if (index < 0) {
+    setStatus('Selected queue item no longer exists.', 'warning');
     return;
   }
 
   const nextIndex = index + delta;
   if (nextIndex < 0 || nextIndex >= queueState.items.length) {
+    setStatus('Queue item is already at the edge of the list.', 'info');
     return;
   }
 
@@ -739,6 +809,7 @@ function moveSelectedQueueItem(delta: -1 | 1): void {
   queueState.items.splice(nextIndex, 0, item);
   renderQueue();
   updateQueueButtons();
+  setStatus(delta < 0 ? 'Moved selected queue item up.' : 'Moved selected queue item down.', 'info');
 }
 
 async function exportDiagnosticsBundle(): Promise<void> {
@@ -761,14 +832,22 @@ async function exportDiagnosticsBundle(): Promise<void> {
     statusTone: STATUS_TONE_CLASSES.find((toneClass) => elements.statusBar?.classList.contains(toneClass))
   };
 
-  const result = await invokeDesktop(
-    () => desktopBridge.exportDiagnostics(snapshot),
-    'Failed to export diagnostics'
+  const operation = await runDialogOperation(
+    'Diagnostics export',
+    'Preparing diagnostics export dialog...',
+    () => desktopBridge.exportDiagnostics(snapshot)
   );
+  if (operation.status !== 'success') {
+    return;
+  }
+
+  const result = operation.value;
   if (!result?.saved) {
     if (result?.error) {
       setStatus(`Failed to export diagnostics: ${result.error}`, 'error');
+      return;
     }
+    setStatus('Diagnostics export canceled.', 'info');
     return;
   }
 
@@ -776,18 +855,31 @@ async function exportDiagnosticsBundle(): Promise<void> {
 }
 
 async function saveQueuePlan(): Promise<void> {
+  if (queueState.items.length === 0) {
+    setStatus('Queue is empty. Add files before saving a plan.', 'warning');
+    return;
+  }
+
   const entries: BatchPlanEntryPayload[] = queueState.items.map((item) => ({
     id: item.id,
     filePath: item.filePath
   }));
-  const result = await invokeDesktop(
-    () => desktopBridge.saveBatchPlan(entries),
-    'Failed to save batch plan'
+  const operation = await runDialogOperation(
+    'Batch plan save',
+    'Preparing save dialog for batch plan...',
+    () => desktopBridge.saveBatchPlan(entries)
   );
+  if (operation.status !== 'success') {
+    return;
+  }
+
+  const result = operation.value;
   if (!result?.saved) {
     if (result?.error) {
       setStatus(`Failed to save batch plan: ${result.error}`, 'error');
+      return;
     }
+    setStatus('Batch plan save canceled.', 'info');
     return;
   }
 
@@ -796,10 +888,20 @@ async function saveQueuePlan(): Promise<void> {
 
 async function loadQueuePlan(): Promise<void> {
   if (queueState.isRunning) {
+    setStatus('Cannot load queue plan during an active batch run.', 'warning');
     return;
   }
 
-  const result = await invokeDesktop(() => desktopBridge.loadBatchPlan(), 'Failed to load batch plan');
+  const operation = await runDialogOperation(
+    'Batch plan load',
+    'Opening batch plan file picker...',
+    () => desktopBridge.loadBatchPlan()
+  );
+  if (operation.status !== 'success') {
+    return;
+  }
+
+  const result = operation.value;
   if (!result) {
     return;
   }
@@ -808,27 +910,37 @@ async function loadQueuePlan(): Promise<void> {
     return;
   }
 
-  queueState.items = [];
-  const addResult = addQueueItems(result.entries.map((entry) => entry.filePath));
-  if (result.filePath) {
-    if (addResult.added === 0) {
-      setStatus(`Loaded plan from ${result.filePath}, but all entries were duplicates.`, 'warning');
-      return;
-    }
-
-    if (addResult.duplicates > 0) {
-      setStatus(
-        `Loaded ${addResult.added} queued job(s) from ${result.filePath}; skipped ${addResult.duplicates} duplicate(s).`,
-        'warning'
-      );
-      return;
-    }
-    setStatus(`Loaded ${addResult.added} queued job(s) from ${result.filePath}.`, 'success');
+  if (!result.filePath) {
+    setStatus('Batch plan load canceled.', 'info');
+    return;
   }
+
+  queueState.items = [];
+  queueState.selectedId = undefined;
+  const addResult = addQueueItems(result.entries.map((entry) => entry.filePath));
+  if (addResult.added === 0) {
+    setStatus(`Loaded plan from ${result.filePath}, but all entries were duplicates.`, 'warning');
+    return;
+  }
+
+  if (addResult.duplicates > 0) {
+    setStatus(
+      `Loaded ${addResult.added} queued job(s) from ${result.filePath}; skipped ${addResult.duplicates} duplicate(s).`,
+      'warning'
+    );
+    return;
+  }
+
+  setStatus(`Loaded ${addResult.added} queued job(s) from ${result.filePath}.`, 'success');
 }
 
 async function runQueue(): Promise<void> {
+  if (dialogState.active) {
+    setStatus(`${dialogState.label} is active. Finish the dialog before running queue.`, 'warning');
+    return;
+  }
   if (queueState.isRunning) {
+    setStatus('Batch run is already active.', 'info');
     return;
   }
   if (queueState.items.length === 0) {
@@ -878,6 +990,7 @@ async function runQueue(): Promise<void> {
 
 function stopQueue(): void {
   if (!queueState.isRunning) {
+    setStatus('No active batch run to stop.', 'info');
     return;
   }
 
@@ -886,6 +999,14 @@ function stopQueue(): void {
 }
 
 async function openQueueItem(filePath: string): Promise<boolean> {
+  if (dialogState.active) {
+    setStatus(`${dialogState.label} is active. Finish the dialog before opening another file.`, 'warning');
+    return false;
+  }
+  if (queueState.isRunning) {
+    setStatus('Wait for the active batch run to stop before opening a queued file.', 'warning');
+    return false;
+  }
   setActivePath(filePath);
   return postDesktopMessage(
     {
@@ -1235,9 +1356,11 @@ function updateQueueButtons(): void {
   const hasSelection = selectedIndex >= 0;
   const hasItems = queueState.items.length > 0;
   const running = queueState.isRunning;
+  const dialogBusy = dialogState.active;
+  const controlsLocked = running || dialogBusy;
 
-  setDisabled(elements.addQueueFilesButton, running);
-  setDisabled(elements.addQueueFolderButton, running);
+  setDisabled(elements.addQueueFilesButton, controlsLocked);
+  setDisabled(elements.addQueueFolderButton, controlsLocked);
   setDisabled(elements.removeQueueItemButton, running || !hasSelection);
   setDisabled(elements.clearQueueButton, running || !hasItems);
   setDisabled(elements.moveQueueUpButton, running || !hasSelection || selectedIndex <= 0);
@@ -1245,18 +1368,19 @@ function updateQueueButtons(): void {
     elements.moveQueueDownButton,
     running || !hasSelection || selectedIndex >= queueState.items.length - 1
   );
-  setDisabled(elements.saveQueueButton, running || !hasItems);
-  setDisabled(elements.loadQueueButton, running);
-  setDisabled(elements.exportDiagnosticsButton, false);
-  setDisabled(elements.runQueueButton, running || !hasItems);
+  setDisabled(elements.saveQueueButton, controlsLocked || !hasItems);
+  setDisabled(elements.loadQueueButton, controlsLocked);
+  setDisabled(elements.exportDiagnosticsButton, dialogBusy);
+  setDisabled(elements.runQueueButton, controlsLocked || !hasItems);
   setDisabled(elements.stopQueueButton, !running);
+  setDisabled(elements.openDiskButton, controlsLocked);
+  setDisabled(elements.quickAddQueueFilesButton, controlsLocked);
+  setDisabled(elements.quickRunQueueButton, controlsLocked || !hasItems);
 
-  setDisabled(elements.guidedOpenDiskButton, running);
-  setDisabled(elements.guidedAddFilesButton, running);
-  setDisabled(elements.guidedAddFolderButton, running);
-  setDisabled(elements.guidedLoadPlanButton, running);
-  setDisabled(elements.guidedRunQueueButton, running || !hasItems);
-  setDisabled(elements.guidedExportDiagnosticsButton, false);
+  setDisabled(elements.guidedOpenDiskButton, controlsLocked);
+  setDisabled(elements.guidedAddFilesButton, controlsLocked);
+  setDisabled(elements.guidedRunQueueButton, controlsLocked || !hasItems);
+  setDisabled(elements.guidedExportDiagnosticsButton, dialogBusy);
 }
 
 function appendCell(row: HTMLTableRowElement, text: string): void {

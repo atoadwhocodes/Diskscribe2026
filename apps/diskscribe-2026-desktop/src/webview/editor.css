@@ -93,8 +93,46 @@ h3 {
 .queueButtons {
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   margin-bottom: 8px;
+}
+
+.queueButtonsAdvanced {
+  margin: 8px 0 0;
+}
+
+.queueAdvancedTools {
+  border: 1px solid color-mix(in srgb, var(--app-panel-border), transparent 14%);
+  border-radius: 9px;
+  margin-bottom: 8px;
+  padding: 6px;
+}
+
+.queueAdvancedTools > summary {
+  color: var(--app-ink-soft);
+  cursor: pointer;
+  font-family: var(--app-font-head);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  list-style: none;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.queueAdvancedTools > summary::-webkit-details-marker {
+  display: none;
+}
+
+.queueAdvancedTools > summary::before {
+  content: '>';
+  display: inline-block;
+  margin-right: 6px;
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+
+.queueAdvancedTools[open] > summary::before {
+  transform: rotate(90deg);
 }
 
 .queueTableWrap {
@@ -146,7 +184,7 @@ h3 {
 }
 
 .panelHex {
-  min-height: 520px;
+  min-height: 460px;
 }
 
 body[data-work-mode='expert'] .panelHex {
@@ -159,6 +197,12 @@ body[data-work-mode='expert'] .panelHex {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 8px;
+}
+
+.hexActionButtons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .hexControls label {
@@ -202,7 +246,7 @@ body[data-work-mode='expert'] .panelHex {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
   font-family: var(--app-font-mono);
   font-size: 0.83rem;
-  height: min(67vh, 690px);
+  height: min(58vh, 560px);
   overflow: auto;
   position: relative;
 }
@@ -402,13 +446,18 @@ pre {
   padding: 4px 8px;
 }
 
+.hexActionButtons button {
+  min-height: 26px;
+  padding: 3px 7px;
+}
+
 @media (max-width: 1260px) {
   .panelHex {
-    min-height: 460px;
+    min-height: 420px;
   }
 
   .hexScroller {
-    height: 54vh;
+    height: 48vh;
   }
 }
 

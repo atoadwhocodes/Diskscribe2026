@@ -41,7 +41,7 @@ body {
   color: var(--app-ink);
   font-family: var(--app-font-sans);
   overflow-x: hidden;
-  padding: 14px 14px 92px;
+  padding: 10px 10px 82px;
 }
 
 .atmosphere {
@@ -74,10 +74,10 @@ body {
   border-radius: 16px;
   box-shadow: 0 14px 34px rgba(20, 34, 42, 0.08);
   display: flex;
-  gap: 18px;
+  gap: 12px;
   justify-content: space-between;
   margin-bottom: 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
 
 .brandCluster {
@@ -130,7 +130,7 @@ body {
   align-items: flex-end;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .modeDeck {
@@ -196,20 +196,21 @@ body {
   flex-wrap: wrap;
   gap: 6px;
   justify-content: flex-end;
+  max-width: 520px;
 }
 
 button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 238, 226, 0.98));
   border: 1px solid rgba(29, 57, 64, 0.16);
-  border-radius: 8px;
+  border-radius: 7px;
   color: var(--app-ink);
   cursor: pointer;
   font-family: var(--app-font-head);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.03em;
-  min-height: 30px;
-  padding: 5px 10px;
+  min-height: 28px;
+  padding: 4px 9px;
   text-transform: uppercase;
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
@@ -240,7 +241,7 @@ button:disabled {
   color: color-mix(in srgb, var(--app-ink), var(--app-ink-soft) 45%);
   font-size: 0.75rem;
   margin: 0;
-  max-width: 760px;
+  max-width: 620px;
   text-align: right;
 }
 
@@ -375,7 +376,7 @@ body[data-work-mode='guided'] #extractSelectionButton {
 .workspace {
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(338px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 368px) minmax(0, 1fr);
 }
 
 .leftRail,
@@ -397,7 +398,7 @@ body[data-work-mode='guided'] #extractSelectionButton {
   border: 1px solid var(--app-panel-border);
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(21, 35, 42, 0.08);
-  padding: 10px;
+  padding: 9px;
 }
 
 .panelGuided {
@@ -567,7 +568,7 @@ body.is-modal-open .statusBar {
 
 @media (max-width: 860px) {
   body {
-    padding: 10px 10px 102px;
+    padding: 8px 8px 98px;
   }
 
   .masthead {

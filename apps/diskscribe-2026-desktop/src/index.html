@@ -35,13 +35,9 @@
         </div>
         <div class="commandGroup">
           <button id="openDiskButton" class="btnPrimary" type="button">Open Volume</button>
+          <button id="quickAddQueueFilesButton" type="button">Queue Files</button>
+          <button id="quickRunQueueButton" class="btnPrimary" type="button">Run Batch</button>
           <button id="sendFeedbackButton" type="button">Report Issue</button>
-          <button id="jumpOffsetButton" type="button">Go Offset</button>
-          <button id="jumpLbaButton" type="button">Go LBA</button>
-          <button id="copyOffsetButton" type="button">Copy Off</button>
-          <button id="copyLbaButton" type="button">Copy LBA</button>
-          <button id="extractSelectionButton" type="button">Dump Bytes</button>
-          <button id="refreshButton" type="button">Reload View</button>
         </div>
         <p id="modeHint" class="modeHint">DiskTools mode: guided menu flow with safety prompts.</p>
         <p class="toolbarHint">
@@ -71,8 +67,6 @@
           <div class="guidedGrid">
             <button id="guidedOpenDiskButton" class="btnPrimary" type="button">Open Volume</button>
             <button id="guidedAddFilesButton" type="button">Queue Files</button>
-            <button id="guidedAddFolderButton" type="button">Queue Folder</button>
-            <button id="guidedLoadPlanButton" type="button">Load Batch Plan</button>
             <button id="guidedRunQueueButton" type="button">Run Batch</button>
             <button id="guidedExportDiagnosticsButton" type="button">Diagnostics</button>
           </div>
@@ -122,17 +116,22 @@
           </div>
           <div class="queueButtons">
             <button id="addQueueFilesButton" type="button">Add Files</button>
-            <button id="addQueueFolderButton" type="button">Add Folder</button>
             <button id="removeQueueItemButton" type="button">Remove</button>
             <button id="clearQueueButton" type="button">Clear</button>
-            <button id="moveQueueUpButton" type="button">Move Up</button>
-            <button id="moveQueueDownButton" type="button">Move Down</button>
-            <button id="saveQueueButton" type="button">Save Plan</button>
-            <button id="loadQueueButton" type="button">Load Plan</button>
-            <button id="exportDiagnosticsButton" type="button">Diagnostics</button>
             <button id="runQueueButton" class="btnPrimary" type="button">Run Batch</button>
             <button id="stopQueueButton" type="button">Stop</button>
           </div>
+          <details class="queueAdvancedTools">
+            <summary>Advanced Queue Tools</summary>
+            <div class="queueButtons queueButtonsAdvanced">
+              <button id="addQueueFolderButton" type="button">Add Folder</button>
+              <button id="moveQueueUpButton" type="button">Move Up</button>
+              <button id="moveQueueDownButton" type="button">Move Down</button>
+              <button id="saveQueueButton" type="button">Save Plan</button>
+              <button id="loadQueueButton" type="button">Load Plan</button>
+              <button id="exportDiagnosticsButton" type="button">Diagnostics</button>
+            </div>
+          </details>
           <div class="queueTableWrap">
             <table class="summaryTable queueTable">
               <thead>
@@ -164,6 +163,14 @@
               <option value="disk">Disk View (LBA 0 base)</option>
               <option value="raw">Raw View (file offset base)</option>
             </select>
+            <div class="hexActionButtons">
+              <button id="refreshButton" type="button">Reload View</button>
+              <button id="jumpOffsetButton" type="button">Go Offset</button>
+              <button id="jumpLbaButton" type="button">Go LBA</button>
+              <button id="copyOffsetButton" type="button">Copy Off</button>
+              <button id="copyLbaButton" type="button">Copy LBA</button>
+              <button id="extractSelectionButton" type="button">Dump Bytes</button>
+            </div>
           </div>
           <div id="hexScroller" class="hexScroller">
             <div id="hexSpacer"></div>

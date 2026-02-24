@@ -112,10 +112,10 @@ app.setName(APP_DESKTOP_NAME);
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     title: APP_DESKTOP_NAME,
-    width: 1400,
-    height: 920,
-    minWidth: 980,
-    minHeight: 720,
+    width: 1240,
+    height: 800,
+    minWidth: 900,
+    minHeight: 640,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#f8f1e3',
