@@ -45,8 +45,11 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 
 ## Development
 
+Recommended runtime: Node 22 LTS.
+
 ```bash
 npm run doctor
+npm run typecheck
 npm run desktop:install
 npm run desktop:start
 ```

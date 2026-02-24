@@ -290,7 +290,18 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
+const allowedMessageOrigins = new Set(['', 'null', window.location.origin]);
+
 window.addEventListener('message', (event) => {
+  const origin = typeof event.origin === 'string' ? event.origin : '';
+  if (!allowedMessageOrigins.has(origin)) {
+    return;
+  }
+
+  if (event.source && event.source !== window) {
+    return;
+  }
+
   const message = event.data;
   if (!message || typeof message.type !== 'string') {
     return;
@@ -833,6 +844,35 @@ function chooseMode(mode) {
   return 'raw';
 }
 
+function getWorkbenchMode() {
+  return document.body.getAttribute('data-work-mode') === 'expert' ? 'expert' : 'guided';
+}
+
+function isExpertArmed() {
+  return document.body.getAttribute('data-expert-armed') === 'true';
+}
+
+function requireExpertMode(actionLabel) {
+  if (getWorkbenchMode() === 'expert') {
+    return true;
+  }
+
+  setText(elements.status, `Switch to DiskEdit mode to ${actionLabel}.`);
+  return false;
+}
+
+function requireArmedExpertMode(actionLabel) {
+  if (!requireExpertMode(actionLabel)) {
+    return false;
+  }
+  if (isExpertArmed()) {
+    return true;
+  }
+
+  setText(elements.status, `Arm expert actions before trying to ${actionLabel}.`);
+  return false;
+}
+
 function clampOffset(offset, mode) {
   const viewLength = getViewLength(mode);
   if (viewLength <= 0) {
@@ -855,19 +895,22 @@ function syncModeSelect() {
 }
 
 async function promptJumpOffset() {
+  if (!requireExpertMode('jump by offset')) {
+    return;
+  }
   if (getViewLength(state.mode) <= 0) {
-    setText(elements.status, 'Open a disk image before jumping.');
+    setText(elements.status, 'Open a volume image before jumping.');
     return;
   }
 
-  const modeInput = window.prompt('Offset mode (disk/raw):', state.mode);
+  const modeInput = window.prompt('Address base (disk/raw):', state.mode);
   if (modeInput === null) {
     return;
   }
 
   const mode = modeInput.trim().toLowerCase() === 'raw' ? 'raw' : 'disk';
   const offsetInput = window.prompt(
-    'Enter offset in decimal or hex (0x..., ...h):',
+    'Enter offset address in decimal or hex (0x..., ...h):',
     mode === 'disk' ? '0x0' : '0'
   );
   if (offsetInput === null) {
@@ -876,7 +919,7 @@ async function promptJumpOffset() {
 
   const offset = parseOffsetInput(offsetInput);
   if (offset === undefined || offset < 0) {
-    setText(elements.status, 'Invalid offset input.');
+    setText(elements.status, 'Invalid offset address.');
     return;
   }
 
@@ -888,8 +931,11 @@ async function promptJumpOffset() {
 }
 
 async function promptJumpLba() {
+  if (!requireExpertMode('jump by LBA')) {
+    return;
+  }
   if (getViewLength(state.mode) <= 0) {
-    setText(elements.status, 'Open a disk image before jumping to LBA.');
+    setText(elements.status, 'Open a volume image before jumping to LBA.');
     return;
   }
 
@@ -900,7 +946,7 @@ async function promptJumpLba() {
 
   const lba = parseDecimalInteger(lbaInput);
   if (lba === undefined || lba < 0) {
-    setText(elements.status, 'Invalid LBA input.');
+    setText(elements.status, 'Invalid LBA value.');
     return;
   }
 
@@ -917,11 +963,11 @@ async function copyOffsetToClipboard() {
   const text = `0x${start.toString(16).toUpperCase()}`;
   const copied = await copyText(text);
   if (!copied) {
-    setText(elements.status, 'Unable to copy offset to clipboard.');
+    setText(elements.status, 'Unable to copy offset address to clipboard.');
     return;
   }
 
-  setText(elements.status, `Copied offset: ${text}`);
+  setText(elements.status, `Copied offset address: ${text}`);
 }
 
 async function copyLbaToClipboard() {
@@ -940,12 +986,26 @@ async function copyLbaToClipboard() {
     return;
   }
 
-  setText(elements.status, `Copied LBA: ${formatNumber(lba)}`);
+  setText(elements.status, `Copied start LBA: ${formatNumber(lba)}`);
 }
 
 async function requestExtractSelection() {
+  if (!requireArmedExpertMode('extract selected bytes')) {
+    return;
+  }
   const start = clampOffset(state.selectionStart, state.mode);
   const end = clampOffset(state.selectionEnd, state.mode);
+  const totalBytes = Math.abs(end - start) + 1;
+  const confirmed = window.confirm(
+    `Extract ${formatNumber(totalBytes)} byte(s) from ${state.mode.toUpperCase()} view (offset ${formatNumber(
+      start
+    )} to ${formatNumber(end)})?`
+  );
+  if (!confirmed) {
+    setText(elements.status, 'Byte extraction canceled.');
+    return;
+  }
+
   post({
     type: 'hex.extract',
     mode: state.mode,
@@ -1327,4 +1387,3 @@ function persistState() {
 }
 
 export {};
-

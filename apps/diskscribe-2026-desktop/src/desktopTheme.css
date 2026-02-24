@@ -14,6 +14,8 @@
   --app-accent: #11806d;
   --app-accent-strong: #0d6657;
   --app-accent-warm: #c6782b;
+  --app-guided-accent: #1f7f6f;
+  --app-expert-accent: #9f631e;
 
   --app-status-info: #365f6d;
   --app-status-success: #0f7a69;
@@ -131,6 +133,64 @@ body {
   gap: 8px;
 }
 
+.modeDeck {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modeToggle {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(24, 54, 64, 0.2);
+  border-radius: 10px;
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.modeButton {
+  border: 0;
+  border-radius: 0;
+  min-height: 30px;
+  min-width: 102px;
+}
+
+.modeButton.is-active {
+  background: linear-gradient(180deg, #1e6a79, #24515d);
+  color: #f5f8fa;
+}
+
+.armToggle {
+  align-items: center;
+  color: var(--app-ink-soft);
+  display: inline-flex;
+  font-family: var(--app-font-head);
+  font-size: 0.74rem;
+  font-weight: 700;
+  gap: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.armToggle input[type='checkbox'] {
+  accent-color: var(--app-expert-accent);
+}
+
+.armToggle input[disabled] {
+  cursor: not-allowed;
+}
+
+.modeHint {
+  color: color-mix(in srgb, var(--app-ink), var(--app-ink-soft) 30%);
+  font-family: var(--app-font-head);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .commandGroup {
   display: flex;
   flex-wrap: wrap;
@@ -198,6 +258,78 @@ button:disabled {
   white-space: nowrap;
 }
 
+.workbenchHint {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 245, 246, 0.9));
+  border: 1px solid rgba(33, 54, 62, 0.14);
+  border-left: 4px solid var(--app-guided-accent);
+  border-radius: 11px;
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-mono);
+  font-size: 0.77rem;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+}
+
+.workbenchHint .separator {
+  margin: 0 8px;
+  opacity: 0.58;
+}
+
+.firstRunModal {
+  align-items: center;
+  background: rgba(8, 18, 24, 0.56);
+  backdrop-filter: blur(3px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 14px;
+  position: fixed;
+  z-index: 180;
+}
+
+.firstRunWindow {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 236, 225, 0.98)),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(32, 52, 61, 0.045) 2px,
+      rgba(32, 52, 61, 0.045) 4px
+    );
+  border: 1px solid rgba(28, 53, 62, 0.34);
+  border-left: 5px solid var(--app-guided-accent);
+  border-radius: 14px;
+  box-shadow: 0 20px 42px rgba(4, 12, 18, 0.42);
+  max-width: 640px;
+  padding: 14px;
+  width: min(100%, 640px);
+}
+
+.firstRunCopy {
+  color: var(--app-ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.firstRunOptions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 12px;
+}
+
+.firstRunHint {
+  border-top: 1px dashed color-mix(in srgb, var(--app-panel-border), transparent 30%);
+  color: color-mix(in srgb, var(--app-ink-soft), black 5%);
+  font-family: var(--app-font-mono);
+  font-size: 0.75rem;
+  margin: 10px 0 0;
+  padding-top: 9px;
+}
+
 .dropHint {
   align-items: center;
   background: rgba(15, 122, 105, 0.15);
@@ -222,6 +354,22 @@ body.is-dropping .workspace {
 
 .isHidden {
   display: none !important;
+}
+
+body[data-work-mode='guided'] .expertOnly {
+  display: none !important;
+}
+
+body[data-work-mode='expert'] .guidedOnly {
+  display: none !important;
+}
+
+body[data-work-mode='guided'] #jumpOffsetButton,
+body[data-work-mode='guided'] #jumpLbaButton,
+body[data-work-mode='guided'] #copyOffsetButton,
+body[data-work-mode='guided'] #copyLbaButton,
+body[data-work-mode='guided'] #extractSelectionButton {
+  display: none;
 }
 
 .workspace {
@@ -250,6 +398,58 @@ body.is-dropping .workspace {
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(21, 35, 42, 0.08);
   padding: 10px;
+}
+
+.panelGuided {
+  border-left: 4px solid color-mix(in srgb, var(--app-guided-accent), white 10%);
+}
+
+.workflowCopy,
+.workflowHint {
+  color: var(--app-ink-soft);
+  font-size: 0.77rem;
+  line-height: 1.42;
+  margin: 0;
+}
+
+.workflowHint {
+  border-top: 1px dashed color-mix(in srgb, var(--app-panel-border), transparent 30%);
+  font-family: var(--app-font-mono);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.guidedGrid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+body[data-work-mode='expert'] {
+  background:
+    radial-gradient(920px 430px at -6% -14%, rgba(42, 92, 110, 0.2), transparent 72%),
+    radial-gradient(870px 410px at 103% -8%, rgba(175, 117, 59, 0.17), transparent 70%),
+    linear-gradient(180deg, #f9fbfb 0%, #f2eee7 100%);
+}
+
+body[data-work-mode='expert'] .panel {
+  border-color: color-mix(in srgb, var(--app-expert-accent), var(--app-panel-border) 65%);
+}
+
+body[data-work-mode='expert'] .workbenchHint {
+  border-left-color: var(--app-expert-accent);
+}
+
+body.is-modal-open .masthead,
+body.is-modal-open .activePath,
+body.is-modal-open .workbenchHint,
+body.is-modal-open .dropHint,
+body.is-modal-open .workspace,
+body.is-modal-open .statusBar {
+  filter: blur(1px) saturate(0.75);
+  pointer-events: none;
+  user-select: none;
 }
 
 .panelHeaderRow {
@@ -375,8 +575,30 @@ body.is-dropping .workspace {
     flex-direction: column;
   }
 
+  .modeDeck {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .modeToggle {
+    width: 100%;
+  }
+
+  .modeButton {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .commandGroup {
     justify-content: flex-start;
+  }
+
+  .workbenchHint .separator {
+    display: none;
+  }
+
+  .firstRunOptions {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .statusBar {

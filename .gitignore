@@ -23,3 +23,5 @@ build/
 apps/diskscribe-2026-desktop/out/
 apps/diskscribe-2026-desktop/.webpack/
 *.code-workspace
+.codeql/
+codeql-results/

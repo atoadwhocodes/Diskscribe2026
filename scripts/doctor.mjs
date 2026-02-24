@@ -24,6 +24,14 @@ console.log(`Desktop version: ${desktopPackage.version ?? 'unknown'}`);
 console.log('');
 
 let hasFailures = false;
+const nodeMajor = Number.parseInt(process.versions.node.split('.')[0] ?? '', 10);
+if (Number.isFinite(nodeMajor) && nodeMajor >= 24) {
+  console.log(
+    `[WARN] Node ${process.version} may emit electron-winstaller deprecation warnings during make/package. Prefer Node 22 LTS for a quieter toolchain.`
+  );
+  console.log('');
+}
+
 for (const check of checks) {
   const targetPath = path.join(workspaceRoot, check.path);
   const exists = fs.existsSync(targetPath);

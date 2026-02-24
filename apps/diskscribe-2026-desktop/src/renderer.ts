@@ -4,8 +4,16 @@ import { APP_DESKTOP_NAME } from './appMeta';
 
 type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
 type StatusTone = 'info' | 'success' | 'warning' | 'error' | 'busy';
+type WorkMode = 'guided' | 'expert';
 
 const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
+const WORKBENCH_UI_STORAGE_KEY = 'diskscribe2026.workbenchUi';
+const WORKBENCH_ONBOARDING_STORAGE_KEY = 'diskscribe2026.workbenchOnboardingComplete';
+
+interface WorkbenchUiPrefs {
+  workMode: WorkMode;
+  expertArmed: boolean;
+}
 
 interface BatchPlanEntryPayload {
   id: string;
@@ -90,13 +98,29 @@ const queueState: {
   isRunning: false
 };
 
+const uiState: WorkbenchUiPrefs = loadWorkbenchUiPrefs();
+
 const DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE =
   'Desktop bridge is unavailable. Restart DiskScribe2026 Desktop and try again.';
 
 const elements = {
   brandTitle: document.getElementById('brandTitle'),
   brandVersion: document.getElementById('brandVersion'),
+  modeHint: document.getElementById('modeHint'),
+  workbenchHint: document.getElementById('workbenchHint'),
+  guidedModeButton: document.getElementById('guidedModeButton'),
+  expertModeButton: document.getElementById('expertModeButton'),
+  armExpertToggle: document.getElementById('armExpertToggle') as HTMLInputElement | null,
+  firstRunModal: document.getElementById('firstRunModal'),
+  firstRunGuidedButton: document.getElementById('firstRunGuidedButton'),
+  firstRunExpertButton: document.getElementById('firstRunExpertButton'),
   sendFeedbackButton: document.getElementById('sendFeedbackButton'),
+  guidedOpenDiskButton: document.getElementById('guidedOpenDiskButton'),
+  guidedAddFilesButton: document.getElementById('guidedAddFilesButton'),
+  guidedAddFolderButton: document.getElementById('guidedAddFolderButton'),
+  guidedLoadPlanButton: document.getElementById('guidedLoadPlanButton'),
+  guidedRunQueueButton: document.getElementById('guidedRunQueueButton'),
+  guidedExportDiagnosticsButton: document.getElementById('guidedExportDiagnosticsButton'),
   activePath: document.getElementById('activePath'),
   dropHint: document.getElementById('dropHint'),
   status: document.getElementById('status'),
@@ -144,6 +168,7 @@ document.title = APP_DESKTOP_NAME;
 if (elements.brandTitle) {
   elements.brandTitle.textContent = APP_DESKTOP_NAME;
 }
+applyWorkbenchMode(false);
 
 if (!desktopBridgeAvailable) {
   setStatus(DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE, 'error');
@@ -157,6 +182,7 @@ desktopBridge.onHostMessage((message) => {
 wireDesktopControls();
 wireGlobalShortcuts();
 wireDragAndDrop();
+maybeShowFirstRunChooser();
 
 void import('./webview/editor')
   .then(async () => {
@@ -167,12 +193,54 @@ void import('./webview/editor')
   });
 
 function wireDesktopControls(): void {
+  elements.firstRunGuidedButton?.addEventListener('click', () => {
+    completeFirstRunChooser('guided');
+  });
+  elements.firstRunExpertButton?.addEventListener('click', () => {
+    completeFirstRunChooser('expert');
+  });
+
+  elements.guidedModeButton?.addEventListener('click', () => {
+    setWorkbenchMode('guided');
+  });
+  elements.expertModeButton?.addEventListener('click', () => {
+    setWorkbenchMode('expert');
+  });
+  elements.armExpertToggle?.addEventListener('change', () => {
+    uiState.expertArmed = elements.armExpertToggle?.checked === true;
+    persistWorkbenchUiPrefs();
+    applyWorkbenchMode(false);
+    setStatus(
+      uiState.expertArmed ? 'DiskEdit manual commands armed.' : 'DiskEdit manual commands disarmed.',
+      uiState.expertArmed ? 'warning' : 'info'
+    );
+  });
+
   const openButton = document.getElementById('openDiskButton');
   if (openButton) {
     openButton.addEventListener('click', () => {
       void handleOpenDisk();
     });
   }
+  elements.guidedOpenDiskButton?.addEventListener('click', () => {
+    void handleOpenDisk();
+  });
+  elements.guidedAddFilesButton?.addEventListener('click', () => {
+    void handleAddQueueFiles();
+  });
+  elements.guidedAddFolderButton?.addEventListener('click', () => {
+    void handleAddQueueFolder();
+  });
+  elements.guidedLoadPlanButton?.addEventListener('click', () => {
+    void loadQueuePlan();
+  });
+  elements.guidedRunQueueButton?.addEventListener('click', () => {
+    void runQueue();
+  });
+  elements.guidedExportDiagnosticsButton?.addEventListener('click', () => {
+    void exportDiagnosticsBundle();
+  });
+
   elements.sendFeedbackButton?.addEventListener('click', () => {
     void openFeedbackIssue();
   });
@@ -245,10 +313,15 @@ function wireDesktopControls(): void {
 
   renderQueue();
   updateQueueButtons();
+  applyWorkbenchMode(false);
 }
 
 function wireGlobalShortcuts(): void {
   window.addEventListener('keydown', (event) => {
+    if (isFirstRunChooserOpen()) {
+      return;
+    }
+
     const editableTarget = isEditableTarget(event.target);
     if (!(event.ctrlKey || event.metaKey)) {
       if (!editableTarget && event.key === 'Escape' && queueState.isRunning) {
@@ -263,6 +336,27 @@ function wireGlobalShortcuts(): void {
     }
 
     const key = event.key.toLowerCase();
+    if (key === '1') {
+      event.preventDefault();
+      setWorkbenchMode('guided');
+      return;
+    }
+    if (key === '2') {
+      event.preventDefault();
+      setWorkbenchMode('expert');
+      return;
+    }
+    if (key === 'e' && event.shiftKey) {
+      event.preventDefault();
+      uiState.expertArmed = !uiState.expertArmed;
+      persistWorkbenchUiPrefs();
+      applyWorkbenchMode(false);
+      setStatus(
+        uiState.expertArmed ? 'DiskEdit manual commands armed.' : 'DiskEdit manual commands disarmed.',
+        uiState.expertArmed ? 'warning' : 'info'
+      );
+      return;
+    }
     if (key === 'o' && !event.shiftKey) {
       event.preventDefault();
       void handleOpenDisk();
@@ -360,6 +454,10 @@ function extractDroppedPaths(event: DragEvent): string[] {
 }
 
 async function handleDroppedPaths(filePaths: string[]): Promise<void> {
+  if (isFirstRunChooserOpen()) {
+    return;
+  }
+
   if (!Array.isArray(filePaths) || filePaths.length === 0) {
     setStatus('Dropped items were empty.', 'warning');
     return;
@@ -431,7 +529,7 @@ async function handleOpenDisk(): Promise<void> {
   }
 
   setActivePath(selectedPath);
-  setStatus(`Opening ${selectedPath}...`, 'busy');
+  setStatus(`Opening volume image ${selectedPath}...`, 'busy');
   await postDesktopMessage(
     {
       type: 'desktop.openDisk',
@@ -456,7 +554,7 @@ async function openFeedbackIssue(): Promise<void> {
     return;
   }
 
-  setStatus('Opened GitHub feedback page.', 'info');
+  setStatus('Opened issue report page.', 'info');
 }
 
 async function postDesktopMessage(message: unknown, failurePrefix = 'Action failed'): Promise<boolean> {
@@ -504,7 +602,7 @@ async function handleAddQueueFiles(): Promise<void> {
     return;
   }
 
-  setStatus(`Added ${result.added} file(s) to batch queue.`, 'success');
+  setStatus(`Added ${result.added} file(s) to batch job queue.`, 'success');
 }
 
 async function handleAddQueueFolder(): Promise<void> {
@@ -554,7 +652,7 @@ async function handleAddQueueFolder(): Promise<void> {
     return;
   }
 
-  setStatus(`Added ${result.added} file(s) from folder.`, 'success');
+  setStatus(`Added ${result.added} file(s) from folder scan.`, 'success');
 }
 
 function addQueueItems(filePaths: string[]): { added: number; duplicates: number } {
@@ -605,12 +703,21 @@ function clearQueue(): void {
   if (queueState.isRunning) {
     return;
   }
+  if (queueState.items.length > 0) {
+    const confirmed = window.confirm(
+      `Clear all ${queueState.items.length} queued job(s)? This cannot be undone.`
+    );
+    if (!confirmed) {
+      setStatus('Batch queue clear canceled.', 'info');
+      return;
+    }
+  }
 
   queueState.items = [];
   queueState.selectedId = undefined;
   renderQueue();
   updateQueueButtons();
-  setStatus('Cleared batch queue.', 'info');
+  setStatus('Cleared batch job queue.', 'info');
 }
 
 function moveSelectedQueueItem(delta: -1 | 1): void {
@@ -711,12 +818,12 @@ async function loadQueuePlan(): Promise<void> {
 
     if (addResult.duplicates > 0) {
       setStatus(
-        `Loaded ${addResult.added} queue item(s) from ${result.filePath}; skipped ${addResult.duplicates} duplicate(s).`,
+        `Loaded ${addResult.added} queued job(s) from ${result.filePath}; skipped ${addResult.duplicates} duplicate(s).`,
         'warning'
       );
       return;
     }
-    setStatus(`Loaded ${addResult.added} queue item(s) from ${result.filePath}.`, 'success');
+    setStatus(`Loaded ${addResult.added} queued job(s) from ${result.filePath}.`, 'success');
   }
 }
 
@@ -725,8 +832,17 @@ async function runQueue(): Promise<void> {
     return;
   }
   if (queueState.items.length === 0) {
-    setStatus('Batch queue is empty.', 'warning');
+    setStatus('Batch job queue is empty.', 'warning');
     return;
+  }
+  if (uiState.workMode === 'guided') {
+    const confirmed = window.confirm(
+      `Run guided batch now for ${queueState.items.length} queued job(s)?`
+    );
+    if (!confirmed) {
+      setStatus('Guided batch run canceled.', 'info');
+      return;
+    }
   }
 
   queueState.isRunning = true;
@@ -740,7 +856,7 @@ async function runQueue(): Promise<void> {
   renderQueue();
   updateQueueButtons();
 
-  setStatus(`Running ${queueState.items.length} queued item(s)...`, 'busy');
+  setStatus(`Running ${queueState.items.length} queued job(s)...`, 'busy');
   setProgress(0, queueState.items.length, true);
 
   const started = await postDesktopMessage(
@@ -751,7 +867,7 @@ async function runQueue(): Promise<void> {
         filePath: item.filePath
       }))
     },
-    'Unable to start batch queue'
+    'Unable to start batch run'
   );
   if (!started) {
     queueState.isRunning = false;
@@ -765,8 +881,8 @@ function stopQueue(): void {
     return;
   }
 
-  setStatus('Stopping batch queue after current file...', 'busy');
-  void postDesktopMessage({ type: 'desktop.batchStop' }, 'Unable to stop batch queue');
+  setStatus('Stopping batch run after current file...', 'busy');
+  void postDesktopMessage({ type: 'desktop.batchStop' }, 'Unable to stop batch run');
 }
 
 async function openQueueItem(filePath: string): Promise<boolean> {
@@ -825,10 +941,10 @@ function handleDesktopMessage(message: unknown): void {
       updateQueueButtons();
       if (typeof message.total === 'number' && typeof message.completed === 'number') {
         if (message.canceled === true) {
-          setStatus(`Batch canceled (${message.completed}/${message.total} completed).`, 'warning');
+          setStatus(`Batch run canceled (${message.completed}/${message.total} completed).`, 'warning');
         } else {
           setStatus(
-            `Batch complete (${message.completed} succeeded, ${numberOrUndefined(message.failed) ?? 0} failed).`,
+            `Batch run complete (${message.completed} succeeded, ${numberOrUndefined(message.failed) ?? 0} failed).`,
             'success'
           );
         }
@@ -837,6 +953,132 @@ function handleDesktopMessage(message: unknown): void {
       return;
     default:
       return;
+  }
+}
+
+function setWorkbenchMode(mode: WorkMode): void {
+  if (uiState.workMode === mode) {
+    return;
+  }
+
+  uiState.workMode = mode;
+  if (mode !== 'expert') {
+    uiState.expertArmed = false;
+  }
+  persistWorkbenchUiPrefs();
+  applyWorkbenchMode(true);
+}
+
+function applyWorkbenchMode(announce: boolean): void {
+  document.body.setAttribute('data-work-mode', uiState.workMode);
+  document.body.setAttribute('data-expert-armed', uiState.expertArmed ? 'true' : 'false');
+
+  const guidedActive = uiState.workMode === 'guided';
+  setToggleState(elements.guidedModeButton, guidedActive);
+  setToggleState(elements.expertModeButton, !guidedActive);
+
+  if (elements.armExpertToggle) {
+    elements.armExpertToggle.checked = uiState.expertArmed;
+    elements.armExpertToggle.disabled = guidedActive;
+  }
+
+  if (elements.modeHint) {
+    if (guidedActive) {
+      elements.modeHint.textContent = 'DiskTools mode: guided menu flow with safety prompts.';
+    } else {
+      elements.modeHint.textContent = uiState.expertArmed
+        ? 'DiskEdit mode: direct sector commands enabled (armed).'
+        : 'DiskEdit mode: direct sector commands visible. Arm expert actions for risky tasks.';
+    }
+  }
+
+  if (elements.workbenchHint) {
+    elements.workbenchHint.textContent = guidedActive
+      ? 'Guided mode active. Use DiskTools queue and partition menus for safer workflows.'
+      : 'Expert mode active. Sector editor commands are manual and require careful validation.';
+  }
+
+  if (announce) {
+    setStatus(
+      guidedActive
+        ? 'Switched to DiskTools guided menu mode.'
+        : uiState.expertArmed
+          ? 'Switched to DiskEdit expert mode. Manual commands are armed.'
+          : 'Switched to DiskEdit expert mode. Arm expert actions before risky commands.',
+      guidedActive ? 'info' : 'warning'
+    );
+  }
+}
+
+function maybeShowFirstRunChooser(): void {
+  if (!desktopBridgeAvailable) {
+    return;
+  }
+
+  if (!shouldShowFirstRunChooser()) {
+    return;
+  }
+
+  showFirstRunChooser();
+  setStatus('Choose startup workbench mode to continue.', 'info');
+}
+
+function shouldShowFirstRunChooser(): boolean {
+  try {
+    return window.localStorage.getItem(WORKBENCH_ONBOARDING_STORAGE_KEY) !== 'true';
+  } catch {
+    return false;
+  }
+}
+
+function isFirstRunChooserOpen(): boolean {
+  return Boolean(elements.firstRunModal && !elements.firstRunModal.classList.contains('isHidden'));
+}
+
+function showFirstRunChooser(): void {
+  if (!elements.firstRunModal) {
+    return;
+  }
+
+  elements.firstRunModal.classList.remove('isHidden');
+  document.body.classList.add('is-modal-open');
+  const primary = elements.firstRunGuidedButton;
+  if (primary instanceof HTMLButtonElement) {
+    window.requestAnimationFrame(() => {
+      primary.focus();
+    });
+  }
+}
+
+function hideFirstRunChooser(): void {
+  if (!elements.firstRunModal) {
+    return;
+  }
+
+  elements.firstRunModal.classList.add('isHidden');
+  document.body.classList.remove('is-modal-open');
+}
+
+function completeFirstRunChooser(mode: WorkMode): void {
+  uiState.workMode = mode;
+  uiState.expertArmed = false;
+  persistWorkbenchUiPrefs();
+  applyWorkbenchMode(false);
+  markFirstRunChooserCompleted();
+  hideFirstRunChooser();
+  setStatus(
+    mode === 'guided'
+      ? 'Startup set to DiskTools guided mode.'
+      : 'Startup set to DiskEdit expert mode. Arm expert actions for risky commands.',
+    mode === 'guided' ? 'info' : 'warning'
+  );
+}
+
+function markFirstRunChooserCompleted(): void {
+  try {
+    window.localStorage.setItem(WORKBENCH_ONBOARDING_STORAGE_KEY, 'true');
+  } catch {
+    // Ignore storage failures.
   }
 }
 
@@ -954,11 +1196,11 @@ function renderQueue(): void {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
     cell.colSpan = 5;
-    cell.textContent = 'Queue is empty.';
+    cell.textContent = 'Batch queue is empty.';
     row.appendChild(cell);
     elements.queueRows.appendChild(row);
     if (elements.queueMeta) {
-      elements.queueMeta.textContent = '0 items';
+      elements.queueMeta.textContent = '0 jobs';
     }
     return;
   }
@@ -982,7 +1224,7 @@ function renderQueue(): void {
 
   elements.queueRows.appendChild(fragment);
   if (elements.queueMeta) {
-    elements.queueMeta.textContent = `${queueState.items.length} item(s)`;
+    elements.queueMeta.textContent = `${queueState.items.length} job(s)`;
   }
 }
 
@@ -1008,6 +1250,13 @@ function updateQueueButtons(): void {
   setDisabled(elements.exportDiagnosticsButton, false);
   setDisabled(elements.runQueueButton, running || !hasItems);
   setDisabled(elements.stopQueueButton, !running);
+
+  setDisabled(elements.guidedOpenDiskButton, running);
+  setDisabled(elements.guidedAddFilesButton, running);
+  setDisabled(elements.guidedAddFolderButton, running);
+  setDisabled(elements.guidedLoadPlanButton, running);
+  setDisabled(elements.guidedRunQueueButton, running || !hasItems);
+  setDisabled(elements.guidedExportDiagnosticsButton, false);
 }
 
 function appendCell(row: HTMLTableRowElement, text: string): void {
@@ -1021,6 +1270,14 @@ function setDisabled(element: HTMLElement | null, disabled: boolean): void {
     return;
   }
   element.disabled = disabled;
+}
+
+function setToggleState(element: HTMLElement | null, active: boolean): void {
+  if (!(element instanceof HTMLButtonElement)) {
+    return;
+  }
+  element.classList.toggle('is-active', active);
+  element.setAttribute('aria-pressed', active ? 'true' : 'false');
 }
 
 function createQueueItemId(): string {
@@ -1070,6 +1327,37 @@ function toErrorMessage(error: unknown): string {
     return error.message;
   }
   return String(error);
+}
+
+function loadWorkbenchUiPrefs(): WorkbenchUiPrefs {
+  try {
+    const raw = window.localStorage.getItem(WORKBENCH_UI_STORAGE_KEY);
+    if (!raw) {
+      return { workMode: 'guided', expertArmed: false };
+    }
+
+    const parsed = JSON.parse(raw) as Partial<WorkbenchUiPrefs>;
+    const workMode: WorkMode = parsed.workMode === 'expert' ? 'expert' : 'guided';
+    const expertArmed = parsed.expertArmed === true;
+    return {
+      workMode,
+      expertArmed: workMode === 'expert' ? expertArmed : false
+    };
+  } catch {
+    return { workMode: 'guided', expertArmed: false };
+  }
+}
+
+function persistWorkbenchUiPrefs(): void {
+  try {
+    const safe: WorkbenchUiPrefs = {
+      workMode: uiState.workMode === 'expert' ? 'expert' : 'guided',
+      expertArmed: uiState.workMode === 'expert' && uiState.expertArmed
+    };
+    window.localStorage.setItem(WORKBENCH_UI_STORAGE_KEY, JSON.stringify(safe));
+  } catch {
+    // Ignore storage failures.
+  }
 }
 
 function resolveDesktopBridge(candidate: Partial<DesktopBridge> | undefined): DesktopBridge {

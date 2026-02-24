@@ -13,35 +13,76 @@
         <div class="brandMark" aria-hidden="true">DS</div>
         <div class="brandText">
           <h1 id="brandTitle">DiskScribe2026 Desktop</h1>
-          <p class="brandTagline">PC-98 Disk Workbench</p>
+          <p class="brandTagline">Character Utility Workbench</p>
           <p id="brandVersion" class="brandVersion">Version --</p>
         </div>
       </div>
 
       <div class="commandDeck">
-        <div class="commandGroup">
-          <button id="openDiskButton" class="btnPrimary" type="button">Open Disk</button>
-          <button id="sendFeedbackButton" type="button">Send Feedback</button>
-          <button id="jumpOffsetButton" type="button">Jump Offset</button>
-          <button id="jumpLbaButton" type="button">Jump LBA</button>
-          <button id="copyOffsetButton" type="button">Copy Offset</button>
-          <button id="copyLbaButton" type="button">Copy LBA</button>
-          <button id="extractSelectionButton" type="button">Extract Bytes</button>
-          <button id="refreshButton" type="button">Reload</button>
+        <div class="modeDeck">
+          <div class="modeToggle" role="tablist" aria-label="Workbench mode">
+            <button id="guidedModeButton" class="modeButton is-active" type="button" aria-pressed="true">
+              DiskTools
+            </button>
+            <button id="expertModeButton" class="modeButton" type="button" aria-pressed="false">
+              DiskEdit
+            </button>
+          </div>
+          <label class="armToggle" for="armExpertToggle">
+            <input id="armExpertToggle" type="checkbox" />
+            Arm expert actions
+          </label>
         </div>
+        <div class="commandGroup">
+          <button id="openDiskButton" class="btnPrimary" type="button">Open Volume</button>
+          <button id="sendFeedbackButton" type="button">Report Issue</button>
+          <button id="jumpOffsetButton" type="button">Go Offset</button>
+          <button id="jumpLbaButton" type="button">Go LBA</button>
+          <button id="copyOffsetButton" type="button">Copy Off</button>
+          <button id="copyLbaButton" type="button">Copy LBA</button>
+          <button id="extractSelectionButton" type="button">Dump Bytes</button>
+          <button id="refreshButton" type="button">Reload View</button>
+        </div>
+        <p id="modeHint" class="modeHint">DiskTools mode: guided menu flow with safety prompts.</p>
         <p class="toolbarHint">
-          Shortcuts: Ctrl/Cmd+O open disk, Ctrl/Cmd+Shift+O queue files, Ctrl/Cmd+Shift+D export diagnostics, Ctrl/Cmd+G jump offset, Ctrl/Cmd+L jump LBA, Ctrl/Cmd+Enter run queue, Esc stop queue.
+          Hotkeys: Ctrl/Cmd+1 DiskTools, Ctrl/Cmd+2 DiskEdit, Ctrl/Cmd+Shift+E arm expert actions, Ctrl/Cmd+O open volume, Ctrl/Cmd+Shift+O queue files, Ctrl/Cmd+G go offset, Ctrl/Cmd+L go LBA.
         </p>
       </div>
     </header>
 
     <div id="activePath" class="activePath">No disk loaded.</div>
+    <div id="workbenchHint" class="workbenchHint">
+      <strong>DiskTools:</strong> guided automation and guarded actions.
+      <span class="separator">|</span>
+      <strong>DiskEdit:</strong> manual sector-level operations for power users.
+    </div>
     <div id="dropHint" class="dropHint isHidden">Drop disk image files here to open or queue</div>
 
     <main class="workspace">
       <aside class="leftRail">
+        <section class="panel panelGuided guidedOnly">
+          <div class="panelHeaderRow">
+            <h2>DiskTools Program Menu</h2>
+            <span>Automated first</span>
+          </div>
+          <p class="workflowCopy">
+            Start with high-level actions. This mode prioritizes queue plans, parser automation, and guarded prompts.
+          </p>
+          <div class="guidedGrid">
+            <button id="guidedOpenDiskButton" class="btnPrimary" type="button">Open Volume</button>
+            <button id="guidedAddFilesButton" type="button">Queue Files</button>
+            <button id="guidedAddFolderButton" type="button">Queue Folder</button>
+            <button id="guidedLoadPlanButton" type="button">Load Batch Plan</button>
+            <button id="guidedRunQueueButton" type="button">Run Batch</button>
+            <button id="guidedExportDiagnosticsButton" type="button">Diagnostics</button>
+          </div>
+          <p class="workflowHint">
+            Source images stay untouched. Manual byte operations stay in DiskEdit mode.
+          </p>
+        </section>
+
         <section class="panel panelSummary">
-          <h2>Disk Summary</h2>
+          <h2>Volume Summary</h2>
           <dl class="summaryGrid">
             <div><dt>File</dt><dd id="fileName">-</dd></div>
             <div><dt>Format</dt><dd id="format">-</dd></div>
@@ -55,7 +96,7 @@
         </section>
 
         <section class="panel">
-          <h2>Partitions</h2>
+          <h2>Partition Table</h2>
           <div class="tableWrap">
             <table class="summaryTable">
               <thead>
@@ -76,7 +117,7 @@
 
         <section class="panel panelQueue">
           <div class="panelHeaderRow">
-            <h2>Batch Queue</h2>
+            <h2>Batch Job Queue</h2>
             <span id="queueMeta">0 items</span>
           </div>
           <div class="queueButtons">
@@ -89,7 +130,7 @@
             <button id="saveQueueButton" type="button">Save Plan</button>
             <button id="loadQueueButton" type="button">Load Plan</button>
             <button id="exportDiagnosticsButton" type="button">Diagnostics</button>
-            <button id="runQueueButton" class="btnPrimary" type="button">Run Queue</button>
+            <button id="runQueueButton" class="btnPrimary" type="button">Run Batch</button>
             <button id="stopQueueButton" type="button">Stop</button>
           </div>
           <div class="queueTableWrap">
@@ -112,16 +153,16 @@
       </aside>
 
       <section class="rightRail">
-        <section class="panel panelHex">
+        <section class="panel panelHex expertOnly">
           <div class="panelHeaderRow">
-            <h2>Hex Stage</h2>
+            <h2>Sector Editor Stage</h2>
             <span id="hexRangeMeta">No range selected.</span>
           </div>
           <div class="hexControls">
-            <label for="hexModeSelect">View Mode</label>
+            <label for="hexModeSelect">Address Base</label>
             <select id="hexModeSelect">
-              <option value="disk">Disk (LBA 0 base)</option>
-              <option value="raw">Raw (file offset base)</option>
+              <option value="disk">Disk View (LBA 0 base)</option>
+              <option value="raw">Raw View (file offset base)</option>
             </select>
           </div>
           <div id="hexScroller" class="hexScroller">
@@ -132,20 +173,20 @@
 
         <div class="panelRow">
           <section class="panel">
-            <h2>Selection Context</h2>
+            <h2>Operator Context</h2>
             <p id="jumpResult">Use controls above to jump, copy, or extract from the current cursor.</p>
           </section>
 
           <section class="panel">
-            <h2>Shift-JIS Preview</h2>
+            <h2>Quick Text Preview</h2>
             <pre id="shiftJisPreview">(waiting for data)</pre>
           </section>
         </div>
 
-        <section class="panel panelTranslator">
-          <h2>Translator Workspace</h2>
+        <section class="panel panelTranslator expertOnly">
+          <h2>Text Decode Workbench</h2>
           <div class="translatorControls">
-            <label for="translationEncoding">Character Set</label>
+            <label for="translationEncoding">Decode Set</label>
             <select id="translationEncoding">
               <optgroup label="NEC PC-98">
                 <option value="pc98-cp932">PC-98 CP932 (Windows-31J)</option>
@@ -170,30 +211,30 @@
                 <option value="latin1">Latin-1</option>
               </optgroup>
             </select>
-            <button id="copyDecodedButton" type="button">Copy Decoded</button>
-            <button id="copyDraftButton" type="button">Copy Draft</button>
-            <button id="clearDraftButton" type="button">Clear Draft</button>
+            <button id="copyDecodedButton" type="button">Copy Decode</button>
+            <button id="copyDraftButton" type="button">Copy Notes</button>
+            <button id="clearDraftButton" type="button">Clear Notes</button>
           </div>
-          <p id="translationMeta" class="translationMeta">Select bytes in hex view to decode text for translation.</p>
+          <p id="translationMeta" class="translationMeta">Mark bytes in Sector Editor to decode and annotate text.</p>
           <div class="translatorGrid">
             <div class="translatorColumn">
-              <h3>Decoded Source</h3>
+              <h3>Decoded Buffer</h3>
               <pre id="decodedSelection">(no selection)</pre>
             </div>
             <div class="translatorColumn">
-              <h3>Translation Draft</h3>
+              <h3>Operator Notes</h3>
               <textarea
                 id="translationDraft"
                 spellcheck="false"
-                placeholder="Type translation notes or final text..."
+                placeholder="Type decode notes, translation text, or findings..."
               ></textarea>
             </div>
           </div>
         </section>
 
-        <div class="panelRow">
+        <div class="panelRow expertOnly">
           <section class="panel">
-            <h2>Character Frame</h2>
+            <h2>Byte Role Table</h2>
             <p id="charsetLegend" class="charsetLegend">
               Select bytes to inspect character roles for the active encoding.
             </p>
@@ -215,15 +256,29 @@
           </section>
 
           <section class="panel">
-            <h2>Notes</h2>
+            <h2>Session Notes</h2>
             <pre id="notes">-</pre>
           </section>
         </div>
       </section>
     </main>
 
+    <div id="firstRunModal" class="firstRunModal isHidden" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle">
+      <div class="firstRunWindow panelSurface">
+        <h2 id="firstRunTitle">Choose Startup Workbench</h2>
+        <p class="firstRunCopy">
+          DiskTools provides guided queue-driven workflows with safety prompts. DiskEdit exposes direct sector-level controls for manual analysis.
+        </p>
+        <div class="firstRunOptions">
+          <button id="firstRunGuidedButton" class="btnPrimary" type="button">Start In DiskTools (Guided)</button>
+          <button id="firstRunExpertButton" type="button">Start In DiskEdit (Expert)</button>
+        </div>
+        <p class="firstRunHint">You can switch later with Ctrl/Cmd+1 and Ctrl/Cmd+2.</p>
+      </div>
+    </div>
+
     <footer id="statusBar" class="statusBar tone-info">
-      <div id="status" class="statusText">Open a disk image (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .img, .ima, .vfd, .xdf, .raw, .bin, .iso) to start.</div>
+      <div id="status" class="statusText">Open a disk image (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .img, .ima, .vfd, .xdf, .raw, .bin, .iso) to begin guided maintenance or expert sector editing.</div>
       <div id="statusProgressWrap" class="statusProgressWrap isHidden">
         <progress id="statusProgress" value="0" max="100"></progress>
         <span id="statusProgressLabel"></span>

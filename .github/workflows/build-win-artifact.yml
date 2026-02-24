@@ -30,6 +30,9 @@ jobs:
       - name: Install desktop dependencies
         run: npm --prefix apps/diskscribe-2026-desktop ci
 
+      - name: Typecheck desktop app
+        run: npm --prefix apps/diskscribe-2026-desktop run typecheck
+
       - name: Validate version consistency
         run: npm run check:versions
 
