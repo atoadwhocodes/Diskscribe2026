@@ -52,6 +52,9 @@
       <span class="separator">|</span>
       <strong>DiskEdit:</strong> manual sector-level operations for power users.
     </div>
+    <div id="contextHelp" class="contextHelp" role="status" aria-live="polite">
+      Hover or focus a control to see what it does.
+    </div>
     <div id="dropHint" class="dropHint isHidden">Drop disk image files here to open or queue</div>
 
     <main class="workspace">
@@ -122,7 +125,7 @@
             <button id="stopQueueButton" type="button">Stop</button>
           </div>
           <details class="queueAdvancedTools">
-            <summary>Advanced Queue Tools</summary>
+            <summary id="queueAdvancedSummary">Advanced Queue Tools</summary>
             <div class="queueButtons queueButtonsAdvanced">
               <button id="addQueueFolderButton" type="button">Add Folder</button>
               <button id="moveQueueUpButton" type="button">Move Up</button>
@@ -217,6 +220,13 @@
                 <option value="ascii">ASCII</option>
                 <option value="latin1">Latin-1</option>
               </optgroup>
+            </select>
+            <label for="translationTextFormat">JP Format</label>
+            <select id="translationTextFormat">
+              <option value="preserve">Preserve</option>
+              <option value="nfkc">Normalize (NFKC)</option>
+              <option value="hiragana">Hiragana</option>
+              <option value="katakana">Katakana</option>
             </select>
             <button id="copyDecodedButton" type="button">Copy Decode</button>
             <button id="copyDraftButton" type="button">Copy Notes</button>

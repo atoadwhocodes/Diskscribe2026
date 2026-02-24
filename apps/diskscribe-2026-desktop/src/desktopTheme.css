@@ -277,6 +277,22 @@ button:disabled {
   opacity: 0.58;
 }
 
+.contextHelp {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(239, 244, 246, 0.9));
+  border: 1px solid rgba(33, 54, 62, 0.14);
+  border-left: 4px solid var(--app-status-info);
+  border-radius: 11px;
+  color: var(--app-ink-soft);
+  display: flex;
+  font-family: var(--app-font-mono);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  margin-bottom: 10px;
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
 .firstRunModal {
   align-items: center;
   background: rgba(8, 18, 24, 0.56);

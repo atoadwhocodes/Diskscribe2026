@@ -113,6 +113,50 @@ const dialogState: { active: boolean; label: string } = {
 
 const DESKTOP_BRIDGE_UNAVAILABLE_MESSAGE =
   'Desktop bridge is unavailable. Restart DiskScribe2026 Desktop and try again.';
+const DEFAULT_CONTEXT_HELP_TEXT = 'Hover or focus a control to see what it does.';
+const CONTROL_HELP_TEXT: Record<string, string> = {
+  guidedModeButton: 'Switch to DiskTools mode with guarded queue-driven workflows.',
+  expertModeButton: 'Switch to DiskEdit mode for direct low-level sector inspection.',
+  armExpertToggle: 'Arm risky expert actions such as extracting byte ranges.',
+  openDiskButton: 'Open one disk image and load it immediately in the workbench.',
+  quickAddQueueFilesButton: 'Add one or more image files to the batch queue.',
+  quickRunQueueButton: 'Run the current queue using the active mode workflow.',
+  sendFeedbackButton: 'Open the issue reporter prefilled with app/session context.',
+  guidedOpenDiskButton: 'Guided shortcut to open a single disk image.',
+  guidedAddFilesButton: 'Guided shortcut to queue multiple disk images.',
+  guidedRunQueueButton: 'Guided shortcut to run all queued jobs.',
+  guidedExportDiagnosticsButton: 'Export a JSON diagnostics snapshot for debugging.',
+  addQueueFilesButton: 'Add files to the queue without replacing current items.',
+  removeQueueItemButton: 'Remove the currently selected queue item.',
+  clearQueueButton: 'Remove every queued item after confirmation.',
+  runQueueButton: 'Start processing queued jobs now.',
+  stopQueueButton: 'Request stop after the current queued job finishes.',
+  queueAdvancedSummary: 'Show advanced queue tools for folders, ordering, and plans.',
+  addQueueFolderButton: 'Scan a folder and add supported disk images to queue.',
+  moveQueueUpButton: 'Move the selected queue item one position up.',
+  moveQueueDownButton: 'Move the selected queue item one position down.',
+  saveQueueButton: 'Save the queue as a reusable batch plan JSON file.',
+  loadQueueButton: 'Load queued entries from a saved batch plan JSON file.',
+  exportDiagnosticsButton: 'Export diagnostics including queue and runtime context.',
+  refreshButton: 'Reload disk summary and reset current view from source image.',
+  jumpOffsetButton: 'Jump cursor to a typed offset (hex or decimal).',
+  jumpLbaButton: 'Jump cursor to a typed logical block address.',
+  copyOffsetButton: 'Copy selected offset as hexadecimal text.',
+  copyLbaButton: 'Copy selected position as a logical block address.',
+  extractSelectionButton: 'Extract the selected byte range to a binary file.',
+  hexModeSelect: 'Choose offset base: disk data offsets or raw file offsets.',
+  queueRows: 'Click to select a queued item. Double-click to open it.',
+  partitionRows: 'Click a partition row to jump to its start address.',
+  hexRows: 'Click bytes to select range; Shift+click extends selection.',
+  translationEncoding: 'Choose character set used to decode selected bytes.',
+  translationTextFormat: 'Choose Japanese text/character formatting for decoded output.',
+  copyDecodedButton: 'Copy decoded text from current byte selection.',
+  copyDraftButton: 'Copy the operator notes draft text.',
+  clearDraftButton: 'Clear the operator notes draft.',
+  translationDraft: 'Editable notes area for decoded text and findings.',
+  firstRunGuidedButton: 'Set startup mode to guided DiskTools.',
+  firstRunExpertButton: 'Set startup mode to expert DiskEdit.'
+};
 
 const elements = {
   brandTitle: document.getElementById('brandTitle'),
@@ -133,6 +177,7 @@ const elements = {
   guidedAddFilesButton: document.getElementById('guidedAddFilesButton'),
   guidedRunQueueButton: document.getElementById('guidedRunQueueButton'),
   guidedExportDiagnosticsButton: document.getElementById('guidedExportDiagnosticsButton'),
+  contextHelp: document.getElementById('contextHelp'),
   activePath: document.getElementById('activePath'),
   dropHint: document.getElementById('dropHint'),
   status: document.getElementById('status'),
@@ -194,6 +239,7 @@ desktopBridge.onHostMessage((message) => {
 wireDesktopControls();
 wireGlobalShortcuts();
 wireDragAndDrop();
+wireControlDescriptions();
 maybeShowFirstRunChooser();
 
 void import('./webview/editor')
@@ -323,6 +369,59 @@ function wireDesktopControls(): void {
   renderQueue();
   updateQueueButtons();
   applyWorkbenchMode(false);
+}
+
+function wireControlDescriptions(): void {
+  if (!(elements.contextHelp instanceof HTMLElement)) {
+    return;
+  }
+
+  const helpTarget = elements.contextHelp;
+  let focusedSource: HTMLElement | null = null;
+
+  const setHelpText = (text: string): void => {
+    helpTarget.textContent = text;
+  };
+
+  const restoreDefault = (): void => {
+    if (focusedSource) {
+      const focusedText = focusedSource.dataset.helpText;
+      if (focusedText) {
+        setHelpText(focusedText);
+        return;
+      }
+    }
+    setHelpText(DEFAULT_CONTEXT_HELP_TEXT);
+  };
+
+  setHelpText(DEFAULT_CONTEXT_HELP_TEXT);
+
+  for (const [id, helpText] of Object.entries(CONTROL_HELP_TEXT)) {
+    const node = document.getElementById(id);
+    if (!(node instanceof HTMLElement)) {
+      continue;
+    }
+
+    node.dataset.helpText = helpText;
+    node.setAttribute('title', helpText);
+
+    node.addEventListener('mouseenter', () => {
+      setHelpText(helpText);
+    });
+    node.addEventListener('mouseleave', () => {
+      restoreDefault();
+    });
+    node.addEventListener('focus', () => {
+      focusedSource = node;
+      setHelpText(helpText);
+    });
+    node.addEventListener('blur', () => {
+      if (focusedSource === node) {
+        focusedSource = null;
+      }
+      restoreDefault();
+    });
+  }
 }
 
 function wireGlobalShortcuts(): void {

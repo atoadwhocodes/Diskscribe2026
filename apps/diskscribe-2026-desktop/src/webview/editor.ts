@@ -33,6 +33,13 @@ const MAX_CHUNKS_PER_MODE = 128;
 const MAX_TRANSLATION_BYTES = 8192;
 const MAX_CHAR_FRAME_BYTES = 192;
 
+const TEXT_FORMAT_LABELS = {
+  preserve: 'Preserve',
+  nfkc: 'Normalize (NFKC)',
+  hiragana: 'Hiragana',
+  katakana: 'Katakana'
+};
+
 const persisted = vscode.getState() || {};
 
 const elements = {
@@ -61,6 +68,7 @@ const elements = {
   copyLbaButton: document.getElementById('copyLbaButton'),
   extractSelectionButton: document.getElementById('extractSelectionButton'),
   translationEncoding: document.getElementById('translationEncoding'),
+  translationTextFormat: document.getElementById('translationTextFormat'),
   translationMeta: document.getElementById('translationMeta'),
   decodedSelection: document.getElementById('decodedSelection'),
   translationDraft: document.getElementById('translationDraft'),
@@ -73,6 +81,8 @@ const elements = {
 
 const hasPersistedTranslationEncoding =
   typeof persisted.translationEncoding === 'string' && persisted.translationEncoding.length > 0;
+const hasPersistedTranslationTextFormat =
+  typeof persisted.translationTextFormat === 'string' && persisted.translationTextFormat.length > 0;
 
 const state = {
   summary: undefined,
@@ -83,6 +93,7 @@ const state = {
   sectorSize: 512,
   geometry: undefined,
   translationEncoding: normalizeCharsetId(persisted.translationEncoding),
+  translationTextFormat: normalizeTranslationTextFormatId(persisted.translationTextFormat),
   translationDraft: typeof persisted.translationDraft === 'string' ? persisted.translationDraft : '',
   selectionStart: Number.isInteger(persisted.selectionStart) ? persisted.selectionStart : 0,
   selectionEnd: Number.isInteger(persisted.selectionEnd) ? persisted.selectionEnd : 0,
@@ -139,6 +150,15 @@ if (elements.translationEncoding) {
   elements.translationEncoding.addEventListener('change', () => {
     const value = normalizeCharsetId(elements.translationEncoding.value);
     state.translationEncoding = value;
+    persistState();
+    refreshTranslationPanels();
+  });
+}
+
+if (elements.translationTextFormat) {
+  elements.translationTextFormat.addEventListener('change', () => {
+    const value = normalizeTranslationTextFormatId(elements.translationTextFormat.value);
+    state.translationTextFormat = value;
     persistState();
     refreshTranslationPanels();
   });
@@ -390,6 +410,9 @@ function handleHexInit(message) {
   state.mode = chooseMode(state.mode || nextDefault);
   if (!hasPersistedTranslationEncoding && typeof message.defaultCharset === 'string') {
     state.translationEncoding = normalizeCharsetId(message.defaultCharset);
+  }
+  if (!hasPersistedTranslationTextFormat) {
+    state.translationTextFormat = 'preserve';
   }
 
   if (Number.isFinite(message.fileSize)) {
@@ -1055,14 +1078,16 @@ function refreshTranslationPanels() {
     setText(elements.decodedSelection, '(loading selected bytes from disk...)');
   } else {
     const profile = getCharsetProfile(state.translationEncoding);
-    const decoded = decodeSelectionBytes(selection.bytes, state.translationEncoding);
+    const decodedRaw = decodeSelectionBytes(selection.bytes, state.translationEncoding);
+    const decoded = applyTranslationTextFormat(decodedRaw, state.translationTextFormat);
+    const formatLabel = getTranslationTextFormatLabel(state.translationTextFormat);
     const detail =
       selection.total > selection.readLength
         ? `, showing first ${formatNumber(selection.readLength)}`
         : '';
     setText(
       elements.translationMeta,
-      `Decode ${formatNumber(selection.total)} byte(s) as ${profile.label}${detail}.`
+      `Decode ${formatNumber(selection.total)} byte(s) as ${profile.label} (${formatLabel})${detail}.`
     );
     setText(elements.decodedSelection, decoded.length > 0 ? decoded : '(decoded text is empty)');
   }
@@ -1075,6 +1100,13 @@ function syncTranslatorInputs() {
     const normalized = normalizeCharsetId(state.translationEncoding);
     if (elements.translationEncoding.value !== normalized) {
       elements.translationEncoding.value = normalized;
+    }
+  }
+
+  if (elements.translationTextFormat) {
+    const normalized = normalizeTranslationTextFormatId(state.translationTextFormat);
+    if (elements.translationTextFormat.value !== normalized) {
+      elements.translationTextFormat.value = normalized;
     }
   }
 
@@ -1189,6 +1221,68 @@ function renderCharFramePlaceholder(message) {
 
 function decodeSelectionBytes(bytes, encoding) {
   return decodeBytesByCharset(bytes, encoding);
+}
+
+function normalizeTranslationTextFormatId(value) {
+  if (
+    value === 'preserve' ||
+    value === 'nfkc' ||
+    value === 'hiragana' ||
+    value === 'katakana'
+  ) {
+    return value;
+  }
+  return 'preserve';
+}
+
+function getTranslationTextFormatLabel(value) {
+  const normalized = normalizeTranslationTextFormatId(value);
+  return TEXT_FORMAT_LABELS[normalized] || TEXT_FORMAT_LABELS.preserve;
+}
+
+function applyTranslationTextFormat(text, value) {
+  const normalized = normalizeTranslationTextFormatId(value);
+  if (!text) {
+    return text;
+  }
+
+  switch (normalized) {
+    case 'nfkc':
+      return text.normalize('NFKC');
+    case 'hiragana':
+      return katakanaToHiragana(text.normalize('NFKC'));
+    case 'katakana':
+      return hiraganaToKatakana(text.normalize('NFKC'));
+    case 'preserve':
+    default:
+      return text;
+  }
+}
+
+function katakanaToHiragana(text) {
+  const output = [];
+  for (const char of text) {
+    const code = char.codePointAt(0) || 0;
+    if (code >= 0x30a1 && code <= 0x30f6) {
+      output.push(String.fromCodePoint(code - 0x60));
+      continue;
+    }
+    output.push(char);
+  }
+  return output.join('');
+}
+
+function hiraganaToKatakana(text) {
+  const output = [];
+  for (const char of text) {
+    const code = char.codePointAt(0) || 0;
+    if (code >= 0x3041 && code <= 0x3096) {
+      output.push(String.fromCodePoint(code + 0x60));
+      continue;
+    }
+    output.push(char);
+  }
+  return output.join('');
 }
 
 function toGlyph(byte, encoding) {
@@ -1378,6 +1472,7 @@ function persistState() {
     defaultMode: state.defaultMode,
     mode: state.mode,
     translationEncoding: state.translationEncoding,
+    translationTextFormat: state.translationTextFormat,
     translationDraft: state.translationDraft,
     selectionStart: state.selectionStart,
     selectionEnd: state.selectionEnd,

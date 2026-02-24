@@ -7,8 +7,9 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "patch:electron-winstaller": "node scripts/patch-electron-winstaller.mjs",
+    "package": "npm run patch:electron-winstaller && electron-forge package",
+    "make": "npm run patch:electron-winstaller && electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "typecheck": "tsc -p tsconfig.json --noEmit"
