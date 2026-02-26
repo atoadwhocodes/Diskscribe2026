@@ -4,8 +4,10 @@
     "allowJs": true,
     "module": "commonjs",
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
+    "suppressImplicitAnyIndexErrors": true,
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
@@ -17,3 +19,4 @@
   },
   "include": ["src/**/*"]
 }
+
