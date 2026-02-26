@@ -13,6 +13,10 @@
   },
   "homepage": "https://github.com/atoadwhocodes/Diskscribe2026#readme",
   "scripts": {
+    "core:build": "tsc --project tsconfig.json",
+    "core:dev": "tsc --project tsconfig.json --watch",
+    "core:test": "jest --config jest.config.js",
+    "core:typecheck": "tsc --project tsconfig.json --noEmit",
     "desktop:install": "npm --prefix apps/diskscribe-2026-desktop ci",
     "desktop:start": "npm --prefix apps/diskscribe-2026-desktop run start",
     "desktop:lint": "npm --prefix apps/diskscribe-2026-desktop run lint",
@@ -20,7 +24,8 @@
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
     "start": "npm run desktop:start",
     "lint": "npm run desktop:lint",
-    "build": "npm run desktop:make",
-    "package": "npm run desktop:make"
+    "typecheck": "npm run core:typecheck",
+    "build": "npm run core:build && npm run desktop:make",
+    "package": "npm run core:build && npm run desktop:make"
   }
 }
