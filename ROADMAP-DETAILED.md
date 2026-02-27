@@ -8,7 +8,7 @@
 
 ## 📋 Executive Summary
 
-```
+```text
 Phase 1 (MVP)         - PC-98 FDI end-to-end      2-4 weeks
 Phase 2 (Universal)   - Multi-container support   3-6 weeks  
 Phase 3 (Claude)      - Provider + caching        1-2 weeks
