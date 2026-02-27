@@ -1,0 +1,14 @@
+# Gitleaks ignore file for false positive suppressions
+# https://github.com/gitleaks/gitleaks#gitleaksignore
+
+# Webpack build artifacts (already in .gitignore)
+# Contains benign URL auth parsing code that triggers false positives
+apps/diskscribe-2026-desktop/.webpack/**
+
+# Benign translation service API parameter names (not actual secrets)
+src/translation-service.js:*apiKey*
+
+# Test and example scripts with placeholder references
+test-*.js
+*-GUIDE.js
+ALSHARK-TRANSLATION-GUIDE.js
