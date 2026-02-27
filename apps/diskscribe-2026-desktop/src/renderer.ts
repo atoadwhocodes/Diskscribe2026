@@ -213,9 +213,16 @@ const elements = {
   translationLoadJsonButton: document.getElementById('translationLoadJsonButton'),
   translationSaveJsonButton: document.getElementById('translationSaveJsonButton'),
   translationReinsertButton: document.getElementById('translationReinsertButton'),
+  translationAutoTranslateButton: document.getElementById('translationAutoTranslateButton'),
   translationStatus: document.getElementById('translationStatus'),
   translationCategoryRows: document.getElementById('translationCategoryRows'),
-  viewTranslationToolsPanel: document.getElementById('viewTranslationToolsPanel')
+  viewTranslationToolsPanel: document.getElementById('viewTranslationToolsPanel'),
+  filterAll: document.getElementById('filterAll'),
+  filterDialog: document.getElementById('filterDialog'),
+  filterUI: document.getElementById('filterUI'),
+  filterCombat: document.getElementById('filterCombat'),
+  filterNames: document.getElementById('filterNames'),
+  filterOther: document.getElementById('filterOther')
 };
 
 const vscodeApi: VsCodeApi = {
