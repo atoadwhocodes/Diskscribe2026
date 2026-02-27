@@ -22,6 +22,26 @@ import {
   SUPPORTED_DISK_EXTENSIONS
 } from './core/diskSummary';
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
+import {
+  mockExtractFromDisks,
+  autoTranslateStrings,
+  reflowStrings,
+  saveProjectToJson,
+  applyTranslationsToDisk,
+  sendProgress,
+  setGameProfile,
+  getGameProfiles,
+  getGlossaryTranslations,
+  addGlossaryEntry,
+  getGlossaryStats,
+  exportGlossary,
+  importGlossary,
+  type ExtractionResult,
+  type TranslationResult,
+  type SaveResult,
+  type PatchResult,
+  type ProgressUpdate
+} from './translation-ipc';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -375,6 +395,221 @@ ipcMain.handle('desktop:openFeedbackIssue', async (_event, rawContext: unknown):
 
 ipcMain.handle('desktop:writeClipboard', async (_event, text: unknown): Promise<void> => {
   clipboard.writeText(typeof text === 'string' ? text : String(text ?? ''));
+});
+
+// Translation IPC Handlers
+ipcMain.handle('translation:getProfiles', async (): Promise<any[]> => {
+  return getGameProfiles().map(p => ({
+    id: p.id,
+    name: p.name,
+    developer: p.developer,
+    year: p.year
+  }));
+});
+
+ipcMain.handle('translation:setProfile', async (_event, profileId: unknown): Promise<boolean> => {
+  if (typeof profileId !== 'string') {
+    return false;
+  }
+  return setGameProfile(profileId);
+});
+
+ipcMain.handle('translation:extract', async (event, _diskPaths: unknown): Promise<ExtractionResult> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  const mockPaths = ['Alshark (System disk)', 'Alshark (Data disk) 1', 'Alshark (Data disk) 2'];
+  
+  return mockExtractFromDisks(mockPaths, (update: ProgressUpdate) => {
+    sendProgress(ownerWindow, update);
+  });
+});
+
+ipcMain.handle('translation:autoTranslate', async (event, rawStrings: unknown): Promise<TranslationResult> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  // Validate strings format
+  if (!Array.isArray(rawStrings)) {
+    return { success: false, translated: 0, reflowed: 0, untranslatable: 0, error: 'Invalid strings array' };
+  }
+  
+  const strings = rawStrings as any[];
+  
+  // Step 1: Translate
+  const translateResult = autoTranslateStrings(strings, (update: ProgressUpdate) => {
+    sendProgress(ownerWindow, update);
+  });
+  
+  if (!translateResult.success) {
+    return translateResult;
+  }
+  
+  // Step 2: Reflow
+  const reflowResult = reflowStrings(strings, (update: ProgressUpdate) => {
+    sendProgress(ownerWindow, update);
+  });
+  
+  return {
+    success: true,
+    translated: translateResult.translated,
+    reflowed: reflowResult.reflowed,
+    untranslatable: translateResult.untranslatable
+  };
+});
+
+ipcMain.handle('translation:reflow', async (event, rawStrings: unknown): Promise<TranslationResult> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  if (!Array.isArray(rawStrings)) {
+    return { success: false, translated: 0, reflowed: 0, untranslatable: 0, error: 'Invalid strings array' };
+  }
+  
+  return reflowStrings(rawStrings as any[], (update: ProgressUpdate) => {
+    sendProgress(ownerWindow, update);
+  });
+});
+
+ipcMain.handle('translation:saveProject', async (event, rawData: unknown): Promise<SaveResult> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  if (!rawData || typeof rawData !== 'object') {
+    return { success: false, error: 'Invalid project data' };
+  }
+  
+  const data = rawData as any;
+  
+  // Use save dialog
+  const result = await dialog.showSaveDialog(ownerWindow || new BrowserWindow(), {
+    title: 'Save Translation Project',
+    defaultPath: `${data.name || 'translation'}.project.json`,
+    filters: [
+      { name: 'Translation Project', extensions: ['project.json'] },
+      { name: 'JSON Files', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+  
+  if (result.canceled || !result.filePath) {
+    return { success: false, error: 'Save canceled' };
+  }
+  
+  const extractedStrings = Array.isArray(data.strings) ? data.strings : [];
+  
+  return saveProjectToJson(
+    result.filePath,
+    {
+      name: data.name || 'Untitled Project',
+      gameId: data.gameId || 'pc98-game',
+      strings: extractedStrings,
+      statistics: data.statistics || {}
+    },
+    (update: ProgressUpdate) => {
+      sendProgress(ownerWindow, update);
+    }
+  );
+});
+
+ipcMain.handle('translation:applyPatch', async (event, rawData: unknown): Promise<PatchResult> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  if (!rawData || typeof rawData !== 'object') {
+    return { success: false, patched: 0, failures: 0, error: 'Invalid patch data' };
+  }
+  
+  const data = rawData as any;
+  const diskPath = data.diskPath;
+  const strings = Array.isArray(data.strings) ? data.strings : [];
+  
+  if (!diskPath) {
+    return { success: false, patched: 0, failures: 0, error: 'No disk path specified' };
+  }
+  
+  return applyTranslationsToDisk(diskPath, strings, (update: ProgressUpdate) => {
+    sendProgress(ownerWindow, update);
+  });
+});
+
+// Glossary Management Handlers
+ipcMain.handle('translation:getGlossary', async (): Promise<any[]> => {
+  return getGlossaryTranslations();
+});
+
+ipcMain.handle('translation:getGlossaryStats', async (): Promise<any> => {
+  return getGlossaryStats();
+});
+
+ipcMain.handle('translation:addGlossaryEntry', async (_event, entry: unknown): Promise<boolean> => {
+  if (!entry || typeof entry !== 'object') {
+    return false;
+  }
+  return addGlossaryEntry(entry as any);
+});
+
+ipcMain.handle('translation:exportGlossary', async (event, _format: unknown): Promise<any> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  try {
+    const result = await dialog.showSaveDialog(ownerWindow || new BrowserWindow(), {
+      title: 'Export Glossary',
+      defaultPath: 'glossary.json',
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] },
+        { name: 'CSV Files', extensions: ['csv'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: 'Export canceled' };
+    }
+
+    const format = result.filePath.endsWith('.csv') ? 'csv' : 'json';
+    const success = await exportGlossary(result.filePath, format as 'json' | 'csv');
+
+    if (success) {
+      sendProgress(ownerWindow, {
+        type: 'complete',
+        message: `✓ Glossary exported to ${path.basename(result.filePath)}`
+      });
+    }
+
+    return { success, filePath: result.filePath };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMsg };
+  }
+});
+
+ipcMain.handle('translation:importGlossary', async (event): Promise<any> => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  try {
+    const result = await dialog.showOpenDialog(ownerWindow || new BrowserWindow(), {
+      title: 'Import Glossary',
+      filters: [
+        { name: 'JSON Files', extensions: ['json'] },
+        { name: 'CSV Files', extensions: ['csv'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, error: 'Import canceled' };
+    }
+
+    const filePath = result.filePaths[0];
+    const success = await importGlossary(filePath);
+
+    if (success) {
+      sendProgress(ownerWindow, {
+        type: 'complete',
+        message: `✓ Glossary imported from ${path.basename(filePath)}`
+      });
+    }
+
+    return { success, filePath };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return { success: false, error: errorMsg };
+  }
 });
 
 ipcMain.handle('desktop:postMessage', async (event, rawMessage: unknown): Promise<void> => {

@@ -9,11 +9,9 @@ import {
   normalizeCharsetId
 } from './necCharsets';
 
+// State persistence helper
 const fallbackState: { value: unknown } = { value: {} };
-const fallbackVsCodeApi = {
-  postMessage() {
-    // no-op in fallback mode
-  },
+const stateManager = {
   getState() {
     return fallbackState.value;
   },
@@ -22,8 +20,9 @@ const fallbackVsCodeApi = {
     return value;
   }
 };
-const vscode =
-  typeof window.acquireVsCodeApi === 'function' ? window.acquireVsCodeApi() : fallbackVsCodeApi;
+
+// Get the persisted state from browser storage
+const persisted = stateManager.getState() || {};
 
 const BYTES_PER_ROW = 16;
 const ROW_HEIGHT = 20;
@@ -39,8 +38,6 @@ const TEXT_FORMAT_LABELS = {
   hiragana: 'Hiragana',
   katakana: 'Katakana'
 };
-
-const persisted = vscode.getState() || {};
 
 const elements = {
   status: document.getElementById('status'),
@@ -113,6 +110,43 @@ const state = {
 if (elements.refreshButton) {
   elements.refreshButton.addEventListener('click', () => {
     post({ type: 'refresh' });
+  });
+}
+
+// Toolbar button handlers for view switching
+const viewHexButton = document.getElementById('viewHexButton');
+const viewDecoderButton = document.getElementById('viewDecoderButton');
+const viewCharFrameButton = document.getElementById('viewCharFrameButton');
+
+function switchToView(viewId: string) {
+  // Hide all panels
+  document.querySelectorAll('.viewPanel').forEach((p) => {
+    p.classList.add('isHidden');
+    p.classList.remove('is-active');
+  });
+  // Show selected panel
+  const panel = document.getElementById(viewId);
+  if (panel) {
+    panel.classList.remove('isHidden');
+    panel.classList.add('is-active');
+  }
+}
+
+if (viewHexButton) {
+  viewHexButton.addEventListener('click', () => {
+    switchToView('viewHexPanel');
+  });
+}
+
+if (viewDecoderButton) {
+  viewDecoderButton.addEventListener('click', () => {
+    switchToView('viewDecoderPanel');
+  });
+}
+
+if (viewCharFrameButton) {
+  viewCharFrameButton.addEventListener('click', () => {
+    switchToView('viewCharFramePanel');
   });
 }
 
@@ -875,6 +909,62 @@ function isExpertArmed() {
   return document.body.getAttribute('data-expert-armed') === 'true';
 }
 
+function showModalDialog(title, message) {
+  const dialog = document.createElement('div');
+  dialog.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  `;
+
+  const titleEl = document.createElement('h2');
+  titleEl.textContent = title;
+  titleEl.style.cssText = 'margin: 0 0 16px 0; font-size: 18px; color: #1a1a1a;';
+  box.appendChild(titleEl);
+
+  const msgEl = document.createElement('p');
+  msgEl.textContent = message;
+  msgEl.style.cssText = 'margin: 0 0 24px 0; font-size: 14px; color: #555555; line-height: 1.6; white-space: pre-wrap;';
+  box.appendChild(msgEl);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'OK';
+  btn.style.cssText = `
+    background: #0078d4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+  `;
+  btn.onclick = () => {
+    dialog.remove();
+  };
+  box.appendChild(btn);
+
+  dialog.appendChild(box);
+  document.body.appendChild(dialog);
+}
+
 function requireExpertMode(actionLabel) {
   if (getWorkbenchMode() === 'expert') {
     return true;
@@ -918,11 +1008,19 @@ function syncModeSelect() {
 }
 
 async function promptJumpOffset() {
-  if (!requireExpertMode('jump by offset')) {
+  if (getViewLength(state.mode) <= 0) {
+    showModalDialog(
+      'Open a Disk Image',
+      'No disk image is currently loaded. Use Ctrl+O to open a disk image file before jumping to an offset.'
+    );
     return;
   }
-  if (getViewLength(state.mode) <= 0) {
-    setText(elements.status, 'Open a volume image before jumping.');
+
+  if (getWorkbenchMode() !== 'expert') {
+    showModalDialog(
+      'Switch to DiskEdit Mode',
+      'Offset jumping is only available in DiskEdit mode.\n\nPress Ctrl+2 to switch to DiskEdit, then try Ctrl+G again.\n\nAlternatively, you can use the "Go Offset" button in the Sector Editor panel once in DiskEdit mode.'
+    );
     return;
   }
 
@@ -954,11 +1052,19 @@ async function promptJumpOffset() {
 }
 
 async function promptJumpLba() {
-  if (!requireExpertMode('jump by LBA')) {
+  if (getViewLength(state.mode) <= 0) {
+    showModalDialog(
+      'Open a Disk Image',
+      'No disk image is currently loaded. Use Ctrl+O to open a disk image file before jumping to an LBA sector.'
+    );
     return;
   }
-  if (getViewLength(state.mode) <= 0) {
-    setText(elements.status, 'Open a volume image before jumping to LBA.');
+
+  if (getWorkbenchMode() !== 'expert') {
+    showModalDialog(
+      'Switch to DiskEdit Mode',
+      'LBA sector jumping is only available in DiskEdit mode.\n\nPress Ctrl+2 to switch to DiskEdit, then try Ctrl+L again.\n\nAlternatively, you can use the "Go LBA" button in the Sector Editor panel once in DiskEdit mode.'
+    );
     return;
   }
 
@@ -1464,11 +1570,13 @@ function appendCell(row, value) {
 }
 
 function post(message) {
-  vscode.postMessage(message);
+  if (window.diskScribeDesktop && typeof window.diskScribeDesktop.postMessage === 'function') {
+    void window.diskScribeDesktop.postMessage(message);
+  }
 }
 
 function persistState() {
-  vscode.setState({
+  stateManager.setState({
     defaultMode: state.defaultMode,
     mode: state.mode,
     translationEncoding: state.translationEncoding,

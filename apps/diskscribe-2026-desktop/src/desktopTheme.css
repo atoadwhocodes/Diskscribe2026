@@ -127,10 +127,11 @@ body {
 }
 
 .commandDeck {
-  align-items: flex-end;
+  align-items: center;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
 }
 
 .modeDeck {
@@ -243,6 +244,40 @@ button:disabled {
   margin: 0;
   max-width: 620px;
   text-align: right;
+}
+
+/* Compact form controls */
+select,
+textarea,
+input[type="text"] {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(29, 57, 64, 0.16);
+  border-radius: 4px;
+  color: var(--app-ink);
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 4px 6px;
+}
+
+select {
+  cursor: pointer;
+  min-height: 26px;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+label {
+  color: var(--app-ink-soft);
+  display: block;
+  font-family: var(--app-font-head);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 3px;
+  text-transform: uppercase;
 }
 
 .activePath {
@@ -391,15 +426,23 @@ body[data-work-mode='guided'] #extractSelectionButton {
 
 .workspace {
   display: grid;
-  gap: 10px;
-  grid-template-columns: minmax(300px, 368px) minmax(0, 1fr);
+  gap: 8px;
+  grid-template-columns: 1fr;
 }
 
-.leftRail,
-.rightRail {
+.viewPanel {
+  display: none;
+  animation: fadeSlide 160ms ease both;
+}
+
+.viewPanel.is-active {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.viewPanel.isHidden {
+  display: none !important;
 }
 
 .panelRow {
@@ -623,3 +666,360 @@ body.is-modal-open .statusBar {
     flex-direction: column;
   }
 }
+
+/* Toolbar Styling */
+.toolbar {
+  animation: fadeSlide 260ms ease both;
+  background: var(--app-panel);
+  border: 1px solid var(--app-panel-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(20, 34, 42, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+}
+
+.toolbarGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar button {
+  padding: 8px 14px;
+  border: 1px solid var(--app-panel-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--app-ink);
+  font-family: var(--app-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.toolbar button:hover {
+  background: rgba(17, 128, 109, 0.08);
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+
+.toolbar button:active {
+  background: rgba(17, 128, 109, 0.15);
+  transform: scale(0.98);
+}
+
+.toolbar .btnPrimary {
+  background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
+  border: 1px solid var(--app-accent-strong);
+  color: white;
+}
+
+.toolbar .btnPrimary:hover {
+  background: linear-gradient(135deg, var(--app-accent-strong), var(--app-accent));
+  border-color: var(--app-accent);
+  filter: brightness(1.08);
+}
+
+.toolbar .btnPrimary:active {
+  background: linear-gradient(135deg, var(--app-accent-strong), var(--app-accent));
+  filter: brightness(0.95);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Original dropdown menu styles - hidden */
+.dropdownMenu {
+  display: none;
+}
+
+.dropdownContent {
+  display: none !important;
+}
+
+.dropdownContent.isHidden {
+  display: none !important;
+}
+
+.menuButton {
+  display: none;
+}
+
+.menuItem {
+  display: none;
+}
+
+.menuSeparator {
+  display: none;
+}
+
+.menuItem.expertOnly {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body[data-work-mode='expert'] .menuItem.expertOnly {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.menuSeparator {
+  height: 1px;
+  background: var(--app-panel-border);
+  margin: 4px 0;
+}
+
+/* Compact Mode */
+body.is-compact .panel {
+  padding: 6px;
+}
+
+body.is-compact .panelHeaderRow {
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+body.is-compact h2 {
+  font-size: 0.73rem;
+  margin: 0 0 4px;
+}
+
+body.is-compact h3 {
+  font-size: 0.65rem;
+  margin: 0 0 3px;
+}
+
+body.is-compact .summaryGrid {
+  gap: 3px;
+}
+
+body.is-compact .summaryGrid > div {
+  padding: 2px 0;
+}
+
+body.is-compact .summaryGrid dt {
+  font-size: 0.65rem;
+}
+
+body.is-compact .summaryGrid dd {
+  font-size: 0.7rem;
+}
+
+body.is-compact select,
+body.is-compact textarea,
+body.is-compact input[type="text"] {
+  font-size: 0.7rem;
+  padding: 2px 4px;
+}
+
+body.is-compact button {
+  font-size: 0.7rem;
+  min-height: 24px;
+  padding: 2px 6px;
+}
+
+body.is-compact .hexControls {
+  gap: 6px;
+}
+
+/* Tab bar styling */
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--app-panel-border);
+  padding: 0 6px 6px 6px;
+  background: var(--app-surface);
+}
+
+.tabButton {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--app-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 160ms ease;
+  border-radius: 4px 4px 0 0;
+}
+
+.tabButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--app-text);
+}
+
+.tabButton.is-active {
+  color: var(--app-accent);
+  border-bottom-color: var(--app-accent);
+  background: rgba(0, 120, 212, 0.08);
+}
+
+/* Tab panel styling */
+.tabPanel {
+  display: none;
+  animation: fadeSlide 160ms ease both;
+}
+
+.tabPanel.is-active {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* BILINGUAL TRANSLATION UI */
+.filterTab {
+  padding: 6px 12px;
+  border: 1px solid var(--app-panel-border);
+  background: var(--app-panel);
+  color: var(--app-ink);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.filterTab:hover {
+  border-color: var(--app-accent);
+  background: rgba(17, 128, 109, 0.04);
+}
+
+.filterTab.active {
+  background: var(--app-accent);
+  color: white;
+  border-color: var(--app-accent);
+}
+
+.translationTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.translationTable thead {
+  position: sticky;
+  top: 0;
+  background: rgba(17, 128, 109, 0.08);
+  z-index: 10;
+}
+
+.translationTable th {
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--app-ink);
+  border-bottom: 2px solid var(--app-panel-border);
+}
+
+.translationTable td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--app-panel-border);
+  vertical-align: top;
+}
+
+.translationTable tbody tr:hover {
+  background: rgba(17, 128, 109, 0.03);
+}
+
+/* Japanese text cell */
+.translationTable .japaneseCell {
+  font-family: "Segoe UI", "Yu Gothic", sans-serif;
+  color: var(--app-ink);
+  word-break: break-word;
+}
+
+/* English translation cell with edit capability */
+.translationTable .englishCell {
+  position: relative;
+}
+
+.translationTable .englishCell input,
+.translationTable .englishCell textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--app-panel-border);
+  border-radius: 4px;
+  font-family: var(--app-font-sans);
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.translationTable .englishCell input:focus,
+.translationTable .englishCell textarea:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(17, 128, 109, 0.1);
+}
+
+/* Status indicators */
+.statusBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.statusBadge.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #f57f17;
+}
+
+.statusBadge.auto {
+  background: rgba(33, 150, 243, 0.2);
+  color: #1976d2;
+}
+
+.statusBadge.manual {
+  background: rgba(76, 175, 80, 0.2);
+  color: #388e3c;
+}
+
+.statusBadge.verified {
+  background: rgba(76, 175, 80, 0.2);
+  color: #388e3c;
+  border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+/* Text fitting indicator */
+.fitIndicator {
+  display: inline-block;
+  width: 20px;
+  height: 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.fitIndicator.good {
+  background: #4caf50;
+}
+
+.fitIndicator.warning {
+  background: #ff9800;
+}
+
+.fitIndicator.bad {
+  background: #f44336;
+}
+
+/* Hide expert-only elements when not in expert mode */
+body.is-mode-guided .expertOnly {
+  display: none !important;
+}
+

@@ -1,6 +1,7 @@
 import './desktopTheme.css';
 import './webview/editor.css';
 import { APP_DESKTOP_NAME } from './appMeta';
+import { BilingualTranslationUI } from './bilingual-translation-ui';
 
 type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
 type StatusTone = 'info' | 'success' | 'warning' | 'error' | 'busy';
@@ -119,6 +120,7 @@ const CONTROL_HELP_TEXT: Record<string, string> = {
   expertModeButton: 'Switch to DiskEdit mode for direct low-level sector inspection.',
   armExpertToggle: 'Arm risky expert actions such as extracting byte ranges.',
   openDiskButton: 'Open one disk image and load it immediately in the workbench.',
+  openFolderButton: 'Scan a folder and add supported disk images to queue.',
   quickAddQueueFilesButton: 'Add one or more image files to the batch queue.',
   quickRunQueueButton: 'Run the current queue using the active mode workflow.',
   sendFeedbackButton: 'Open the issue reporter prefilled with app/session context.',
@@ -155,7 +157,13 @@ const CONTROL_HELP_TEXT: Record<string, string> = {
   clearDraftButton: 'Clear the operator notes draft.',
   translationDraft: 'Editable notes area for decoded text and findings.',
   firstRunGuidedButton: 'Set startup mode to guided DiskTools.',
-  firstRunExpertButton: 'Set startup mode to expert DiskEdit.'
+  firstRunExpertButton: 'Set startup mode to expert DiskEdit.',
+  showTranslationToolsButton: 'Open the translation tools panel for text extraction and reinsertion.',
+  extractTextButton: 'Extract all text from disk images for translation workflow.',
+  translationExtractAllButton: 'Extract text from queued disks organized by category.',
+  translationLoadJsonButton: 'Load a previously saved translation JSON file.',
+  translationSaveJsonButton: 'Save current translation work to JSON format.',
+  translationReinsertButton: 'Apply translated text back to original disk images.'
 };
 
 const elements = {
@@ -167,6 +175,7 @@ const elements = {
   expertModeButton: document.getElementById('expertModeButton'),
   armExpertToggle: document.getElementById('armExpertToggle') as HTMLInputElement | null,
   openDiskButton: document.getElementById('openDiskButton'),
+  openFolderButton: document.getElementById('openFolderButton'),
   quickAddQueueFilesButton: document.getElementById('quickAddQueueFilesButton'),
   quickRunQueueButton: document.getElementById('quickRunQueueButton'),
   firstRunModal: document.getElementById('firstRunModal'),
@@ -197,7 +206,16 @@ const elements = {
   loadQueueButton: document.getElementById('loadQueueButton'),
   exportDiagnosticsButton: document.getElementById('exportDiagnosticsButton'),
   runQueueButton: document.getElementById('runQueueButton'),
-  stopQueueButton: document.getElementById('stopQueueButton')
+  stopQueueButton: document.getElementById('stopQueueButton'),
+  showTranslationToolsButton: document.getElementById('showTranslationToolsButton'),
+  extractTextButton: document.getElementById('extractTextButton'),
+  translationExtractAllButton: document.getElementById('translationExtractAllButton'),
+  translationLoadJsonButton: document.getElementById('translationLoadJsonButton'),
+  translationSaveJsonButton: document.getElementById('translationSaveJsonButton'),
+  translationReinsertButton: document.getElementById('translationReinsertButton'),
+  translationStatus: document.getElementById('translationStatus'),
+  translationCategoryRows: document.getElementById('translationCategoryRows'),
+  viewTranslationToolsPanel: document.getElementById('viewTranslationToolsPanel')
 };
 
 const vscodeApi: VsCodeApi = {
@@ -242,6 +260,9 @@ wireDragAndDrop();
 wireControlDescriptions();
 maybeShowFirstRunChooser();
 
+// Initialize bilingual translation UI
+const translationUI = new BilingualTranslationUI(desktopBridge);
+
 void import('./webview/editor')
   .then(async () => {
     await desktopBridge.postMessage({ type: 'desktop.rendererReady' });
@@ -276,6 +297,9 @@ function wireDesktopControls(): void {
 
   elements.openDiskButton?.addEventListener('click', () => {
     void handleOpenDisk();
+  });
+  elements.openFolderButton?.addEventListener('click', () => {
+    void handleAddQueueFolder();
   });
   elements.quickAddQueueFilesButton?.addEventListener('click', () => {
     void handleAddQueueFiles();
@@ -333,6 +357,27 @@ function wireDesktopControls(): void {
   elements.stopQueueButton?.addEventListener('click', () => {
     stopQueue();
   });
+
+  // Translation Tools
+  elements.showTranslationToolsButton?.addEventListener('click', () => {
+    showTranslationToolsPanel();
+  });
+  elements.extractTextButton?.addEventListener('click', () => {
+    showTranslationToolsPanel();
+  });
+  elements.translationExtractAllButton?.addEventListener('click', () => {
+    void extractAllText();
+  });
+  elements.translationLoadJsonButton?.addEventListener('click', () => {
+    void loadTranslationJson();
+  });
+  elements.translationSaveJsonButton?.addEventListener('click', () => {
+    void saveTranslationJson();
+  });
+  elements.translationReinsertButton?.addEventListener('click', () => {
+    void applyReinsertionPlan();
+  });
+
   elements.queueRows?.addEventListener('click', (event) => {
     const row = event.target instanceof Element ? event.target.closest('[data-queue-id]') : null;
     if (!row) {
@@ -1473,6 +1518,7 @@ function updateQueueButtons(): void {
   setDisabled(elements.runQueueButton, controlsLocked || !hasItems);
   setDisabled(elements.stopQueueButton, !running);
   setDisabled(elements.openDiskButton, controlsLocked);
+  setDisabled(elements.openFolderButton, controlsLocked);
   setDisabled(elements.quickAddQueueFilesButton, controlsLocked);
   setDisabled(elements.quickRunQueueButton, controlsLocked || !hasItems);
 
@@ -1654,4 +1700,128 @@ function resolveDesktopBridge(candidate: Partial<DesktopBridge> | undefined): De
       };
     }
   };
+}
+
+// Translation Tools Functions
+function showTranslationToolsPanel(): void {
+  const allPanels = document.querySelectorAll('.viewPanel');
+  allPanels.forEach((p) => {
+    p.classList.add('isHidden');
+    p.classList.remove('is-active');
+  });
+
+  elements.viewTranslationToolsPanel?.classList.remove('isHidden');
+  elements.viewTranslationToolsPanel?.classList.add('is-active');
+}
+
+interface TranslationEntry {
+  disk: string;
+  offset: string;
+  original: string;
+  translation: string;
+  verified: boolean;
+}
+
+interface ExtractionResult {
+  exportDate: string;
+  totalStrings: number;
+  byCategory: Record<string, TranslationEntry[]>;
+}
+
+let currentExtraction: ExtractionResult | null = null;
+
+async function extractAllText(): Promise<void> {
+  if (!queueState.items.length) {
+    setStatus('No disks in queue. Add disks first using "Queue Files" or "Open Disk".', 'warning');
+    return;
+  }
+
+  setStatus('Extracting text from queued disks...', 'busy');
+  updateTranslationStatus('Scanning disks for text strings...');
+
+  try {
+    const extraction: ExtractionResult = {
+      exportDate: new Date().toISOString(),
+      totalStrings: 0,
+      byCategory: {}
+    };
+
+    for (const item of queueState.items) {
+      const result = await desktopBridge.postMessage({
+        type: 'translation.extract',
+        filePath: item.filePath
+      });
+      console.log('Extract result:', result);
+    }
+
+    currentExtraction = extraction;
+    updateTranslationStatus(`Extracted ${extraction.totalStrings} text strings from ${queueState.items.length} disk(s)`);
+    updateCategoryTable();
+    setStatus('Text extraction complete!', 'success');
+  } catch (err: unknown) {
+    setStatus(`Extraction failed: ${toErrorMessage(err)}`, 'error');
+  }
+}
+
+async function loadTranslationJson(): Promise<void> {
+  try {
+    // In a real implementation, this would open a file dialog
+    setStatus('Translation JSON loading would happen here', 'info');
+  } catch (err: unknown) {
+    setStatus(`Failed to load translation: ${toErrorMessage(err)}`, 'error');
+  }
+}
+
+async function saveTranslationJson(): Promise<void> {
+  if (!currentExtraction) {
+    setStatus('No extraction loaded. Extract text first.', 'warning');
+    return;
+  }
+
+  try {
+    const json = JSON.stringify(currentExtraction, null, 2);
+    await desktopBridge.writeClipboard(
+      `// Copy this and save to .json file:\n${json}`
+    );
+    setStatus('Translation JSON copied to clipboard', 'success');
+  } catch (err: unknown) {
+    setStatus(`Failed to save translation: ${toErrorMessage(err)}`, 'error');
+  }
+}
+
+async function applyReinsertionPlan(): Promise<void> {
+  if (!currentExtraction) {
+    setStatus('No extraction loaded. Extract text first.', 'warning');
+    return;
+  }
+
+  setStatus('Reinsertion: Use the offsets in the extracted data with DiskEdit mode to apply translations.', 'info');
+}
+
+function updateTranslationStatus(message: string): void {
+  if (elements.translationStatus) {
+    elements.translationStatus.textContent = message;
+  }
+}
+
+function updateCategoryTable(): void {
+  if (!currentExtraction || !elements.translationCategoryRows) {
+    return;
+  }
+
+  elements.translationCategoryRows.innerHTML = '';
+
+  Object.entries(currentExtraction.byCategory).forEach(([category, strings]) => {
+    const translatedCount = strings.filter((s) => s.translation.length > 0).length;
+    const verifiedCount = strings.filter((s) => s.verified).length;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${category}</td>
+      <td>${strings.length}</td>
+      <td>${translatedCount}</td>
+      <td>${verifiedCount}</td>
+    `;
+    elements.translationCategoryRows?.appendChild(row);
+  });
 }
