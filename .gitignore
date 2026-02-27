@@ -38,3 +38,6 @@ codeql-results/
 # Test binary artifacts
 *.backup.*
 *.patched
+
+# Large extraction data files (>50MB)
+**/extraction.json
