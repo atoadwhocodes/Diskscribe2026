@@ -1,0 +1,78 @@
+[
+  {
+    "diskName": "Alshark (User disk).hdm",
+    "offset": 8409,
+    "offsetHex": "0x0020d9",
+    "originalBytes": {
+      "type": "Buffer",
+      "data": [
+        68,
+        99,
+        35
+      ]
+    },
+    "originalText": "Dc#",
+    "length": 3,
+    "encoding": "ascii",
+    "isJapanese": false,
+    "category": "other"
+  },
+  {
+    "diskName": "Alshark (User disk).hdm",
+    "offset": 8425,
+    "offsetHex": "0x0020e9",
+    "originalBytes": {
+      "type": "Buffer",
+      "data": [
+        64,
+        65,
+        66
+      ]
+    },
+    "originalText": "@AB",
+    "length": 3,
+    "encoding": "ascii",
+    "isJapanese": false,
+    "category": "other"
+  },
+  {
+    "diskName": "Alshark (User disk).hdm",
+    "offset": 8582,
+    "offsetHex": "0x002186",
+    "originalBytes": {
+      "type": "Buffer",
+      "data": [
+        66,
+        116,
+        52
+      ]
+    },
+    "originalText": "Bt4",
+    "length": 3,
+    "encoding": "ascii",
+    "isJapanese": false,
+    "category": "name_item"
+  },
+  {
+    "diskName": "Alshark (User disk).hdm",
+    "offset": 8665,
+    "offsetHex": "0x0021d9",
+    "originalBytes": {
+      "type": "Buffer",
+      "data": [
+        85,
+        62,
+        104,
+        49,
+        50,
+        51,
+        53
+      ]
+    },
+    "originalText": "U>h1235",
+    "length": 7,
+    "encoding": "ascii",
+    "isJapanese": false,
+    "category": "other"
+  }
+]

@@ -1,0 +1,185 @@
+{
+  "timestamp": "2026-02-26T08:32:46.542Z",
+  "plan": [
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000082",
+      "category": "ascii",
+      "original": "U~)",
+      "translation": "Hero Introduction",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00008a",
+      "category": "ascii",
+      "original": "j=K",
+      "translation": "New Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x0000ec",
+      "category": "ascii",
+      "original": "0x@",
+      "translation": "Resume Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x0000f4",
+      "category": "ascii",
+      "original": "T**",
+      "translation": "Options",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000116",
+      "category": "ascii",
+      "original": " bD",
+      "translation": "Save Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00018b",
+      "category": "ascii",
+      "original": "\"C5",
+      "translation": "Load Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000194",
+      "category": "ascii",
+      "original": "[A#*TP",
+      "translation": "Quit Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x0002ff",
+      "category": "ascii",
+      "original": "@Qe",
+      "translation": "Attack",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00030b",
+      "category": "ascii",
+      "original": ":e1",
+      "translation": "Guard",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000317",
+      "category": "ascii",
+      "original": ";rR",
+      "translation": "Spells",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000397",
+      "category": "ascii",
+      "original": "*rY",
+      "translation": "Items",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000405",
+      "category": "ascii",
+      "original": "U[g",
+      "translation": "Character Status",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00048b",
+      "category": "ascii",
+      "original": ":e1",
+      "translation": "Gear",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000497",
+      "category": "ascii",
+      "original": ";rV",
+      "translation": "Battle Won!",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00050b",
+      "category": "ascii",
+      "original": ":e1",
+      "translation": "Battle Lost",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000517",
+      "category": "ascii",
+      "original": ";RV",
+      "translation": "EXP Gained",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00052e",
+      "category": "ascii",
+      "original": "j_U",
+      "translation": "Hero Introduction",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000594",
+      "category": "ascii",
+      "original": "=N:",
+      "translation": "New Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x000609",
+      "category": "ascii",
+      "original": "[Z$,",
+      "translation": "Resume Game",
+      "action": "replace",
+      "status": "pending"
+    },
+    {
+      "disk": "Alshark (Data disk).hdm",
+      "offset": "0x00060e",
+      "category": "ascii",
+      "original": "\"$II-U",
+      "translation": "Options",
+      "action": "replace",
+      "status": "pending"
+    }
+  ]
+}

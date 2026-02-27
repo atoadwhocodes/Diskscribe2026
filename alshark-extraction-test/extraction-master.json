@@ -1,0 +1,19 @@
+{
+  "exportDate": "2026-02-26T10:46:33.065Z",
+  "totalStrings": 252086,
+  "byCategory": {
+    "other": 230909,
+    "name_item": 14397,
+    "dialog": 6515,
+    "combat_status": 265
+  },
+  "disks": [
+    "Alshark (Data disk).hdm",
+    "Alshark (Ending disk).hdm",
+    "Alshark (Opening disk).hdm",
+    "Alshark (System disk).hdm",
+    "Alshark (User disk).hdm",
+    "Alshark (Visual disk).hdm"
+  ],
+  "diskExtractionsPath": "E:\\diskscribe2026\\alshark-extraction-test"
+}
