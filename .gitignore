@@ -25,3 +25,16 @@ apps/diskscribe-2026-desktop/.webpack/
 *.code-workspace
 .codeql/
 codeql-results/
+
+# Disk images (binary, large)
+*.hdm
+*.hdi
+*.hdd
+*.fdi
+*.fdd
+*.d88
+*.nhd
+
+# Test binary artifacts
+*.backup.*
+*.patched
