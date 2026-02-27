@@ -1,0 +1,103 @@
+{
+  "name": "diskscribe-offline-translation",
+  "version": "1.0.0",
+  "description": "Offline translation system for PC-98 games using Ollama",
+  "main": "translate-offline.js",
+  
+  "scripts": {
+    "setup": "node setup-check.js",
+    "translate": "node translate-offline.js",
+    "translate:fast": "node translate-offline.js --model mistral:7b",
+    "translate:best": "node translate-offline.js --model gemma2:9b",
+    "check": "node check-ollama-status.js",
+    "install-ollama": "powershell -ExecutionPolicy Bypass -File setup-offline-translation.bat"
+  },
+  
+  "config": {
+    "ollama": {
+      "defaultModel": "gemma2:9b",
+      "alternativeModels": [
+        "mistral:7b",
+        "qwen2.5:7b",
+        "phi3:3.8b"
+      ],
+      "port": 11434,
+      "apiBase": "http://localhost:11434"
+    },
+    "translation": {
+      "batchSize": 10,
+      "saveInterval": 100,
+      "cacheEnabled": true,
+      "maxCacheSize": 100000
+    }
+  },
+  
+  "systemRequirements": {
+    "diskSpace": "10GB minimum for model",
+    "ram": "8GB minimum, 16GB recommended",
+    "gpu": "Optional - NVIDIA/AMD GPU recommended for 10x speed boost",
+    "os": "Windows 10+, macOS 12+, Ubuntu 20.04+"
+  },
+  
+  "distribution": {
+    "canPackage": true,
+    "offline": true,
+    "requiresInternet": "Only for initial setup",
+    "license": "MIT (Ollama), Open weights (models)",
+    "commercialUse": true
+  },
+  
+  "features": [
+    "100% free translation",
+    "Works completely offline",
+    "Unlimited translations",
+    "No API keys required",
+    "Privacy-preserving (all local)",
+    "Multiple model support",
+    "Resume from checkpoints",
+    "Progress tracking",
+    "Translation caching"
+  ],
+  
+  "models": {
+    "gemma2:9b": {
+      "size": "9GB",
+      "quality": "Excellent",
+      "speed": "Medium",
+      "recommended": true,
+      "description": "Best balance of quality and speed"
+    },
+    "mistral:7b": {
+      "size": "7GB",
+      "quality": "Very Good",
+      "speed": "Fast",
+      "description": "Faster alternative, good quality"
+    },
+    "qwen2.5:7b": {
+      "size": "7GB",
+      "quality": "Excellent",
+      "speed": "Medium",
+      "description": "Specifically optimized for Chinese/Japanese"
+    },
+    "phi3:3.8b": {
+      "size": "3.8GB",
+      "quality": "Good",
+      "speed": "Very Fast",
+      "description": "Smallest option, good for basic translation"
+    }
+  },
+  
+  "keywords": [
+    "translation",
+    "japanese",
+    "pc98",
+    "ollama",
+    "offline",
+    "free",
+    "game-localization",
+    "retro-gaming"
+  ],
+  
+  "author": "Diskscribe2026",
+  "license": "MIT"
+}
