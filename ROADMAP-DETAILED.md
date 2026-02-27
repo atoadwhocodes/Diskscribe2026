@@ -20,10 +20,11 @@ Phase 7 (Polish)      - Production UX             2-4 weeks per feature
 
 ---
 
-# PHASE 1: "It works end-to-end for one title" (Weeks 1-4)
+## PHASE 1: "It works end-to-end for one title" (Weeks 1-4)
 
 **Goal:** Take Alshark (PC-98 FDI) → extract → translate → layout → patch → playable.  
 **Success Criteria:**
+
 - [ ] No-op rebuild produces identical file hashes
 - [ ] String extraction is stable and complete
 - [ ] In-place patching works for known textbox sizes
@@ -42,6 +43,7 @@ Phase 7 (Polish)      - Production UX             2-4 weeks per feature
 **Priority:** CRITICAL (blocks all later stages)
 
 **Spec:**
+
 ```typescript
 // src/core/container_manifest.ts
 export interface ContainerManifest {
@@ -85,11 +87,13 @@ export interface ExtractionMethod {
 ```
 
 **Deliverables:**
+
 - [ ] `src/core/container_manifest.ts` (200 LOC)
 - [ ] Unit tests for serialization (JSON roundtrip)
 - [ ] Hashing utilities (CLI tool to compute manifest hash)
 
 **API Example:**
+
 ```typescript
 const manifest = await containerOpen("alshark.fdi");
 console.log(manifest.files.length);                    // 23
@@ -104,6 +108,7 @@ console.log(manifest.container_type);                  // "pc98_fdi"
 **Priority:** CRITICAL (extracted strings live here)
 
 **Spec:**
+
 ```typescript
 // src/core/string_table.ts
 export interface StringUnit {
@@ -171,11 +176,13 @@ export class StringTable {
 ```
 
 **Deliverables:**
+
 - [ ] `src/core/string_table.ts` (300 LOC)
 - [ ] Unit tests: add/get/filter/stats
 - [ ] JSON schema + validation
 
 **Usage Example:**
+
 ```typescript
 const table = new StringTable();
 table.add({
@@ -198,6 +205,7 @@ console.log(stats.total);                              // 252086
 **Priority:** CRITICAL (stores translations)
 
 **Spec:**
+
 ```typescript
 // src/core/translation_table.ts
 export interface Translation {
@@ -247,6 +255,7 @@ export class TranslationTable {
 ```
 
 **Deliverables:**
+
 - [ ] `src/core/translation_table.ts` (200 LOC)
 - [ ] Unit tests
 - [ ] Quality report formatter
@@ -259,6 +268,7 @@ export class TranslationTable {
 **Priority:** HIGH (enables reproducibility)
 
 **Spec:**
+
 ```typescript
 // src/core/project.ts
 export interface ProjectIndex {
@@ -326,6 +336,7 @@ project/
 ```
 
 **Deliverables:**
+
 - [ ] `src/core/project.ts` (300 LOC)
 - [ ] Project folder creation + validation
 - [ ] JSON serialization tests
@@ -341,6 +352,7 @@ project/
 **Priority:** CRITICAL (blocks extraction)
 
 **Spec:**
+
 ```typescript
 // src/containers/base.ts
 export interface IContainerPlugin {
@@ -378,6 +390,7 @@ export const global_container_registry = new ContainerRegistry();
 ```
 
 **Deliverables:**
+
 - [ ] `src/containers/base.ts` (200 LOC)
 - [ ] `src/containers/registry.ts` (150 LOC)
 - [ ] Unit tests for registry
@@ -391,6 +404,7 @@ export const global_container_registry = new ContainerRegistry();
 **Priority:** CRITICAL (Alshark uses FDI)
 
 **Spec:**
+
 ```typescript
 // src/containers/pc98_fdi.ts
 export class PC98FDIPlugin implements IContainerPlugin {
@@ -429,6 +443,7 @@ global_container_registry.register(new PC98FDIPlugin());
 ```
 
 **Deliverables:**
+
 - [ ] `src/containers/pc98_fdi.ts` (500 LOC)
 - [ ] FDI parser utility (detect header, parse boot sector)
 - [ ] File extraction + rebuild logic
@@ -436,6 +451,7 @@ global_container_registry.register(new PC98FDIPlugin());
 - [ ] Integration test with real Alshark FDI image
 
 **Acceptance Test:**
+
 ```bash
 diskscribe extract alshark.fdi --output extracted/
 # Should find and extract .EXE, .DAT, .GRP files
@@ -452,6 +468,7 @@ diskscribe extract alshark.fdi --output extracted/
 **Priority:** CRITICAL (blocks text extraction)
 
 **Spec:**
+
 ```typescript
 // src/profiles/base.ts
 export interface IGameProfile {
@@ -495,6 +512,7 @@ export const global_profile_registry = new ProfileRegistry();
 ```
 
 **Deliverables:**
+
 - [ ] `src/profiles/base.ts` (200 LOC)
 - [ ] `src/profiles/registry.ts` (150 LOC)
 - [ ] CLI helper: `diskscribe profiles list`
@@ -508,11 +526,13 @@ export const global_profile_registry = new ProfileRegistry();
 
 **Context:**
 Alshark is an early Alice Soft eroge. Binary structure known from community docs.
+
 - Main script file: `ALSHARK.EXE` (compressed script)
 - Graphics: `*.GRP`
 - Data: `*.DAT`
 
 **Strategy:**
+
 1. Locate script file (EXE)
 2. Decompress if needed
 3. Parse text unit offsets from pointer table at known offset
@@ -520,6 +540,7 @@ Alshark is an early Alice Soft eroge. Binary structure known from community docs
 5. Apply per-scene textbox dimensions
 
 **Spec:**
+
 ```typescript
 // src/profiles/alshark.ts
 export class AlsharkProfile implements IGameProfile {
@@ -581,6 +602,7 @@ global_profile_registry.register(new AlsharkProfile());
 ```
 
 **Deliverables:**
+
 - [ ] `src/profiles/alshark.ts` (400-600 LOC)
 - [ ] Script decompression utilities (if applicable)
 - [ ] Pointer table parser
@@ -588,6 +610,7 @@ global_profile_registry.register(new AlsharkProfile());
 - [ ] Unit tests: extraction on real Alshark.EXE produces known string count
 
 **Acceptance Test:**
+
 ```bash
 diskscribe extract alshark.fdi --profile alshark_pc98
 # Should detect ~2500+ strings, by file:
@@ -605,6 +628,7 @@ diskscribe extract alshark.fdi --profile alshark_pc98
 **Priority:** HIGH (enables AI translation)
 
 **Spec:**
+
 ```typescript
 // src/translate/base.ts
 export interface ITranslationProvider {
@@ -658,6 +682,7 @@ export const global_provider_registry = new ProviderRegistry();
 ```
 
 **Deliverables:**
+
 - [ ] `src/translate/base.ts` (200 LOC)
 - [ ] `src/translate/cache.ts` (300 LOC, SQLite schema)
 - [ ] `src/translate/registry.ts` (100 LOC)
@@ -672,6 +697,7 @@ export const global_provider_registry = new ProviderRegistry();
 **Priority:** MEDIUM (unblocks layout/patch testing)
 
 **Spec:**
+
 ```typescript
 // src/translate/mock_provider.ts
 export class MockProvider implements ITranslationProvider {
@@ -701,6 +727,7 @@ global_provider_registry.register(new MockProvider());
 ```
 
 **Deliverables:**
+
 - [ ] `src/translate/mock_provider.ts` (100 LOC)
 - [ ] Integration tests
 
@@ -714,6 +741,7 @@ global_provider_registry.register(new MockProvider());
 **Priority:** HIGH (required for patch verification)
 
 **Spec:**
+
 ```typescript
 // src/layout/wrap_engine.ts
 export interface LayoutResult {
@@ -777,6 +805,7 @@ export class TextWrapEngine {
 ```
 
 **Deliverables:**
+
 - [ ] `src/layout/wrap_engine.ts` (300-400 LOC)
 - [ ] Basic word-wrap algorithm (no fancy rulesets yet)
 - [ ] Unit tests with various widths/heights
@@ -790,6 +819,7 @@ export class TextWrapEngine {
 **Priority:** HIGH (blocks patch generation)
 
 **Spec:**
+
 ```typescript
 // src/pipeline/layout_stage.ts
 export async function layout_stage(
@@ -826,6 +856,7 @@ export async function layout_stage(
 ```
 
 **Deliverables:**
+
 - [ ] `src/pipeline/layout_stage.ts` (150 LOC)
 - [ ] Integration into `Project.save()`
 
@@ -839,6 +870,7 @@ export async function layout_stage(
 **Priority:** CRITICAL (required output)
 
 **Spec:**
+
 ```typescript
 // src/patch/patcher_inplace.ts
 export class InPlacePatcher {
@@ -892,6 +924,7 @@ export class InPlacePatcher {
 ```
 
 **Deliverables:**
+
 - [ ] `src/patch/patcher_inplace.ts` (400 LOC)
 - [ ] String encoding utilities (shift-jis, preserve control codes)
 - [ ] Unit tests: patch vs reference
@@ -905,6 +938,7 @@ export class InPlacePatcher {
 **Priority:** CRITICAL
 
 **Spec:**
+
 ```typescript
 // src/pipeline/patch_stage.ts
 export async function patch_stage(
@@ -933,6 +967,7 @@ export async function patch_stage(
 ```
 
 **Deliverables:**
+
 - [ ] `src/pipeline/patch_stage.ts` (150 LOC)
 
 ---
@@ -945,6 +980,7 @@ export async function patch_stage(
 **Priority:** CRITICAL (final integration)
 
 **Spec:**
+
 ```bash
 # Full pipeline: open → extract → translate → layout → patch
 $ diskscribe run input.fdi --output project/ --provider mock
@@ -963,6 +999,7 @@ $ diskscribe run input.fdi --output project/ --provider mock
 ```
 
 **Implementation:**
+
 ```typescript
 // src/cli/commands/run.ts
 async function run_command(args: {
@@ -1002,6 +1039,7 @@ async function run_command(args: {
 ```
 
 **Deliverables:**
+
 - [ ] `src/cli/commands/run.ts` (200 LOC)
 - [ ] Argument parser
 - [ ] End-to-end integration test
@@ -1013,6 +1051,7 @@ async function run_command(args: {
 ### TICKET 1.8.1: Project Load/Save Full Cycle
 
 **Deliverables:**
+
 - [ ] Project folder scaffolding
 - [ ] All tables serialize to JSON
 - [ ] Project.save() writes all artifacts
@@ -1037,10 +1076,11 @@ async function run_command(args: {
 
 ---
 
-# PHASE 2: "Universal Containers" (Weeks 5-9)
+## PHASE 2: "Universal Containers" (Weeks 5-9)
 
 **Goal:** Support ZIP, FOLDER, ISO9660 in addition to PC-98 FDI.  
 **Success Criteria:**
+
 - [ ] Extract from any common archive format
 - [ ] Non-disk inputs work (folders, zips, ISOs)
 - [ ] Container auto-detection reliable (>95%)
@@ -1056,7 +1096,7 @@ async function run_command(args: {
 
 ---
 
-# PHASE 3: "Claude Provider" (Weeks 10-11)
+## PHASE 3: "Claude Provider" (Weeks 10-11)
 
 **Goal:** Real Claude translations with caching, batching, cost tracking.
 
@@ -1071,7 +1111,7 @@ async function run_command(args: {
 
 ---
 
-# PHASE 4: "Repointing & Dynamic Patching" (Weeks 12-19)
+## PHASE 4: "Repointing & Dynamic Patching" (Weeks 12-19)
 
 **Goal:** Support strings longer than original without truncation.
 
@@ -1085,7 +1125,7 @@ async function run_command(args: {
 
 ---
 
-# PHASE 5: "Font & Glyph Systems" (Weeks 20–30+, depends on scope)
+## PHASE 5: "Font & Glyph Systems" (Weeks 20–30+, depends on scope)
 
 **Goal:** Glyph coverage tracking and optional font injection.
 
@@ -1099,7 +1139,7 @@ async function run_command(args: {
 
 ---
 
-# PHASE 6: "Profile Authoring Kit" (Weeks 31–36)
+## PHASE 6: "Profile Authoring Kit" (Weeks 31–36)
 
 **Goal:** Community can build new profiles without touching engine.
 
@@ -1113,7 +1153,7 @@ async function run_command(args: {
 
 ---
 
-# PHASE 7: "Production UX" (ongoing, parallel to other phases)
+## PHASE 7: "Production UX" (ongoing, parallel to other phases)
 
 Tickets spread across phases:
 
@@ -1128,7 +1168,7 @@ Tickets spread across phases:
 ## Staffing & Timeline Summary
 
 | Phase | Duration | Peak Load | Notes |
-|-------|----------|-----------|-------|
+| ----- | -------- | --------- | ----- |
 | 1 | 2-4 weeks | 2-3 eng | Core MVP - tight iteration |
 | 2 | 3-6 weeks | 1-2 eng | Parallel plugin creation |
 | 3 | 1-2 weeks | 1 eng | Claude integration straightforward |
