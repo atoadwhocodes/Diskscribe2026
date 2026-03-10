@@ -23,7 +23,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 # ── Configuration ──────────────────────────────────────────────────
-API_KEY = os.environ.get("GEMINI_API_KEY", "***REMOVED***")
+API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 MODEL_NAME = "gemini-2.5-pro"
 PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 PDF_PATH = os.path.join(PROJECT_ROOT, "reference", "Alshark (scans).pdf")
@@ -35,7 +35,6 @@ DPI = 200  # render quality (200 DPI is good balance of quality vs size)
 
 # ── Setup ──────────────────────────────────────────────────────────
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=API_KEY)
 
 PROMPT = """You are an expert OCR system for Japanese documents. 
 Extract ALL text from this scanned page of the Alshark PC-9801 game manual/guide.
@@ -63,7 +62,7 @@ def save_checkpoint(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def ocr_page(page_img_bytes: bytes, page_num: int) -> str:
+def ocr_page(client, page_img_bytes: bytes, page_num: int) -> str:
     """Send a page image to Gemini for OCR."""
     b64 = base64.b64encode(page_img_bytes).decode('utf-8')
     
@@ -109,6 +108,12 @@ def ocr_page(page_img_bytes: bytes, page_num: int) -> str:
 
 
 def main():
+    if not API_KEY:
+        print("ERROR: Set GEMINI_API_KEY before running OCR.")
+        print("\nGet a free key at: https://aistudio.google.com/apikey")
+        sys.exit(1)
+
+    client = genai.Client(api_key=API_KEY)
     print(f"Opening {PDF_PATH}...")
     doc = fitz.open(PDF_PATH)
     total = len(doc)
@@ -139,7 +144,7 @@ def main():
         
         print(f"\n[{len(completed)+1}/{total}] Page {page_num} ({img_kb:.0f} KB)...", end=" ", flush=True)
         
-        text = ocr_page(img_bytes, page_num)
+        text = ocr_page(client, img_bytes, page_num)
         
         # Preview first line (ASCII-safe for Windows console)
         preview = text.split('\n')[0][:60] if text else "(empty)"

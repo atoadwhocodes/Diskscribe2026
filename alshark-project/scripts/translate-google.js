@@ -6,8 +6,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const INPUT = 'ALSHARK-EXTRACTED-REV/alshark-translation-ready.json';
-const OUTPUT_DIR = 'ALSHARK-TRANSLATED-REV';
+const PROJECT_ROOT = path.join(__dirname, '..');
+const INPUT = path.join(PROJECT_ROOT, 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-translation-ready.json');
+const OUTPUT_DIR = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV');
 const CHECKPOINT = path.join(OUTPUT_DIR, 'google-checkpoint.json');
 const OUTPUT = path.join(OUTPUT_DIR, 'translations.json');
 

@@ -17,7 +17,7 @@ from google import genai
 from google.genai import types
 
 # ── Configuration ──────────────────────────────────────────────────
-API_KEY = os.environ.get("GEMINI_API_KEY", "***REMOVED***")
+API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 MODEL_NAME = "gemini-2.5-pro"
 
 # Resolve paths relative to project root (alshark-project/)
@@ -128,23 +128,31 @@ MP (Mental Points), SP (Shield Points for vehicles), Biosoldier, Black Beast (el
 """
 
 
-def translate_batch(client, items: list[str]) -> list[str]:
-    """Translate a batch of strings in one API call using numbered list format."""
-    numbered = '\n'.join(f'[{i+1}] {text}' for i, text in enumerate(items))
+def translate_batch(client, items: list[tuple[str, int]]) -> list[str]:
+    """Translate a batch of (text, maxBytes) tuples in one API call."""
+    numbered = '\n'.join(f'[{i+1}] (max {mb} chars) {text}' for i, (text, mb) in enumerate(items))
 
-    prompt = f"""You are a professional Japanese-to-English translator specializing in 1990s Japanese RPG video games.
-
-Translate each numbered line below from Japanese to English. This dialogue is from the 1991 PC-98 sci-fi RPG "Alshark" by Light Staff — a space opera set in the Whisperard universe.
+    prompt = f"""You are Ted Woolsey localizing the 1991 PC-98 sci-fi RPG "Alshark" for English-speaking players.
+Your style: punchy, natural English that FITS the space. Rewrite freely. Meaning > literal accuracy.
+Like Woolsey's FFVI/Chrono Trigger: capture the spirit, cut the filler, make every character count.
 
 {ALSHARK_GLOSSARY}
 
+HARD RULE: Each line shows (max N chars). Your translation MUST be ≤ that many characters.
+If it won't fit literally, REWRITE it shorter. Cut filler words, use contractions, rephrase.
+Examples of Woolsey-style compression:
+  "I have been hiding myself in a certain place for reasons" → "I'm in hiding."
+  "It seems like the new engine uses a small black hole" → "New engine runs on a micro black hole."
+  "Please forgive me. I was wrong." → "Sorry... my bad."
+  "Would you like to purchase a ticket?" → "Buy a ticket?"
+
 Rules:
-- Output ONLY the translations, one per line, keeping the [N] numbering
-- Keep translations concise — they must fit in a small dialog box (~40 English characters wide)
-- Use the EXACT character/place name spellings from the glossary above
-- Preserve tone and personality (casual speech, formal speech, military speech, etc.)
-- Keep proper nouns as-is (character names, place names)
-- Do not add quotes, notes, or explanations
+- Output ONLY translations, one per line, keeping [N] numbering
+- NEVER exceed the character limit — rewrite if needed
+- Use EXACT name spellings from the glossary
+- Keep personality: tough guys talk tough, kids talk casually, officers talk formally
+- Contractions always OK: don't, won't, can't, it's, I'm, we're
+- No quotes, notes, or explanations
 
 {numbered}"""
 
@@ -165,15 +173,19 @@ Rules:
         if match:
             idx = int(match.group(1)) - 1
             if 0 <= idx < len(items):
-                translations[idx] = match.group(2).strip()
+                t = match.group(2).strip()
+                # Strip echoed "(max N chars)" prefix if model repeated it
+                t = re.sub(r'^\(max \d+ chars?\)\s*', '', t)
+                translations[idx] = t
 
     return translations
 
 
-def translate_single(client, text: str) -> str:
+def translate_single(client, text: str, max_chars: int = 80) -> str:
     """Translate a single string (fallback for failed batch items)."""
-    prompt = f"""Translate this Japanese RPG dialogue to concise English. Output ONLY the translation.
-From the 1991 PC-98 RPG "Alshark" by Light Staff (sci-fi space opera set in Whisperard).
+    prompt = f"""You are Ted Woolsey. Translate this 1991 RPG dialogue to punchy, natural English.
+HARD LIMIT: {max_chars} characters max. Rewrite freely to fit — meaning over literal accuracy.
+Use contractions, cut filler, capture the spirit. Make it sound like a real SNES/PC-98 era localization.
 
 {ALSHARK_GLOSSARY}
 
@@ -205,10 +217,8 @@ def main():
     print("=== ALSHARK Gemini Pro Translator (Python) ===")
     print(f"Model: {MODEL_NAME} | Batch size: {BATCH_SIZE}\n")
 
-    if API_KEY == "YOUR_API_KEY_HERE" or not API_KEY:
-        print("ERROR: Set your Gemini API key!")
-        print("  Option 1: set GEMINI_API_KEY=your_key_here")
-        print("  Option 2: Edit API_KEY in this file")
+    if not API_KEY:
+        print("ERROR: Set GEMINI_API_KEY before running this translator.")
         print("\nGet a free key at: https://aistudio.google.com/apikey")
         sys.exit(1)
 
@@ -242,17 +252,28 @@ def main():
         except Exception:
             print("Checkpoint invalid, starting fresh")
 
-    # Quick connectivity test
+    # Quick connectivity test with retries (Gemini 2.5 Pro gets 503 during high demand)
     print("Testing Gemini API...")
-    try:
-        test = client.models.generate_content(
-            model=MODEL_NAME,
-            contents='Say "ready"',
-            config=types.GenerateContentConfig(max_output_tokens=4096)
-        )
-        print(f"API connected: {test.text.strip()[:30]}")
-    except Exception as e:
-        print(f"Failed to connect to Gemini API: {e}")
+    for test_attempt in range(10):
+        try:
+            test = client.models.generate_content(
+                model=MODEL_NAME,
+                contents='Say "ready"',
+                config=types.GenerateContentConfig(max_output_tokens=4096)
+            )
+            print(f"API connected: {test.text.strip()[:30]}")
+            break
+        except Exception as e:
+            err_msg = str(e)
+            if '503' in err_msg or 'UNAVAILABLE' in err_msg:
+                wait = 30 * (test_attempt + 1)
+                print(f"  API overloaded (attempt {test_attempt+1}/10), retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"Failed to connect to Gemini API: {e}")
+                sys.exit(1)
+    else:
+        print("API still unavailable after 10 attempts. Exiting.")
         sys.exit(1)
 
     start_time = time.time()
@@ -263,17 +284,20 @@ def main():
     while i < len(strings):
         batch_end = min(i + BATCH_SIZE, len(strings))
         batch_strings = []
+        batch_max_chars = []
         batch_meta = []
 
         for j in range(i, batch_end):
             s = strings[j]
             cleaned = clean_for_translation(s['sourceText'])
+            max_chars = s.get('maxBytes', 80)  # half-width: 1 byte = 1 char
             batch_strings.append(cleaned)
+            batch_max_chars.append(max_chars)
             batch_meta.append(s)
 
         # Check for empty/tiny strings that don't need translation
         needs_translation = [bool(s and len(s) >= 2) for s in batch_strings]
-        to_translate = [s for s, need in zip(batch_strings, needs_translation) if need]
+        to_translate = [(s, mc) for s, mc, need in zip(batch_strings, batch_max_chars, needs_translation) if need]
 
         translations = []
 
@@ -281,7 +305,7 @@ def main():
             for attempt in range(MAX_RETRIES):
                 try:
                     if len(to_translate) == 1:
-                        t = translate_single(client, to_translate[0])
+                        t = translate_single(client, to_translate[0][0], to_translate[0][1])
                         translations = [t]
                     else:
                         translations = translate_batch(client, to_translate)
@@ -302,9 +326,9 @@ def main():
                     if attempt == MAX_RETRIES - 1:
                         print("  Falling back to individual translation...")
                         translations = []
-                        for text in to_translate:
+                        for text, mc in to_translate:
                             try:
-                                t = translate_single(client, text)
+                                t = translate_single(client, text, mc)
                                 translations.append(t)
                                 time.sleep(DELAY_S)
                             except Exception:

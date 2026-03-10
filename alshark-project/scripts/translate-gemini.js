@@ -4,7 +4,7 @@
  * With checkpointing, half-width katakana normalization, and retry logic.
  * 
  * Free tier: 15 RPM, 1M tokens/min, 1500 req/day
- * Usage: set GEMINI_API_KEY env var or edit API_KEY below, then run:
+ * Usage: set GEMINI_API_KEY env var, then run:
  *   node translate-gemini.js
  */
 const fs = require('fs');
@@ -12,11 +12,12 @@ const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // ── Configuration ──────────────────────────────────────────────────
-const API_KEY = process.env.GEMINI_API_KEY || '***REMOVED***';
+const API_KEY = process.env.GEMINI_API_KEY || '';
 const MODEL_NAME = 'gemini-2.0-flash';
+const PROJECT_ROOT = path.join(__dirname, '..');
 
-const INPUT = 'ALSHARK-EXTRACTED-REV/alshark-translation-ready.json';
-const OUTPUT_DIR = 'ALSHARK-TRANSLATED-REV';
+const INPUT = path.join(PROJECT_ROOT, 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-translation-ready.json');
+const OUTPUT_DIR = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV');
 const CHECKPOINT = path.join(OUTPUT_DIR, 'gemini-checkpoint.json');
 const OUTPUT = path.join(OUTPUT_DIR, 'translations.json');
 
@@ -170,10 +171,8 @@ async function main() {
   console.log('=== ALSHARK Gemini Translator ===');
   console.log(`Model: ${MODEL_NAME} | Batch size: ${BATCH_SIZE}\n`);
 
-  if (API_KEY === 'YOUR_API_KEY_HERE') {
-    console.error('ERROR: Set your Gemini API key!');
-    console.error('  Option 1: set GEMINI_API_KEY=your_key_here');
-    console.error('  Option 2: Edit API_KEY in this file');
+  if (!API_KEY) {
+    console.error('ERROR: Set GEMINI_API_KEY before running this translator.');
     console.error('\nGet a free key at: https://aistudio.google.com/apikey');
     process.exit(1);
   }
