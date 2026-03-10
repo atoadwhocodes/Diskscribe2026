@@ -20,8 +20,9 @@ const fs = require('fs');
 const path = require('path');
 const iconv = require('iconv-lite');
 
-const ALSHARK_DIR = 'alshark';
-const OUTPUT_DIR = 'ALSHARK-EXTRACTED-REV';
+const PROJECT_ROOT = path.join(__dirname, '..');
+const ALSHARK_DIR = path.join(PROJECT_ROOT, 'disks');
+const OUTPUT_DIR = path.join(PROJECT_ROOT, 'data', 'ALSHARK-EXTRACTED-REV');
 
 // Disk configurations based on analysis
 const DISK_CONFIG = [
