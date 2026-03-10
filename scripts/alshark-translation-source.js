@@ -122,7 +122,7 @@ function loadJsonTranslationMaps(translationsPath) {
   for (const entry of translations) {
     const id = typeof entry.id === 'string' ? entry.id.trim().toLowerCase() : '';
     const jp = typeof entry.source === 'string' ? entry.source.trim() : '';
-    const en = typeof entry.translation === 'string' ? entry.translation.trim() : '';
+    const en = getEffectiveTranslation(entry);
 
     if (!en) {
       continue;
@@ -138,6 +138,24 @@ function loadJsonTranslationMaps(translationsPath) {
   }
 
   return { idMap, jpMap, translatedRows };
+}
+
+function getEffectiveTranslation(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return '';
+  }
+
+  const patchText = typeof entry.patchText === 'string' ? entry.patchText.trim() : '';
+  if (patchText) {
+    return patchText;
+  }
+
+  const translation = typeof entry.translation === 'string' ? entry.translation.trim() : '';
+  if (!translation || translation === '[ERROR]' || translation === '[EMPTY]') {
+    return '';
+  }
+
+  return translation;
 }
 
 function mergeTranslationMaps(...sources) {
@@ -197,6 +215,7 @@ module.exports = {
   canonicalIdFromMasterString,
   diskShortFromFull,
   escapeCsvCell,
+  getEffectiveTranslation,
   loadMergedTranslationMaps,
   normalizeJP,
   parseCsvLine

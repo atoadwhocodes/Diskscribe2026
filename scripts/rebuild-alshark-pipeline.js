@@ -15,7 +15,8 @@ const steps = [
   'scripts/apply-translations-to-clean.js',
   'scripts/export-canonical-clean-csv.js',
   'scripts/generate-applied-diff-csv.js',
-  'scripts/audit-alshark-translation-coverage.js'
+  'scripts/audit-alshark-translation-coverage.js',
+  'scripts/build-alshark-translation-worklists.js'
 ];
 
 for (const step of steps) {

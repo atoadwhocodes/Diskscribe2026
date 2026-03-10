@@ -199,11 +199,14 @@ function patchDisk(context) {
     }
 
     try {
+      const patchText = typeof entry.patchText === 'string' && entry.patchText.trim()
+        ? entry.patchText.trim()
+        : entry.translation;
       const patch = buildControlSafePatch({
         originalBuffer,
         offset: entry.offset,
         maxBytes: entry.maxBytes,
-        translation: entry.translation,
+        translation: patchText,
         fitOptions: ALSHARK_FIT_OPTIONS
       });
       if (!patch) {
@@ -233,7 +236,7 @@ function patchDisk(context) {
           finalLength: patch.fit.finalLength,
           savedBytes: patch.fit.savedBytes,
           strategies: patch.fit.appliedStrategies,
-          translationPreview: String(entry.translation || '').slice(0, 80),
+          translationPreview: String(patchText || '').slice(0, 80),
           fittedPreview: String(patch.fit.text || '').slice(0, 80)
         });
       }
@@ -253,7 +256,7 @@ function patchDisk(context) {
           savedBytes: patch.fit ? patch.fit.savedBytes : null,
           strategies: patch.fit ? patch.fit.appliedStrategies : [],
           sourcePreview: String(entry.source || '').slice(0, 80),
-          translationPreview: String(entry.translation || '').slice(0, 80),
+          translationPreview: String(patchText || '').slice(0, 80),
           fittedPreview: patch.fit ? String(patch.fit.text || '').slice(0, 80) : ''
         });
       }

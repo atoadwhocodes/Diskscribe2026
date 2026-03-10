@@ -52,3 +52,38 @@ alshark-project/data/ALSHARK-TRANSLATED-REV/gemini-pro-checkpoint.json
 # Test artifacts
 test-patch-workflow/
 test-projects/
+
+# Local Alshark scratch exports and review notes
+/ALSHARK-ALL-LINES*
+/all-alshark-lines/
+/all-alshark-lines-batch500/
+/all-alshark-lines-batch500-clean/
+/ALSHARK-EXTRACTED-REV/
+/ALSHARK-GLOSSARY.md
+/Alshark-Translation-Session.md
+/skipped-lines.txt
+/translation-categories.md
+
+# Local duplicate scripts and one-off utilities
+/translate-gemini-pro.py
+/translate-gemma3.js
+/ocr-alshark-scans.py
+/batch_translate_flagged_garbled_entries.py
+/export_alshark_translations_to_pdf.py
+
+# Local font downloads and unpacked references
+/NotoSansJP-Regular.ttf
+/NotoSansJP-VariableFont_wght.ttf
+/OFL.txt
+/README.txt
+static/NotoSansJP-*.ttf
+
+# Local translation snapshots
+alshark-project/data/ALSHARK-TRANSLATED-REV/backups/
+
+# Local translation job checkpoints and batch outputs
+alshark-project/data/ALSHARK-TRANSLATED-REV/google-remaining-*.json
+alshark-project/data/ALSHARK-TRANSLATED-REV/google-flagged-review-*.json
+alshark-project/data/ALSHARK-TRANSLATED-REV/gemma3-remaining-*.json
+alshark-project/data/ALSHARK-TRANSLATED-REV/gemma3-flagged-review-*.json
+alshark-project/data/ALSHARK-TRANSLATED-REV/gemma3-polish-fit-*.json

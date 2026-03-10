@@ -1,0 +1,218 @@
+{
+  "generatedAt": "2026-03-10T02:05:50.101Z",
+  "masterStrings": 14459,
+  "translatedStrings": 1232,
+  "cleanBacklogCount": 8938,
+  "flaggedBacklogCount": 4289,
+  "polishQueueCount": 626,
+  "fitPriorityPath": "E:\\diskscribe2026\\alshark-project\\output\\ALSHARK-PATCHED-HW-ARTIFACTS\\alshark-2026-03-10T02-05-01-540Z\\patch-fit-priority-list.json",
+  "byDisk": {
+    "System": {
+      "translated": 1174,
+      "cleanBacklog": 3415,
+      "flaggedBacklog": 606,
+      "polishQueue": 621
+    },
+    "Opening": {
+      "translated": 18,
+      "cleanBacklog": 592,
+      "flaggedBacklog": 470,
+      "polishQueue": 1
+    },
+    "Ending": {
+      "translated": 14,
+      "cleanBacklog": 3294,
+      "flaggedBacklog": 1930,
+      "polishQueue": 0
+    },
+    "Data": {
+      "translated": 0,
+      "cleanBacklog": 1195,
+      "flaggedBacklog": 898,
+      "polishQueue": 0
+    },
+    "Visual": {
+      "translated": 26,
+      "cleanBacklog": 442,
+      "flaggedBacklog": 385,
+      "polishQueue": 4
+    }
+  },
+  "topPolish": [
+    {
+      "id": "system_6cf3c",
+      "disk": "System",
+      "overflowBytes": 31,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "What do you think, do you want to look at other weapons?"
+    },
+    {
+      "id": "system_51339",
+      "disk": "System",
+      "overflowBytes": 14,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Would you like to go with me?"
+    },
+    {
+      "id": "system_645cc",
+      "disk": "System",
+      "overflowBytes": 14,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything else you need?"
+    },
+    {
+      "id": "system_5172a",
+      "disk": "System",
+      "overflowBytes": 12,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "I guess you want to go to Paris?"
+    },
+    {
+      "id": "system_6cf85",
+      "disk": "System",
+      "overflowBytes": 12,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything else you need?"
+    },
+    {
+      "id": "system_6cfa4",
+      "disk": "System",
+      "overflowBytes": 11,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything else you need?"
+    },
+    {
+      "id": "system_5cd58",
+      "disk": "System",
+      "overflowBytes": 21,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Are you leaving for the spaceport on the planet Mars?"
+    },
+    {
+      "id": "system_62f2b",
+      "disk": "System",
+      "overflowBytes": 13,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Are there any other items you need?"
+    },
+    {
+      "id": "system_534e7",
+      "disk": "System",
+      "overflowBytes": 11,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Are you looking for an informant?"
+    },
+    {
+      "id": "system_5f0d4",
+      "disk": "System",
+      "overflowBytes": 19,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Would you like to use the interstellar bus?"
+    },
+    {
+      "id": "system_5f397",
+      "disk": "System",
+      "overflowBytes": 19,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Would you like to use the interstellar bus?"
+    },
+    {
+      "id": "system_65870",
+      "disk": "System",
+      "overflowBytes": 8,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do you need something?"
+    },
+    {
+      "id": "system_7108e",
+      "disk": "System",
+      "overflowBytes": 9,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do you want information?"
+    },
+    {
+      "id": "system_63882",
+      "disk": "System",
+      "overflowBytes": 13,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "y “Whisper _Do you need anything else?”"
+    },
+    {
+      "id": "system_5b7a5",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do you need something?"
+    },
+    {
+      "id": "system_60385",
+      "disk": "System",
+      "overflowBytes": 9,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do you need anything else?"
+    },
+    {
+      "id": "system_527ac",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "What about other items?"
+    },
+    {
+      "id": "system_6cf20",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "What about other armor?"
+    },
+    {
+      "id": "system_6cf68",
+      "disk": "System",
+      "overflowBytes": 9,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything you need?"
+    },
+    {
+      "id": "system_57df9",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do you need anything else?"
+    },
+    {
+      "id": "system_57b22",
+      "disk": "System",
+      "overflowBytes": 10,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything else you need?"
+    },
+    {
+      "id": "system_60317",
+      "disk": "System",
+      "overflowBytes": 10,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Is there anything else you need?"
+    },
+    {
+      "id": "system_73516",
+      "disk": "System",
+      "overflowBytes": 1,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Need anything else?"
+    },
+    {
+      "id": "system_6feab",
+      "disk": "System",
+      "overflowBytes": 30,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "In that case, how about I use my power to transport you close to your spaceship?"
+    },
+    {
+      "id": "system_638f9",
+      "disk": "System",
+      "overflowBytes": 4,
+      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
+      "translation": "Do I need anything else?"
+    }
+  ]
+}
