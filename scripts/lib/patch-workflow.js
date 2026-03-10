@@ -122,6 +122,7 @@ function calculateTotals(diskResults, passthroughResults) {
       totals.patched += result.patched || 0;
       totals.skipped += result.skipped || 0;
       totals.truncated += result.truncated || 0;
+      totals.fitAdjusted += result.fitAdjusted || 0;
       totals.errors += Array.isArray(result.errors) ? result.errors.length : 0;
       return totals;
     },
@@ -129,6 +130,7 @@ function calculateTotals(diskResults, passthroughResults) {
       patched: 0,
       skipped: 0,
       truncated: 0,
+      fitAdjusted: 0,
       errors: 0,
       passthroughCopied: passthroughResults.length
     }
@@ -250,7 +252,9 @@ function runProjectPatch(profile, options = {}) {
     result.outputFile = describeFile(outputPath);
     diskResults.push(result);
 
-    console.log(`  Patched: ${result.patched || 0} | Skipped: ${result.skipped || 0} | Truncated: ${result.truncated || 0}`);
+    console.log(
+      `  Patched: ${result.patched || 0} | Fit-adjusted: ${result.fitAdjusted || 0} | Skipped: ${result.skipped || 0} | Truncated: ${result.truncated || 0}`
+    );
     if (Array.isArray(result.errors) && result.errors.length) {
       console.log(`  Errors: ${result.errors.length}`);
     }

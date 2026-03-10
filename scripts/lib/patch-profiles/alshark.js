@@ -1,6 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 const { readNullTerminatedAscii, validatePatchSet } = require('../patch-validation');
+const {
+  buildControlSafePatch,
+  replaceAndWithAmpersandTransform,
+  sequentialReplacementTransform,
+  stripOuterQuotesTransform,
+  tightenAllPunctuationSpacingTransform,
+  tightenCommaSpacingTransform,
+  tightenEllipsisTransform,
+  tightenSentenceSpacingTransform,
+  tightenSlashSpacingTransform,
+  trimLeadingPhrasesTransform,
+  trimWordsTransform
+} = require('../text-slot-patcher');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const PROJECT_ROOT = path.join(REPO_ROOT, 'alshark-project');
@@ -54,136 +67,53 @@ const PROTECTED_RANGES = Object.fromEntries(
   ])
 );
 
-function isSjisLead(byteValue) {
-  return (byteValue >= 0x81 && byteValue <= 0x9F) || (byteValue >= 0xE0 && byteValue <= 0xFC);
+function caseAware(lower, capitalized) {
+  return (match) => (/^[A-Z]/.test(match) ? capitalized : lower);
 }
 
-function isSjisTrail(byteValue) {
-  return ((byteValue >= 0x40 && byteValue <= 0x7E) || (byteValue >= 0x80 && byteValue <= 0xFC)) && byteValue !== 0x7F;
-}
-
-function cleanTranslation(text) {
-  return String(text || '')
-    .replace(/[^\x20-\x7E]/g, ' ')
-    .replace(/[@#$%\\]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function findStringLength(buffer, offset, maxBytes) {
-  const limit = maxBytes ? Math.min(buffer.length, offset + maxBytes) : buffer.length;
-  let end = offset;
-
-  while (end < limit && buffer[end] !== 0x00) {
-    end++;
-  }
-
-  return end - offset;
-}
-
-function buildControlSafePatch(originalBuffer, offset, maxBytes, translation) {
-  const length = findStringLength(originalBuffer, offset, maxBytes);
-  if (length < 4) {
-    return null;
-  }
-
-  const region = Buffer.from(originalBuffer.slice(offset, offset + length));
-  const textSlots = [];
-  let index = 0;
-
-  while (index < length) {
-    const byteValue = region[index];
-
-    if (isSjisLead(byteValue) && index + 1 < length && isSjisTrail(region[index + 1])) {
-      textSlots.push(index, index + 1);
-      index += 2;
-      continue;
-    }
-
-    if (byteValue >= 0xA1 && byteValue <= 0xDF) {
-      textSlots.push(index);
-      index++;
-      continue;
-    }
-
-    if (byteValue === 0x23 && index + 1 < length) {
-      const letter = region[index + 1];
-      if (letter >= 0x41 && letter <= 0x5A) {
-        let codeLength = 2;
-        if (index + 2 < length) {
-          const paramCount = region[index + 2];
-          if (paramCount >= 0x01 && paramCount <= 0x0F && index + 3 + paramCount <= length) {
-            codeLength = 3 + paramCount;
-          }
-        }
-        index += codeLength;
-        continue;
-      }
-    }
-
-    if (byteValue === 0x21 && index + 1 < length) {
-      const next = region[index + 1];
-      if (next === 0x30 || next === 0x40 || next === 0x5F || next === 0x23) {
-        index += 2;
-        continue;
-      }
-    }
-
-    if (byteValue === 0x30 && index + 1 < length && (region[index + 1] === 0x5F || region[index + 1] === 0x23)) {
-      const second = region[index + 1];
-      index += 2;
-      if (second === 0x5F && index < length && region[index] >= 0x30 && region[index] <= 0x39) {
-        index++;
-      }
-      continue;
-    }
-
-    if ((byteValue === 0x24 || byteValue === 0x25) && index + 1 < length) {
-      index += 2;
-      continue;
-    }
-
-    if (byteValue === 0x40 || byteValue < 0x20) {
-      index++;
-      continue;
-    }
-
-    if (byteValue >= 0x20 && byteValue <= 0x7E) {
-      textSlots.push(index);
-      index++;
-      continue;
-    }
-
-    index++;
-  }
-
-  if (textSlots.length === 0) {
-    return null;
-  }
-
-  const clean = cleanTranslation(translation);
-  if (!clean) {
-    return null;
-  }
-
-  const bytes = Buffer.from(clean, 'ascii');
-  if (bytes.length === 0) {
-    return null;
-  }
-
-  let written = 0;
-  for (const slot of textSlots) {
-    region[slot] = written < bytes.length ? bytes[written++] : 0x20;
-  }
-
-  return {
-    region,
-    length,
-    capacity: textSlots.length,
-    used: Math.min(bytes.length, textSlots.length),
-    truncated: bytes.length > textSlots.length
-  };
-}
+const ALSHARK_FIT_OPTIONS = {
+  reservedCharactersPattern: /[@#$%\\]/g,
+  transforms: [
+    tightenSlashSpacingTransform(),
+    stripOuterQuotesTransform(),
+    tightenEllipsisTransform(),
+    tightenSentenceSpacingTransform({
+      abbreviations: ['Dr', 'Mr', 'Mrs', 'Ms', 'Prof', 'Capt', 'Cmdr', 'Lt', 'Sgt', 'Sr', 'Jr', 'St']
+    }),
+    tightenCommaSpacingTransform(),
+    tightenAllPunctuationSpacingTransform({
+      abbreviations: ['Dr', 'Mr', 'Mrs', 'Ms', 'Prof', 'Capt', 'Cmdr', 'Lt', 'Sgt', 'Sr', 'Jr', 'St']
+    }),
+    sequentialReplacementTransform('contractions-and-short-forms', [
+      { pattern: /\byou are\b/gi, replace: caseAware('you\'re', 'You\'re') },
+      { pattern: /\bwe are\b/gi, replace: caseAware('we\'re', 'We\'re') },
+      { pattern: /\bthey are\b/gi, replace: caseAware('they\'re', 'They\'re') },
+      { pattern: /\bI am\b/g, replace: 'I\'m' },
+      { pattern: /\bI will\b/g, replace: 'I\'ll' },
+      { pattern: /\bwe will\b/gi, replace: caseAware('we\'ll', 'We\'ll') },
+      { pattern: /\bthey will\b/gi, replace: caseAware('they\'ll', 'They\'ll') },
+      { pattern: /\bit is\b/gi, replace: caseAware('it\'s', 'It\'s') },
+      { pattern: /\bthat is\b/gi, replace: caseAware('that\'s', 'That\'s') },
+      { pattern: /\bthere is\b/gi, replace: caseAware('there\'s', 'There\'s') },
+      { pattern: /\bdo not\b/gi, replace: caseAware('don\'t', 'Don\'t') },
+      { pattern: /\bdoes not\b/gi, replace: caseAware('doesn\'t', 'Doesn\'t') },
+      { pattern: /\bdid not\b/gi, replace: caseAware('didn\'t', 'Didn\'t') },
+      { pattern: /\bcannot\b/gi, replace: caseAware('can\'t', 'Can\'t') },
+      { pattern: /\bwill not\b/gi, replace: caseAware('won\'t', 'Won\'t') },
+      { pattern: /\bwould not\b/gi, replace: caseAware('wouldn\'t', 'Wouldn\'t') },
+      { pattern: /\bcould not\b/gi, replace: caseAware('couldn\'t', 'Couldn\'t') },
+      { pattern: /\bshould not\b/gi, replace: caseAware('shouldn\'t', 'Shouldn\'t') },
+      { pattern: /\bI have to\b/gi, replace: caseAware('I must', 'I must') },
+      { pattern: /\byou have to\b/gi, replace: caseAware('you must', 'You must') },
+      { pattern: /\bwe have to\b/gi, replace: caseAware('we must', 'We must') },
+      { pattern: /\bthey have to\b/gi, replace: caseAware('they must', 'They must') },
+      { pattern: /\bcredits?\b/gi, replace: caseAware('cr', 'CR') }
+    ]),
+    trimLeadingPhrasesTransform(['Well now, ', 'Well, ', 'Now, ', 'Hey, ', 'Look, ', 'Listen, ', 'Please, ']),
+    trimWordsTransform(['really', 'very', 'quite', 'actually', 'basically', 'just']),
+    replaceAndWithAmpersandTransform()
+  ]
+};
 
 function loadTranslations() {
   if (!fs.existsSync(TRANSLATIONS_FILE)) {
@@ -216,9 +146,11 @@ function patchDisk(context) {
   let patched = 0;
   let skipped = 0;
   let truncated = 0;
+  let fitAdjusted = 0;
   const errors = [];
   const skippedEntries = [];
   const truncatedEntries = [];
+  const fitAdjustedEntries = [];
 
   for (const entry of context.translations) {
     if (entry.offset < context.target.minOffset) {
@@ -254,7 +186,13 @@ function patchDisk(context) {
     }
 
     try {
-      const patch = buildControlSafePatch(originalBuffer, entry.offset, entry.maxBytes, entry.translation);
+      const patch = buildControlSafePatch({
+        originalBuffer,
+        offset: entry.offset,
+        maxBytes: entry.maxBytes,
+        translation: entry.translation,
+        fitOptions: ALSHARK_FIT_OPTIONS
+      });
       if (!patch) {
         skipped++;
         skippedEntries.push({
@@ -271,6 +209,22 @@ function patchDisk(context) {
         outputBuffer[entry.offset + patch.length] = 0x00;
       }
 
+      if (patch.fit && patch.fit.adjusted) {
+        fitAdjusted++;
+        fitAdjustedEntries.push({
+          id: entry.id,
+          offset: entry.offset,
+          offsetHex: `0x${entry.offset.toString(16)}`,
+          capacity: patch.capacity,
+          originalLength: patch.fit.originalLength,
+          finalLength: patch.fit.finalLength,
+          savedBytes: patch.fit.savedBytes,
+          strategies: patch.fit.appliedStrategies,
+          translationPreview: String(entry.translation || '').slice(0, 80),
+          fittedPreview: String(patch.fit.text || '').slice(0, 80)
+        });
+      }
+
       if (patch.truncated) {
         truncated++;
         truncatedEntries.push({
@@ -279,8 +233,15 @@ function patchDisk(context) {
           offsetHex: `0x${entry.offset.toString(16)}`,
           capacity: patch.capacity,
           maxBytes: entry.maxBytes,
+          originalLength: patch.fit ? patch.fit.originalLength : null,
+          preTruncateLength: patch.fit ? patch.fit.preTruncateLength : null,
+          finalLength: patch.fit ? patch.fit.finalLength : null,
+          overflowBytes: patch.fit ? patch.fit.overflowBytes : null,
+          savedBytes: patch.fit ? patch.fit.savedBytes : null,
+          strategies: patch.fit ? patch.fit.appliedStrategies : [],
           sourcePreview: String(entry.source || '').slice(0, 80),
-          translationPreview: String(entry.translation || '').slice(0, 80)
+          translationPreview: String(entry.translation || '').slice(0, 80),
+          fittedPreview: patch.fit ? String(patch.fit.text || '').slice(0, 80) : ''
         });
       }
       patched++;
@@ -303,9 +264,11 @@ function patchDisk(context) {
     patched,
     skipped,
     truncated,
+    fitAdjusted,
     errors,
     skippedEntries,
-    truncatedEntries
+    truncatedEntries,
+    fitAdjustedEntries
   };
 }
 
