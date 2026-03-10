@@ -1,0 +1,127 @@
+{
+  "generatedAt": "2026-03-07T00:18:13.095Z",
+  "masterStrings": 14459,
+  "cleanStrings": 10154,
+  "flaggedStrings": 4305,
+  "translatedRows": 982,
+  "exactCleanMatches": 966,
+  "excludedFromCleanCount": 16,
+  "cleanMappedTranslated": 971,
+  "fullCsvRows": 14459,
+  "fullCsvTranslatedRows": 982,
+  "translationsJsonRows": 982,
+  "excludedFromClean": [
+    {
+      "id": "system_3d7d",
+      "disk": "System",
+      "offset": 15741,
+      "reason": "replacement-char",
+      "sample": "舛%C)C-C1C5C9C=CACECICMCQCUCYC]CaCeCiCmCqCuCyC}C，�C韻韻韻韻韻韻韻韻韻韻韻韻韻匹僂戮｡C･CｩCｭCｱCｵCｹCｽCﾁCﾅC)C匹匹匹匹匹ﾉCﾍCﾑCﾕCﾙCﾝC瓩蕕ﾉC颪銈ﾙC�C"
+    },
+    {
+      "id": "system_d3cb5",
+      "disk": "System",
+      "offset": 867509,
+      "reason": "replacement-char",
+      "sample": "薦��皮鳧EчD��蜈���蜈���蜈����蜈�E��髄.薦чD�皮鳧�皮鳧�皮鳧��皮鳧EB?"
+    },
+    {
+      "id": "system_d4cbb",
+      "disk": "System",
+      "offset": 871611,
+      "reason": "replacement-char",
+      "sample": "髄.薦瓦D999999E｢D99999999999E9999999E瓦ﾆMBB?9>ﾇ｢F?9>MMBBBBﾘBG9999999E瓦N���O蒐O｢T月気Cｃ�CU��9999999E瓦ﾗJJBBBBﾘ｢D9999髄荘9vчBBMM?9>G瓦T((ﾐｃCU｢D999999999繖掩���O蒐㈱｢d"
+    },
+    {
+      "id": "system_d5281",
+      "disk": "System",
+      "offset": 873089,
+      "reason": "replacement-char",
+      "sample": "矣ﾇ薤┐F矣ﾇ�ﾆ矣G�P餡汀ч-./-./ETｵｶ悟E┐Tｵｶ桁況ｶU����柄ч������ED鉅9薤┐D鉅9��鉅E����矧ч������EﾗMﾇ9ﾆﾇ┐ﾆMMﾇ�ﾆMMﾇ矣矣睇�ﾆ矣ﾇ�ﾆ瓱��O蒐O┐N��O蒐��O�ャユOН��O蒐ョ割тттттттт｣｣｣тттт┘宇ﾇ�ﾆ矣G矣矣瓱矣矣瘧Ё矣矣矣ﾇ�ﾆ"
+    },
+    {
+      "id": "system_e1544",
+      "disk": "System",
+      "offset": 922948,
+      "reason": "long repeated run, replacement-char",
+      "sample": "菅麹麹麹麹麹麹豪ﾀﾀﾀﾀﾀﾀﾀﾂ寫麹強ｭｭｭｭｭｭｭ寫麹豪ｽｽｽｽｽｽｽｽｽｽｽｽｽｭ尨恊穴剄麹麹麹麹麹麹饗ﾀﾀﾀﾀﾀﾀﾂ寫麹強ｭｭｭｭｭｭｭｭｭ寫麹豪ｽｽｽｽｽｽｽｽｽｽｽｽｽｭ寫�u剄麹麹麹麹麹麹麹�栢ﾂﾂ穴滑剄麹強ｭｭｭｭｭｭｭｭｭ寫麹豪ｽｽｽｽｽｽｽｽｽｽｽｽｽｭ寫麹麹麹麹麹麹麹麹麹麹�uu剄麹麹麹�惆穴滑滑"
+    },
+    {
+      "id": "system_e9342",
+      "disk": "System",
+      "offset": 955202,
+      "reason": "long repeated run",
+      "sample": "滑滑滑滑滑滑滑滑滑滑滑滑滑滑滑滑ﾐ滑柿`````````````````````````PPPPPPPPPPPPPPPPPPPPPPPPPPPPP````ﾀ滑滑滑滑滑滑滑滑滑滑滑滑滑滑滑滑ﾐ滑柿`````````````````````````PPPPPPPPPPPPPPPPPPPPPPPPPPPPP````ﾀPPPP"
+    },
+    {
+      "id": "system_12c400",
+      "disk": "System",
+      "offset": 1229824,
+      "reason": "replacement-char",
+      "sample": "�囹囹囹囹燕麹麹�囹囹囹囹囹囹嚔麹麹壕囹囹囹囹燕麹麹�囹囹囹囹囹囹焔ﾔﾔO,-OJJ寫麹麹黍-"
+    },
+    {
+      "id": "system_12c77d",
+      "disk": "System",
+      "offset": 1230717,
+      "reason": "long repeated run, replacement-char",
+      "sample": "酔剄麹�uu剄麹麹麹豪ｰｰｰｰｱｱ麹麹麹麹�uu剄麹麹麹麹腰uu剄麹�uu剄麹麹麹麹麹麹麹豪ｰｰｰｰｱｱ麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹豪ｰｰｰｰｱｱ麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹豪ｰｰｰｰｱｱ麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹豪ｰｰｰ"
+    },
+    {
+      "id": "system_12cb3d",
+      "disk": "System",
+      "offset": 1231677,
+      "reason": "replacement-char",
+      "sample": "瑞寞00000022寫麹麹�囹囹嚔�囹囹燕麹麹麹朽"
+    },
+    {
+      "id": "system_12cdf3",
+      "disk": "System",
+      "offset": 1232371,
+      "reason": "long repeated run, replacement-char",
+      "sample": "穴滑滑滑滑滑剄麹�uu剄麹麹麹麹麹麹�uu剄麹麹麹麹麹麹麹麹麹麹麹�uuu剄麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹麹"
+    },
+    {
+      "id": "system_12d2bb",
+      "disk": "System",
+      "offset": 1233595,
+      "reason": "replacement-char",
+      "sample": "鴫ｴ鞘ﾒﾈｰｴ�P聽聽聽聽聽聽聽聽聽聽聽聶RR聽聽聽聽聽聽聽聽聽聽聽Q眠ｴｸ簫ﾈｰｴ��."
+    },
+    {
+      "id": "opening_4747b",
+      "disk": "Opening",
+      "offset": 291963,
+      "reason": "replacement-char",
+      "sample": "檬#Pｨ�ﾃ瀾8慚fｳY,"
+    },
+    {
+      "id": "ending_19722",
+      "disk": "Ending",
+      "offset": 104226,
+      "reason": "replacement-char",
+      "sample": "３ﾜ�^竇k枢bo繕t措y逐噌ｪ＄]艶X艶S装M^泊Q\n｢粘ｦ姓[ｮ沸森ｦ娠ｾ鉄ｶﾅ栴Uﾈ二Sﾎ善ｪﾓ心ﾗ娠ﾗ心ﾓ娠ｨT"
+    },
+    {
+      "id": "ending_199e5",
+      "disk": "Ending",
+      "offset": 104933,
+      "reason": "replacement-char",
+      "sample": "雪g歩m吼･g榱m｣筱緘ｱ疥ｪｶ疔ｻ舂ﾃ疔ﾈ痂は疥ﾒ熨ﾀ*Aﾘ珎臉J裘j�痂桒WUj"
+    },
+    {
+      "id": "visual_ff1",
+      "disk": "Visual",
+      "offset": 4081,
+      "reason": "long repeated run",
+      "sample": "床下からもれる光は、@今や最高潮に達しようとしていた。!#Z)FFFFFFFFFFFFFFFFFFFFFF#Z*_"
+    },
+    {
+      "id": "visual_163f",
+      "disk": "Visual",
+      "offset": 5695,
+      "reason": "long repeated run",
+      "sample": "ついに、エネルギーは、彼の頭の中にまで@はいってきた。@ 走馬燈のように彼の頭の中を駆けめぐる記憶は、@ドゥムナのものだったろうか。AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#L"
+    }
+  ]
+}
