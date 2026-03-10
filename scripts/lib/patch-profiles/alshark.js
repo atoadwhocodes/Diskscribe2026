@@ -67,6 +67,19 @@ const PROTECTED_RANGES = Object.fromEntries(
   ])
 );
 
+const UI_KEYWORDS = /\b(?:removed from the party|map|status|items?|tactics|equip(?:ment)?|skills?|display|scroll|battle|party|sfx|music|opt\.?)\b/i;
+const INTERACTION_KEYWORDS = /\b(?:credit|credits|cr|buy|sell|cost|price|hotel|shop|pay up|trade|armor shop|weapon shop|item shop|gear)\b/i;
+const PROGRESSION_KEYWORDS = /\b(?:go to|head to|get back|return to|report back|meet me|meet at|spaceport|planet|village|fort|fortress|mission|king|queen|commander|throne room|door|tower|orb|ship|flight path|monument|north(?:ern)? fort|atlia|mars|tirus|yosnu|we-dumnah)\b/i;
+const MECHANIC_KEYWORDS = /\b(?:weapon|psychic|psycho|waves?|fusion|ring|generator|locked|attack|soldier|battlefield|resist|inventory|monitor|hangar|repair|launch|land)\b/i;
+
+const PRIORITY_LABELS = {
+  1: 'Tier 1 - Critical UI / Required Interaction',
+  2: 'Tier 2 - Critical Progression / Mandatory Scene',
+  3: 'Tier 3 - Core Gameplay / System Explanation',
+  4: 'Tier 4 - Main Narrative / High-Visibility Dialogue',
+  5: 'Tier 5 - Flavor / Low-Risk Dialogue'
+};
+
 function caseAware(lower, capitalized) {
   return (match) => (/^[A-Z]/.test(match) ? capitalized : lower);
 }
@@ -282,6 +295,73 @@ function normalizeEnglishSample(text) {
     .trim();
 }
 
+function classifyPriority(entry, disk) {
+  const text = `${String(entry.translationPreview || '')} ${String(entry.sourcePreview || '')}`;
+  const rules = [];
+  let tier = 5;
+
+  if (UI_KEYWORDS.test(text)) {
+    tier = 1;
+    rules.push('ui');
+  }
+
+  if (tier > 1 && (INTERACTION_KEYWORDS.test(text) || /#Y\b/.test(String(entry.sourcePreview || '')))) {
+    tier = 1;
+    rules.push('interaction');
+  }
+
+  if (tier > 2 && (PROGRESSION_KEYWORDS.test(text) || disk === 'Opening' || disk === 'Visual')) {
+    tier = 2;
+    rules.push(disk === 'Opening' || disk === 'Visual' ? 'mandatory-scene' : 'progression');
+  }
+
+  if (tier > 3 && MECHANIC_KEYWORDS.test(text)) {
+    tier = 3;
+    rules.push('gameplay');
+  }
+
+  if (tier > 4 && disk === 'System') {
+    tier = 4;
+    rules.push('system-dialogue');
+  }
+
+  const overflowBytes = Number(entry.overflowBytes || 0);
+  let severity = 'small';
+  let severityWeight = 0;
+
+  if (overflowBytes > 20) {
+    severity = 'extreme';
+    severityWeight = 40;
+  } else if (overflowBytes > 10) {
+    severity = 'large';
+    severityWeight = 30;
+  } else if (overflowBytes > 5) {
+    severity = 'medium';
+    severityWeight = 20;
+  } else {
+    severityWeight = 10;
+  }
+
+  const diskWeight = disk === 'Opening' ? 30 : disk === 'Visual' ? 25 : disk === 'System' ? 15 : 5;
+  const tierWeight = (6 - tier) * 100;
+  const score = tierWeight + severityWeight + diskWeight + Math.max(0, 100 - Number(entry.capacity || 0));
+
+  let rationale = PRIORITY_LABELS[tier];
+  if (rules.length) {
+    rationale += `; matched ${rules.join(', ')}`;
+  }
+  rationale += `; overflow ${overflowBytes} byte${overflowBytes === 1 ? '' : 's'}`;
+
+  return {
+    tier,
+    tierLabel: PRIORITY_LABELS[tier],
+    score,
+    severity,
+    rationale,
+    rules
+  };
+}
+
 function validateRun(context) {
   const report = validatePatchSet({
     sourceDir: SOURCE_DIR,
@@ -349,6 +429,9 @@ module.exports = {
   passthroughFiles: PASSTHROUGH_FILES,
   loadTranslations,
   patchDisk,
+  rankPatchFitEntry(entry, context = {}) {
+    return classifyPriority(entry, context.disk || context.target?.key || entry.disk || 'System');
+  },
   validateRun,
   buildControlSafePatch
 };

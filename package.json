@@ -24,6 +24,7 @@
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
     "alshark:audit": "node scripts/audit-alshark-translation-coverage.js",
     "alshark:fit-audit": "node scripts/audit-project-patch-fit.js alshark",
+    "alshark:fit-priority": "node scripts/build-project-fit-priority-list.js alshark",
     "alshark:patch": "node scripts/run-project-patch.js alshark",
     "alshark:rebuild": "node scripts/rebuild-alshark-pipeline.js",
     "alshark:validate": "node scripts/validate-project-patch.js alshark",
