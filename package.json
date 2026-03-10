@@ -27,5 +27,17 @@
     "typecheck": "npm run core:typecheck",
     "build": "npm run core:build && npm run desktop:make",
     "package": "npm run core:build && npm run desktop:make"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "deepl-node": "^1.24.0",
+    "google-translate-api-x": "^10.7.2",
+    "iconv-lite": "^0.7.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.6.3"
   }
 }
