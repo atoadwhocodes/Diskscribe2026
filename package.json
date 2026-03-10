@@ -22,6 +22,8 @@
     "desktop:lint": "npm --prefix apps/diskscribe-2026-desktop run lint",
     "desktop:package": "npm --prefix apps/diskscribe-2026-desktop run package",
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
+    "alshark:patch": "node scripts/run-project-patch.js alshark",
+    "alshark:validate": "node scripts/validate-project-patch.js alshark",
     "start": "npm run desktop:start",
     "lint": "npm run desktop:lint",
     "typecheck": "npm run core:typecheck",
