@@ -1,0 +1,90 @@
+{
+  "updatedAt": "2026-03-12T15:00:00Z",
+  "overrides": [
+    {
+      "id": "story_dialogue_007d1022",
+      "translationMarkup": "[CMD:04][ARG:06][CMD:05]At last, I've found a way to refine Zaiser ore.[CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d10da",
+      "translationMarkup": "[EVT:20]<08><08><05><02><04><05><06><07><08>[EVT:FF]Z-Blaster@Zaiser Cannon@Zaiser Shield@Zaiser Frame@Zaiser Spark[EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]Mind you, the ore is limited, so choose carefully what to make.[CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d10e7",
+      "translationMarkup": "Z-Blaster@Zaiser Cannon@Zaiser Shield@Zaiser Frame@Zaiser Spark[EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]Mind you, the ore is limited, so choose carefully what to make.[CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d113b",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]Mind you, the ore is limited, so choose carefully what to make.[CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1175",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]That's a mighty blaster even [ARG:02] can handle![CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d11b2",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]That's a one-shot cannon [ARG:08] and [ARG:04] can use![CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d11f5",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]That's a shield made just for you. With it, you'll be invincible.@Invincible![CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1240",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]That's [ARG:04]'s frame. It'll raise [ARG:04]'s defense by a lot![CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1284",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]That's the Hellbuster's main gun. I guarantee its power![CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d12c7",
+      "translationMarkup": "[CMD:5F][CMD:04][ARG:06][CMD:05]So, is that the one?[CMD:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d12e0",
+      "translationMarkup": "[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d12e6",
+      "translationMarkup": "[EVT:0B]<03>[BR][EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]Then, the Zaiser Blaster@it is, eh?[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1320",
+      "translationMarkup": "[EVT:0B]<03>[BR]1<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]Then, the Zaiser Cannon@it is, eh?[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1358",
+      "translationMarkup": "[EVT:0B]<03>[BR]V<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]Then, the Zaiser Shield@it is, eh?[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1390",
+      "translationMarkup": "[EVT:0B]<03>[BR]y<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]Then, the Zaiser Frame@it is, eh?[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d13c8",
+      "translationMarkup": "[EVT:0B]<03><02><13><FF>[CMD:5F][CMD:04][ARG:06][CMD:05]Then, the Zaiser Spark@it is, eh?[EVT:00]",
+      "storyStrategy": "manual_review"
+    },
+    {
+      "id": "story_dialogue_007d1400",
+      "translationMarkup": "[EVT:0C]<02>[BR]-[EVT:04][BR]<87>[EVT:FF][END]",
+      "storyStrategy": "manual_review"
+    }
+  ]
+}

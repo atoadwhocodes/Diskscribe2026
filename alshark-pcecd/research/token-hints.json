@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-03-12T09:26:45.212Z",
+  "projectId": "alshark_pcecd",
+  "hints": [
+    {
+      "token": "[BR]",
+      "meaning": "byte `01`, likely an in-message break / line split"
+    },
+    {
+      "token": "[LF]",
+      "meaning": "byte `0D`"
+    },
+    {
+      "token": "[CMD:xx]",
+      "meaning": "byte pair beginning with `23`"
+    },
+    {
+      "token": "[ARG:xx]",
+      "meaning": "byte pair beginning with `24`"
+    },
+    {
+      "token": "[EVT:xx]",
+      "meaning": "byte pair beginning with `25`"
+    },
+    {
+      "token": "[SUB:xx]",
+      "meaning": "byte pair beginning with `26`"
+    }
+  ]
+}

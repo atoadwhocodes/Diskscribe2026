@@ -1,0 +1,10 @@
+Master Workbook,Alshark PC Engine CD Translation Workbook
+Source IMG,Alshark (Japan).img
+Track 02 user-data size,"76,419,072 bytes"
+Story bank offset,0x007D1000
+Story pointer-table messages,17
+Location names,22
+Event prompts,24
+Battle/system entries,0
+Translated sample messages in current test build,4
+Current sample build free bytes in story bank,3057

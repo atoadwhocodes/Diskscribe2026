@@ -1,0 +1,131 @@
+# Alshark Phase 2 Parser Output
+
+- track: 02
+- offset: 0x7D1000
+- size: 0x1000
+- segment_base: 0xC000
+- pointer_count: 17
+
+## Pointer Table
+
+- 0: abs=0xC022 rel=0x0022 table=0x0000
+- 1: abs=0xC0DA rel=0x00DA table=0x0002
+- 2: abs=0xC0E7 rel=0x00E7 table=0x0004
+- 3: abs=0xC13B rel=0x013B table=0x0006
+- 4: abs=0xC175 rel=0x0175 table=0x0008
+- 5: abs=0xC1B2 rel=0x01B2 table=0x000A
+- 6: abs=0xC1F5 rel=0x01F5 table=0x000C
+- 7: abs=0xC240 rel=0x0240 table=0x000E
+- 8: abs=0xC284 rel=0x0284 table=0x0010
+- 9: abs=0xC2C7 rel=0x02C7 table=0x0012
+- 10: abs=0xC2E0 rel=0x02E0 table=0x0014
+- 11: abs=0xC2E6 rel=0x02E6 table=0x0016
+- 12: abs=0xC320 rel=0x0320 table=0x0018
+- 13: abs=0xC358 rel=0x0358 table=0x001A
+- 14: abs=0xC390 rel=0x0390 table=0x001C
+- 15: abs=0xC3C8 rel=0x03C8 table=0x001E
+- 16: abs=0xC400 rel=0x0400 table=0x0020
+
+## Messages
+
+## Message 0
+- rel_offset: 0x0022
+- span: 0x0022..0x0054
+- length: 50
+[CMD:04][ARG:06][CMD:05]実ﾊ、ﾂｲﾆザイザー鉱石ｦ精錬ｽﾙ方法ｦ見ﾂｹﾀﾝだ。[CMD:00]
+
+## Message 1
+- rel_offset: 0x00DA
+- span: 0x00DA..0x00E7
+- length: 13
+[EVT:20]<08><08><05><02><04><05><06><07><08>[EVT:FF]
+
+## Message 2
+- rel_offset: 0x00E7
+- span: 0x00E7..0x013B
+- length: 84
+Ｚ・ブラスター@ザイザーキャノン@ザイザーシールド@ザイザーフレーム@ザイザースパーク[EVT:FF]
+
+## Message 3
+- rel_offset: 0x013B
+- span: 0x013B..0x016F
+- length: 52
+[CMD:5F][CMD:04][ARG:06][CMD:05]ﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。[CMD:00]
+
+## Message 4
+- rel_offset: 0x0175
+- span: 0x0175..0x01A6
+- length: 49
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、[ARG:02]でﾓ持ﾃﾙﾒﾁｬ強力ﾅブラスターじｬｨ！[CMD:00]
+
+## Message 5
+- rel_offset: 0x01B2
+- span: 0x01B2..0x01E9
+- length: 55
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、ﾜｼﾔ[ARG:08]ﾔ、[ARG:04]ﾉﾓﾃﾙ一撃必殺ﾉキャノン砲じｬｨ！[CMD:00]
+
+## Message 6
+- rel_offset: 0x01F5
+- span: 0x01F5..0x0234
+- length: 63
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊｵﾏｴ専用ﾉシールドじｬｨ。ｿﾚがｱﾚば、無敵じｬﾖ。@無敵！[CMD:00]
+
+## Message 7
+- rel_offset: 0x0240
+- span: 0x0240..0x0278
+- length: 56
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、[ARG:04]ﾉフレームじｬｨ[ARG:04]ﾉ防御力が格段ﾆ上がﾙぞ！[CMD:00]
+
+## Message 8
+- rel_offset: 0x0284
+- span: 0x0284..0x02BB
+- length: 55
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、ヘルバスターﾉ主砲で威力ﾊﾜｼﾉ保証付ｷじｬ！[CMD:00]
+
+## Message 9
+- rel_offset: 0x02C7
+- span: 0x02C7..0x02DE
+- length: 23
+[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂで、ｲｲﾉｶ？[CMD:00]
+
+## Message 10
+- rel_offset: 0x02E0
+- span: 0x02E0..0x02E2
+- length: 2
+[EVT:00]
+
+## Message 11
+- rel_offset: 0x02E6
+- span: 0x02E6..0x031C
+- length: 54
+[EVT:0B]<03>[BR][EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーブラスターｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]
+
+## Message 12
+- rel_offset: 0x0320
+- span: 0x0320..0x0354
+- length: 52
+[EVT:0B]<03>[BR]1<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーキャノンｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]
+
+## Message 13
+- rel_offset: 0x0358
+- span: 0x0358..0x038C
+- length: 52
+[EVT:0B]<03>[BR]V<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーシールドｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]
+
+## Message 14
+- rel_offset: 0x0390
+- span: 0x0390..0x03C4
+- length: 52
+[EVT:0B]<03>[BR]y<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーフレームｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]
+
+## Message 15
+- rel_offset: 0x03C8
+- span: 0x03C8..0x03FC
+- length: 52
+[EVT:0B]<03><02><13><FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザースパークｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]
+
+## Message 16
+- rel_offset: 0x0400
+- span: 0x0400..0x040C
+- length: 12
+[EVT:0C]<02>[BR]ｰ[EVT:04][BR]<87>[EVT:FF][END]

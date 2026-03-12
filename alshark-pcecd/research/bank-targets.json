@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-03-12T09:26:45.212Z",
+  "projectId": "alshark_pcecd",
+  "targets": [
+    {
+      "offset": "0x04802100",
+      "label": "location names"
+    },
+    {
+      "offset": "0x06a1000",
+      "label": "event prompts"
+    },
+    {
+      "offset": "0x07b0000",
+      "label": "battle/system"
+    },
+    {
+      "offset": "0x07d1000",
+      "label": "story dialogue"
+    },
+    {
+      "offset": "0x0000b143",
+      "label": "early dialogue/status foothold"
+    }
+  ]
+}

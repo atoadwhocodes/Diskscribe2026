@@ -1,0 +1,5 @@
+How to use,Edit English columns only. Keep status as todo / edited / review / done.
+Story bank safety,"Preserve [CMD], [ARG], [EVT], [SUB], and raw <XX> tokens in the same order."
+Location/Event/Battle banks,"For clean text banks, translate the plain English column. Keep notes for overflow or context."
+Priority order,"1) Story_Dialogue, 2) Location_Names, 3) Event_Prompts, 4) Battle_System."
+Current state,Workbook prepopulates source text and leaves translation columns blank for production work.

@@ -1,0 +1,55 @@
+{
+  "trackOutput": "track15_user.bin",
+  "banks": [
+    {
+      "slug": "location_names",
+      "offset": 75505920,
+      "size": 512,
+      "description": "Location names",
+      "availableBytes": 512,
+      "sha256": "5ffc83053a4161569b874f7ed0bd26c8dcb54a5555a206136f08f6cf70957209",
+      "bin": "banks/location_names.bin",
+      "textPreview": "banks/location_names.txt"
+    },
+    {
+      "slug": "event_prompts",
+      "offset": 6950912,
+      "size": 2048,
+      "description": "Event prompts",
+      "availableBytes": 2048,
+      "sha256": "e23cb77c0f7c9c06d3208375f18acc342657d527ebdff670c510c29bae67858a",
+      "bin": "banks/event_prompts.bin",
+      "textPreview": "banks/event_prompts.txt"
+    },
+    {
+      "slug": "battle_system",
+      "offset": 8060928,
+      "size": 2048,
+      "description": "Battle/system",
+      "availableBytes": 2048,
+      "sha256": "2e46466fd184e421af0a3621d45a4c45f1674023e16c4f7c21d5c4cd79743c6c",
+      "bin": "banks/battle_system.bin",
+      "textPreview": "banks/battle_system.txt"
+    },
+    {
+      "slug": "story_dialogue",
+      "offset": 8196096,
+      "size": 4096,
+      "description": "Story dialogue",
+      "availableBytes": 4096,
+      "sha256": "c7fda81023f3cd9d44cfc21bf3b4d85e02d3e10e8b3685090eea4c02a4dd1e19",
+      "bin": "banks/story_dialogue.bin",
+      "textPreview": "banks/story_dialogue.txt"
+    },
+    {
+      "slug": "early_dialogue_status",
+      "offset": 45379,
+      "size": 512,
+      "description": "Early dialogue/status foothold",
+      "availableBytes": 512,
+      "sha256": "05ef3ae62c1d6db4f56a8d09dba74fdf1abea76cea10a42f4d44b459c3a39b10",
+      "bin": "banks/early_dialogue_status.bin",
+      "textPreview": "banks/early_dialogue_status.txt"
+    }
+  ]
+}

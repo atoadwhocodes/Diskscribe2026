@@ -1,0 +1,150 @@
+{
+  "project_id": "alshark_pcecd",
+  "name": "Alshark PC Engine CD",
+  "description": "Alshark PC Engine CD translation bootstrap workspace",
+  "created_at": "2026-03-12T09:26:45.212Z",
+  "updated_at": "2026-03-12T09:38:00.000Z",
+  "config": {
+    "input_path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).ccd",
+    "container_type": "clonecd",
+    "profile_id": "alshark_pcecd",
+    "source_lang": "ja",
+    "target_lang": "en",
+    "provider": "manual"
+  },
+  "stages": {
+    "extraction": {
+      "status": "pending"
+    },
+    "translation": {
+      "status": "pending"
+    },
+    "layout": {
+      "status": "pending"
+    },
+    "patching": {
+      "status": "pending"
+    }
+  },
+  "inputs": [
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).ccd",
+      "fileName": "Alshark (Japan).ccd",
+      "size": 2980,
+      "modifiedAt": "2026-03-12T09:23:58.630Z"
+    },
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).img",
+      "fileName": "Alshark (Japan).img",
+      "size": 463939056,
+      "modifiedAt": "2026-03-12T09:23:58.465Z"
+    },
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).sub",
+      "fileName": "Alshark (Japan).sub",
+      "size": 18936288,
+      "modifiedAt": "2026-03-12T09:23:58.601Z"
+    }
+  ],
+  "partials": [
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\alsharkpccdREADME.md",
+      "fileName": "alsharkpccdREADME.md",
+      "size": 2553,
+      "modifiedAt": "2026-03-12T09:13:33.802Z",
+      "importedTo": "notes/alsharkpccdREADME.md"
+    },
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\README.txt",
+      "fileName": "README.txt",
+      "size": 899,
+      "modifiedAt": "2026-03-12T09:57:51.000Z",
+      "importedTo": "notes/README.txt"
+    }
+  ],
+  "translationAssets": [
+    {
+      "path": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark_master_translation_workbook.xlsx",
+      "fileName": "Alshark_master_translation_workbook.xlsx",
+      "size": 16936,
+      "modifiedAt": "2026-03-12T13:13:27.4810307Z",
+      "sha256": "CB653D77E01CF1EE0F75F2151D3EECDD7D4344EC76605535D313A4E1FC5E6ACA",
+      "importedTo": "translated/Alshark_master_translation_workbook.xlsx",
+      "metadataPath": "translated/workbook-metadata.json",
+      "sheets": [
+        "Overview",
+        "Instructions",
+        "Story_Dialogue",
+        "Location_Names",
+        "Event_Prompts",
+        "Battle_System",
+        "Build_Status"
+      ]
+    }
+  ],
+  "research": {
+    "bankTargets": [
+      {
+        "offset": "0x04802100",
+        "label": "location names"
+      },
+      {
+        "offset": "0x06a1000",
+        "label": "event prompts"
+      },
+      {
+        "offset": "0x07b0000",
+        "label": "battle/system"
+      },
+      {
+        "offset": "0x07d1000",
+        "label": "story dialogue"
+      },
+      {
+        "offset": "0x0000b143",
+        "label": "early dialogue/status foothold"
+      }
+    ],
+    "tokenHints": [
+      {
+        "token": "[BR]",
+        "meaning": "byte `01`, likely an in-message break / line split"
+      },
+      {
+        "token": "[LF]",
+        "meaning": "byte `0D`"
+      },
+      {
+        "token": "[CMD:xx]",
+        "meaning": "byte pair beginning with `23`"
+      },
+      {
+        "token": "[ARG:xx]",
+        "meaning": "byte pair beginning with `24`"
+      },
+      {
+        "token": "[EVT:xx]",
+        "meaning": "byte pair beginning with `25`"
+      },
+      {
+        "token": "[SUB:xx]",
+        "meaning": "byte pair beginning with `26`"
+      }
+    ],
+    "samplePatchKit": {
+      "sourceImage": {
+        "fileName": "Alshark (Japan).img",
+        "size": 463939056,
+        "sha256": "b9e9f69e0ade8af692c8edbd633486b8fca0958cfe4addd103e3bfb51d11fea8"
+      },
+      "patchedImage": {
+        "fileName": "Alshark (Japan) [EN sample].img",
+        "sha256": "b220f4d608b0ac0820aa6c54aee1aa651733d317b84a79fb14b590cc75ef7c3b"
+      },
+      "artifacts": [
+        "Alshark (Japan) [EN sample].bytepatch.json",
+        "apply_alshark_bytepatch.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1461 @@
+{
+  "generatedAt": "2026-03-12T13:19:32Z",
+  "sourceInput": "E:\\diskscribe2026\\alshark-pcecd\\extracted\\workbook\\translation_units.json",
+  "count": 63,
+  "byCategory": {
+    "story_dialogue": 17,
+    "location_names": 22,
+    "event_prompts": 24
+  },
+  "units": [
+    {
+      "id": "story_dialogue_007d1022",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 0,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196130,
+      "relOffset": 34,
+      "ptr": null,
+      "absPtr": 49186,
+      "oldLength": 50,
+      "source": {
+        "tokenized": "[CMD:04][ARG:06][CMD:05]実ﾊ、ﾂｲﾆザイザー鉱石ｦ精錬ｽﾙ方法ｦ見ﾂｹﾀﾝだ。[CMD:00]",
+        "plainJapanese": "実ﾊ、ﾂｲﾆザイザー鉱石ｦ精錬ｽﾙ方法ｦ見ﾂｹﾀﾝだ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d10da",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 1,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196314,
+      "relOffset": 218,
+      "ptr": null,
+      "absPtr": 49370,
+      "oldLength": 149,
+      "source": {
+        "tokenized": "[EVT:20]<08><08><05><02><04><05><06><07><08>[EVT:FF]Ｚ・ブラスター@ザイザーキャノン@ザイザーシールド@ザイザーフレーム@ザイザースパーク[EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]ﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。[CMD:00]",
+        "plainJapanese": "Ｚ・ブラスター\nザイザーキャノン\nザイザーシールド\nザイザーフレーム\nザイザースパークﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d10e7",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 2,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196327,
+      "relOffset": 231,
+      "ptr": null,
+      "absPtr": 49383,
+      "oldLength": 136,
+      "source": {
+        "tokenized": "Ｚ・ブラスター@ザイザーキャノン@ザイザーシールド@ザイザーフレーム@ザイザースパーク[EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]ﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。[CMD:00]",
+        "plainJapanese": "Ｚ・ブラスター\nザイザーキャノン\nザイザーシールド\nザイザーフレーム\nザイザースパークﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d113b",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 3,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196411,
+      "relOffset": 315,
+      "ptr": null,
+      "absPtr": 49467,
+      "oldLength": 52,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。[CMD:00]",
+        "plainJapanese": "ﾀだｼ、鉱石ﾉ量ﾊ限ﾗﾚﾃﾙｶﾗﾅ。造ﾘﾀｲ物ｦ選ﾝでﾐﾅ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1175",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 4,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196469,
+      "relOffset": 373,
+      "ptr": null,
+      "absPtr": 49525,
+      "oldLength": 49,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、[ARG:02]でﾓ持ﾃﾙﾒﾁｬ強力ﾅブラスターじｬｨ！[CMD:00]",
+        "plainJapanese": "ｿｲﾂﾊ、でﾓ持ﾃﾙﾒﾁｬ強力ﾅブラスターじｬｨ！"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d11b2",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 5,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196530,
+      "relOffset": 434,
+      "ptr": null,
+      "absPtr": 49586,
+      "oldLength": 55,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、ﾜｼﾔ[ARG:08]ﾔ、[ARG:04]ﾉﾓﾃﾙ一撃必殺ﾉキャノン砲じｬｨ！[CMD:00]",
+        "plainJapanese": "ｿｲﾂﾊ、ﾜｼﾔﾔ、ﾉﾓﾃﾙ一撃必殺ﾉキャノン砲じｬｨ！"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d11f5",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 6,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196597,
+      "relOffset": 501,
+      "ptr": null,
+      "absPtr": 49653,
+      "oldLength": 63,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊｵﾏｴ専用ﾉシールドじｬｨ。ｿﾚがｱﾚば、無敵じｬﾖ。@無敵！[CMD:00]",
+        "plainJapanese": "ｿｲﾂﾊｵﾏｴ専用ﾉシールドじｬｨ。ｿﾚがｱﾚば、無敵じｬﾖ。\n無敵！"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1240",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 7,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196672,
+      "relOffset": 576,
+      "ptr": null,
+      "absPtr": 49728,
+      "oldLength": 56,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、[ARG:04]ﾉフレームじｬｨ[ARG:04]ﾉ防御力が格段ﾆ上がﾙぞ！[CMD:00]",
+        "plainJapanese": "ｿｲﾂﾊ、ﾉフレームじｬｨﾉ防御力が格段ﾆ上がﾙぞ！"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1284",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 8,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196740,
+      "relOffset": 644,
+      "ptr": null,
+      "absPtr": 49796,
+      "oldLength": 55,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂﾊ、ヘルバスターﾉ主砲で威力ﾊﾜｼﾉ保証付ｷじｬ！[CMD:00]",
+        "plainJapanese": "ｿｲﾂﾊ、ヘルバスターﾉ主砲で威力ﾊﾜｼﾉ保証付ｷじｬ！"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d12c7",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 9,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196807,
+      "relOffset": 711,
+      "ptr": null,
+      "absPtr": 49863,
+      "oldLength": 23,
+      "source": {
+        "tokenized": "[CMD:5F][CMD:04][ARG:06][CMD:05]ｿｲﾂで、ｲｲﾉｶ？[CMD:00]",
+        "plainJapanese": "ｿｲﾂで、ｲｲﾉｶ？"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d12e0",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 10,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196832,
+      "relOffset": 736,
+      "ptr": null,
+      "absPtr": 49888,
+      "oldLength": 2,
+      "source": {
+        "tokenized": "[EVT:00]",
+        "plainJapanese": ""
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d12e6",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 11,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196838,
+      "relOffset": 742,
+      "ptr": null,
+      "absPtr": 49894,
+      "oldLength": 54,
+      "source": {
+        "tokenized": "[EVT:0B]<03>[BR][EVT:FF][CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーブラスターｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]",
+        "plainJapanese": "じｬｱ、ザイザーブラスターｦ\n造ﾙｺﾄﾆｽﾙｶｨ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1320",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 12,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196896,
+      "relOffset": 800,
+      "ptr": null,
+      "absPtr": 49952,
+      "oldLength": 52,
+      "source": {
+        "tokenized": "[EVT:0B]<03>[BR]1<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーキャノンｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]",
+        "plainJapanese": "1じｬｱ、ザイザーキャノンｦ\n造ﾙｺﾄﾆｽﾙｶｨ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1358",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 13,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8196952,
+      "relOffset": 856,
+      "ptr": null,
+      "absPtr": 50008,
+      "oldLength": 52,
+      "source": {
+        "tokenized": "[EVT:0B]<03>[BR]V<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーシールドｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]",
+        "plainJapanese": "Vじｬｱ、ザイザーシールドｦ\n造ﾙｺﾄﾆｽﾙｶｨ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1390",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 14,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8197008,
+      "relOffset": 912,
+      "ptr": null,
+      "absPtr": 50064,
+      "oldLength": 52,
+      "source": {
+        "tokenized": "[EVT:0B]<03>[BR]y<FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザーフレームｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]",
+        "plainJapanese": "yじｬｱ、ザイザーフレームｦ\n造ﾙｺﾄﾆｽﾙｶｨ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d13c8",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 15,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8197064,
+      "relOffset": 968,
+      "ptr": null,
+      "absPtr": 50120,
+      "oldLength": 52,
+      "source": {
+        "tokenized": "[EVT:0B]<03><02><13><FF>[CMD:5F][CMD:04][ARG:06][CMD:05]じｬｱ、ザイザースパークｦ@造ﾙｺﾄﾆｽﾙｶｨ。[EVT:00]",
+        "plainJapanese": "じｬｱ、ザイザースパークｦ\n造ﾙｺﾄﾆｽﾙｶｨ。"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "story_dialogue_007d1400",
+      "sheet": "Story_Dialogue",
+      "category": "story_dialogue",
+      "index": 16,
+      "track": 2,
+      "bankOffset": 8196096,
+      "fileOffset": 8197120,
+      "relOffset": 1024,
+      "ptr": null,
+      "absPtr": 50176,
+      "oldLength": 12,
+      "source": {
+        "tokenized": "[EVT:0C]<02>[BR]ｰ[EVT:04][BR]<87>[EVT:FF][END]",
+        "plainJapanese": "ｰ"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802100",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 0,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75505920,
+      "relOffset": 0,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 20,
+      "source": {
+        "tokenized": "]リアス資源発掘基地[END]",
+        "plainJapanese": "]リアス資源発掘基地"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802114",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 1,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75505940,
+      "relOffset": 20,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 21,
+      "source": {
+        "tokenized": "ゾリアス燃料精錬基地[END]",
+        "plainJapanese": "ゾリアス燃料精錬基地"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802129",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 2,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75505961,
+      "relOffset": 41,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 21,
+      "source": {
+        "tokenized": "マ－ズ連邦軍総司令部[END]",
+        "plainJapanese": "マ－ズ連邦軍総司令部"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_0480213e",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 3,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75505982,
+      "relOffset": 62,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 17,
+      "source": {
+        "tokenized": "帝国星軍総司令部[END]",
+        "plainJapanese": "帝国星軍総司令部"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_0480214f",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 4,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75505999,
+      "relOffset": 79,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 17,
+      "source": {
+        "tokenized": "マウンドキャスル[END]",
+        "plainJapanese": "マウンドキャスル"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802160",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 5,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506016,
+      "relOffset": 96,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 19,
+      "source": {
+        "tokenized": "ザ－テ・コセの宮殿[END]",
+        "plainJapanese": "ザ－テ・コセの宮殿"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802173",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 6,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506035,
+      "relOffset": 115,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 15,
+      "source": {
+        "tokenized": "ラミュ－の住処[END]",
+        "plainJapanese": "ラミュ－の住処"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802182",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 7,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506050,
+      "relOffset": 130,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 7,
+      "source": {
+        "tokenized": "植民船[END]",
+        "plainJapanese": "植民船"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802189",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 8,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506057,
+      "relOffset": 137,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 17,
+      "source": {
+        "tokenized": "ゾリアス兵器工場[END]",
+        "plainJapanese": "ゾリアス兵器工場"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_0480219a",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 9,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506074,
+      "relOffset": 154,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 21,
+      "source": {
+        "tokenized": "ゾリアスバイオ研究所[END]",
+        "plainJapanese": "ゾリアスバイオ研究所"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021af",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 10,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506095,
+      "relOffset": 175,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 13,
+      "source": {
+        "tokenized": "ノ－ザンの砦[END]",
+        "plainJapanese": "ノ－ザンの砦"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021bc",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 11,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506108,
+      "relOffset": 188,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 5,
+      "source": {
+        "tokenized": "廃坑[END]",
+        "plainJapanese": "廃坑"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021c1",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 12,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506113,
+      "relOffset": 193,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 5,
+      "source": {
+        "tokenized": "鉱山[END]",
+        "plainJapanese": "鉱山"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021c6",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 13,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506118,
+      "relOffset": 198,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 7,
+      "source": {
+        "tokenized": "ダスト[END]",
+        "plainJapanese": "ダスト"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021cd",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 14,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506125,
+      "relOffset": 205,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 13,
+      "source": {
+        "tokenized": "コ－リスの塔[END]",
+        "plainJapanese": "コ－リスの塔"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021da",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 15,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506138,
+      "relOffset": 218,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 19,
+      "source": {
+        "tokenized": "ザクセンキャニオン[END]",
+        "plainJapanese": "ザクセンキャニオン"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021ed",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 16,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506157,
+      "relOffset": 237,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 5,
+      "source": {
+        "tokenized": "墓地[END]",
+        "plainJapanese": "墓地"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_048021f2",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 17,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506162,
+      "relOffset": 242,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 15,
+      "source": {
+        "tokenized": "ザイザルの火口[END]",
+        "plainJapanese": "ザイザルの火口"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802201",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 18,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506177,
+      "relOffset": 257,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 13,
+      "source": {
+        "tokenized": "ジョ－の部屋[END]",
+        "plainJapanese": "ジョ－の部屋"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_0480220e",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 19,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506190,
+      "relOffset": 270,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 17,
+      "source": {
+        "tokenized": "マ－ズ民間航宙船[END]",
+        "plainJapanese": "マ－ズ民間航宙船"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_0480221f",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 20,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506207,
+      "relOffset": 287,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 5,
+      "source": {
+        "tokenized": "船内[END]",
+        "plainJapanese": "船内"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "location_names_04802224",
+      "sheet": "Location_Names",
+      "category": "location_names",
+      "index": 21,
+      "track": 2,
+      "bankOffset": 75505920,
+      "fileOffset": 75506212,
+      "relOffset": 292,
+      "ptr": null,
+      "absPtr": null,
+      "oldLength": 21,
+      "source": {
+        "tokenized": "ラッセルガイヤ－艦内[END]",
+        "plainJapanese": "ラッセルガイヤ－艦内"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1040",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 0,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6950976,
+      "relOffset": 64,
+      "ptr": 64,
+      "absPtr": null,
+      "oldLength": 32,
+      "source": {
+        "tokenized": "ﾌｧｳﾝﾃﾝ･ﾍｯ<EF>の町の入口だ｡[BR]入るか?[END]",
+        "plainJapanese": "ﾌｧｳﾝﾃﾝ･ﾍｯの町の入口だ｡\n入るか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1060",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 1,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951008,
+      "relOffset": 96,
+      "ptr": 96,
+      "absPtr": null,
+      "oldLength": 69,
+      "source": {
+        "tokenized": "暗い寺院の入口に続く木の床には[BR]恐ろしげな絵柄が彫られている｡[BR]入るか?[END]",
+        "plainJapanese": "暗い寺院の入口に続く木の床には\n恐ろしげな絵柄が彫られている｡\n入るか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a10a5",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 2,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951077,
+      "relOffset": 165,
+      "ptr": 165,
+      "absPtr": null,
+      "oldLength": 50,
+      "source": {
+        "tokenized": "小さい石壁に緑色の苔が生えている｡[BR]井戸水を飲むか?[END]",
+        "plainJapanese": "小さい石壁に緑色の苔が生えている｡\n井戸水を飲むか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a10d7",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 3,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951127,
+      "relOffset": 215,
+      "ptr": 215,
+      "absPtr": null,
+      "oldLength": 34,
+      "source": {
+        "tokenized": "君の皮膚が魔法の力で頑丈になった![END]",
+        "plainJapanese": "君の皮膚が魔法の力で頑丈になった!"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a10f9",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 4,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951161,
+      "relOffset": 249,
+      "ptr": 249,
+      "absPtr": null,
+      "oldLength": 33,
+      "source": {
+        "tokenized": "君の防御ｽｷﾙが魔法の力で高まった![END]",
+        "plainJapanese": "君の防御ｽｷﾙが魔法の力で高まった!"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a111a",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 5,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951194,
+      "relOffset": 282,
+      "ptr": 282,
+      "absPtr": null,
+      "oldLength": 32,
+      "source": {
+        "tokenized": "君の輝きが魔法の力で高められた![END]",
+        "plainJapanese": "君の輝きが魔法の力で高められた!"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a113a",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 6,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951226,
+      "relOffset": 314,
+      "ptr": 314,
+      "absPtr": null,
+      "oldLength": 32,
+      "source": {
+        "tokenized": "君の知性が魔法の力で広められた![END]",
+        "plainJapanese": "君の知性が魔法の力で広められた!"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a115a",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 7,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951258,
+      "relOffset": 346,
+      "ptr": 346,
+      "absPtr": null,
+      "oldLength": 117,
+      "source": {
+        "tokenized": "｢貴殿らに我が丹精の品を[BR] おすそ分けして進ぜよう｡[BR] これこそ貴殿らの戦闘力を高めてくれる[BR] 魔法の練金薬でござる｣[BR]<06><02>▼<06><07>[END]",
+        "plainJapanese": "｢貴殿らに我が丹精の品を\n おすそ分けして進ぜよう｡\n これこそ貴殿らの戦闘力を高めてくれる\n 魔法の練金薬でござる｣\n▼"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a11cf",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 8,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951375,
+      "relOffset": 463,
+      "ptr": 463,
+      "absPtr": null,
+      "oldLength": 97,
+      "source": {
+        "tokenized": "君たちは偶然ｵｰｸの居留地を見つけた｡[BR]乾いた獣皮に地図と解読不可能な計画が書かれている｡[BR]破壊するか?[END]",
+        "plainJapanese": "君たちは偶然ｵｰｸの居留地を見つけた｡\n乾いた獣皮に地図と解読不可能な計画が書かれている｡\n破壊するか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1230",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 9,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951472,
+      "relOffset": 560,
+      "ptr": 560,
+      "absPtr": null,
+      "oldLength": 67,
+      "source": {
+        "tokenized": "君たちが叩き割ると､[BR]荷馬車は破片とこっぱを飛び散らせて潰れた｡[BR]<02>▼<07>[END]",
+        "plainJapanese": "君たちが叩き割ると､\n荷馬車は破片とこっぱを飛び散らせて潰れた｡\n▼"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1273",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 10,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951539,
+      "relOffset": 627,
+      "ptr": 627,
+      "absPtr": null,
+      "oldLength": 149,
+      "source": {
+        "tokenized": "ﾁに黄金の天秤が置いてある｡[BR]天秤のかたわらに置かれた巻物に[BR]こう書かれている｡[BR]｢この天秤のｶｯﾉ5000蟆ﾙ<EF>置くと､[BR] 熟練した商人になれます｣[BR]蟆ﾙ<EF>を置くか?[END]",
+        "plainJapanese": "ﾁに黄金の天秤が置いてある｡\n天秤のかたわらに置かれた巻物に\nこう書かれている｡\n｢この天秤のｶｯﾉ5000蟆ﾙ置くと､\n 熟練した商人になれます｣\n蟆ﾙを置くか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1308",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 11,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951688,
+      "relOffset": 776,
+      "ptr": 776,
+      "absPtr": null,
+      "oldLength": 24,
+      "source": {
+        "tokenized": "きらりと輝く魔法の天秤｡[END]",
+        "plainJapanese": "きらりと輝く魔法の天秤｡"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1320",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 12,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951712,
+      "relOffset": 800,
+      "ptr": 800,
+      "absPtr": null,
+      "oldLength": 116,
+      "source": {
+        "tokenized": "｢私はﾐｽﾃｨｯｸ･ｱｲの弟子[BR] ｿﾌｨﾅです｡[BR] 坙恤ｨを見通す目福ﾌ力を借り､[BR] 10蟆ﾙ<EF>であなた方の運勢を[BR] 占ってあげましょう｣[BR]払うか?[END]",
+        "plainJapanese": "｢私はﾐｽﾃｨｯｸ･ｱｲの弟子\n ｿﾌｨﾅです｡\n 坙恤ｨを見通す目福ﾌ力を借り､\n 10蟆ﾙであなた方の運勢を\n 占ってあげましょう｣\n払うか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1394",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 13,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951828,
+      "relOffset": 916,
+      "ptr": 916,
+      "absPtr": null,
+      "oldLength": 127,
+      "source": {
+        "tokenized": "｢伝説上最強といわれる騎士ですら､[BR] <EF>ﾗ袿･ﾛｰ<EF>を倒すことが[BR] できませんでした｡[BR] かの獣を倒した勇者には[BR] 大いなる栄誉が授けられます｣[END]",
+        "plainJapanese": "｢伝説上最強といわれる騎士ですら､\n ﾗ袿･ﾛｰを倒すことが\n できませんでした｡\n かの獣を倒した勇者には\n 大いなる栄誉が授けられます｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1413",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 14,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6951955,
+      "relOffset": 1043,
+      "ptr": 1043,
+      "absPtr": null,
+      "oldLength": 179,
+      "source": {
+        "tokenized": "｢呪われた冷たい洞窟のｯｸ･ﾅｲﾄが[BR] あなた方にとって最も手ごわい敵と[BR] なるかもしれません｡[BR] 彼は魔女に仕える軍隊を指揮している[BR] のですが､暇な時は楽しみのために[BR] 戦士狩りをしています｣[END]",
+        "plainJapanese": "｢呪われた冷たい洞窟のｯｸ･ﾅｲﾄが\n あなた方にとって最も手ごわい敵と\n なるかもしれません｡\n 彼は魔女に仕える軍隊を指揮している\n のですが､暇な時は楽しみのために\n 戦士狩りをしています｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a14c6",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 15,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952134,
+      "relOffset": 1222,
+      "ptr": 1222,
+      "absPtr": null,
+      "oldLength": 127,
+      "source": {
+        "tokenized": "｢あなたの狙いは常に正確でしょうが､[BR] あなたは魔法の力の訓練を[BR] 忘れてはなりません｡[BR] 接近戦では弓より呪文のほうが[BR] 強力なのです｣[END]",
+        "plainJapanese": "｢あなたの狙いは常に正確でしょうが､\n あなたは魔法の力の訓練を\n 忘れてはなりません｡\n 接近戦では弓より呪文のほうが\n 強力なのです｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1545",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 16,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952261,
+      "relOffset": 1349,
+      "ptr": 1349,
+      "absPtr": null,
+      "oldLength": 58,
+      "source": {
+        "tokenized": "｢ｴｱを通るときは気をつけて｡[BR] 木があなたを殺そうとします｣[END]",
+        "plainJapanese": "｢ｴｱを通るときは気をつけて｡\n 木があなたを殺そうとします｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a157f",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 17,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952319,
+      "relOffset": 1407,
+      "ptr": 1407,
+      "absPtr": null,
+      "oldLength": 82,
+      "source": {
+        "tokenized": "｢ﾐｭｰﾀﾝﾄ山の愚か者たちに[BR] 用心しなさい｡[BR] 彼らはとりわけ魔法使いを[BR] 軽蔑しています｣[END]",
+        "plainJapanese": "｢ﾐｭｰﾀﾝﾄ山の愚か者たちに\n 用心しなさい｡\n 彼らはとりわけ魔法使いを\n 軽蔑しています｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a15d1",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 18,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952401,
+      "relOffset": 1489,
+      "ptr": 1489,
+      "absPtr": null,
+      "oldLength": 140,
+      "source": {
+        "tokenized": "｢鍵開けのｽｷﾙは訓練すれば[BR] 上達します｡[BR] この世界には鍵のかかった財宝が[BR] あちこちに散らばっていますから､[BR] あなた方の技能を磨くには好都合です｣[END]",
+        "plainJapanese": "｢鍵開けのｽｷﾙは訓練すれば\n 上達します｡\n この世界には鍵のかかった財宝が\n あちこちに散らばっていますから､\n あなた方の技能を磨くには好都合です｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a165d",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 19,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952541,
+      "relOffset": 1629,
+      "ptr": 1629,
+      "absPtr": null,
+      "oldLength": 61,
+      "source": {
+        "tokenized": "｢ならずものの忍者は[BR] ｽﾜﾝﾀｳﾝ一族の怒りに[BR] 直面するはずです｣[END]",
+        "plainJapanese": "｢ならずものの忍者は\n ｽﾜﾝﾀｳﾝ一族の怒りに\n 直面するはずです｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a169a",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 20,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952602,
+      "relOffset": 1690,
+      "ptr": 1690,
+      "absPtr": null,
+      "oldLength": 85,
+      "source": {
+        "tokenized": "｢屈強なｱﾝが[BR] 聚ｲｳｲﾝ<EF>城の入口を[BR] 守っています｡[BR] 近々彼らと戦うことになりましょう｣[END]",
+        "plainJapanese": "｢屈強なｱﾝが\n 聚ｲｳｲﾝ城の入口を\n 守っています｡\n 近々彼らと戦うことになりましょう｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a16ef",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 21,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952687,
+      "relOffset": 1775,
+      "ptr": 1775,
+      "absPtr": null,
+      "oldLength": 66,
+      "source": {
+        "tokenized": "｢恐怖の要塞にいるﾐｲﾗは[BR] <EF>ﾙｲ<EF>を倒すのを[BR] 最大の楽しみとしています｣[END]",
+        "plainJapanese": "｢恐怖の要塞にいるﾐｲﾗは\n ﾙｲを倒すのを\n 最大の楽しみとしています｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1731",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 22,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952753,
+      "relOffset": 1841,
+      "ptr": 1841,
+      "absPtr": null,
+      "oldLength": 69,
+      "source": {
+        "tokenized": "｢ｽﾚ豌ｶﾙﾄの城塞では､[BR] あなたがたと同ﾚのﾓﾝｽﾀｰが[BR] 財宝を守っています｣[END]",
+        "plainJapanese": "｢ｽﾚ豌ｶﾙﾄの城塞では､\n あなたがたと同ﾚのﾓﾝｽﾀｰが\n 財宝を守っています｣"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    },
+    {
+      "id": "event_prompts_006a1776",
+      "sheet": "Event_Prompts",
+      "category": "event_prompts",
+      "index": 23,
+      "track": 2,
+      "bankOffset": 6950912,
+      "fileOffset": 6952822,
+      "relOffset": 1910,
+      "ptr": 1910,
+      "absPtr": null,
+      "oldLength": 113,
+      "source": {
+        "tokenized": "荷馬車の床に､骨と汚れた石器と､[BR]寝台がわりのﾁが散乱している｡片隅につぶれた褪ﾘﾝの鎧が一式ある｡[BR]荷馬車を燃やすか?[END]",
+        "plainJapanese": "荷馬車の床に､骨と汚れた石器と､\n寝台がわりのﾁが散乱している｡片隅につぶれた褪ﾘﾝの鎧が一式ある｡\n荷馬車を燃やすか?"
+      },
+      "translation": {
+        "englishText": "",
+        "englishMarkup": "",
+        "status": "todo",
+        "notes": ""
+      }
+    }
+  ]
+}

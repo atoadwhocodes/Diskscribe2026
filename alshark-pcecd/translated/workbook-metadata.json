@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-03-12T09:38:00.000Z",
+  "sourcePath": "d:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark_master_translation_workbook.xlsx",
+  "importedTo": "translated/Alshark_master_translation_workbook.xlsx",
+  "sha256": "CB653D77E01CF1EE0F75F2151D3EECDD7D4344EC76605535D313A4E1FC5E6ACA",
+  "sheets": [
+    "Overview",
+    "Instructions",
+    "Story_Dialogue",
+    "Location_Names",
+    "Event_Prompts",
+    "Battle_System",
+    "Build_Status"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "sheetName": "Instructions",
+  "rowCount": 5,
+  "header": [
+    "How to use",
+    "Edit English columns only. Keep status as todo / edited / review / done."
+  ],
+  "records": [
+    {
+      "how_to_use": "Story bank safety",
+      "edit_english_columns_only_keep_status_as_todo_edited_review_done": "Preserve [CMD], [ARG], [EVT], [SUB], and raw <XX> tokens in the same order."
+    },
+    {
+      "how_to_use": "Location/Event/Battle banks",
+      "edit_english_columns_only_keep_status_as_todo_edited_review_done": "For clean text banks, translate the plain English column. Keep notes for overflow or context."
+    },
+    {
+      "how_to_use": "Priority order",
+      "edit_english_columns_only_keep_status_as_todo_edited_review_done": "1) Story_Dialogue, 2) Location_Names, 3) Event_Prompts, 4) Battle_System."
+    },
+    {
+      "how_to_use": "Current state",
+      "edit_english_columns_only_keep_status_as_todo_edited_review_done": "Workbook prepopulates source text and leaves translation columns blank for production work."
+    }
+  ]
+}

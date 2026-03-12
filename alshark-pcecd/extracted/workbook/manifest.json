@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-03-12T13:19:32Z",
+  "input": "E:\\diskscribe2026\\alshark-pcecd\\translated\\Alshark_master_translation_workbook.xlsx",
+  "sha256": "cb653d77e01cf1ee0f75f2151d3eecdd7d4344ec76605535d313a4e1fc5e6aca",
+  "sheets": [
+    {
+      "name": "Overview",
+      "slug": "overview",
+      "csv": "overview.csv",
+      "json": "overview.json",
+      "rowCount": 10,
+      "recordCount": 9
+    },
+    {
+      "name": "Instructions",
+      "slug": "instructions",
+      "csv": "instructions.csv",
+      "json": "instructions.json",
+      "rowCount": 5,
+      "recordCount": 4
+    },
+    {
+      "name": "Story_Dialogue",
+      "slug": "story_dialogue",
+      "csv": "story_dialogue.csv",
+      "json": "story_dialogue.json",
+      "rowCount": 18,
+      "recordCount": 17
+    },
+    {
+      "name": "Location_Names",
+      "slug": "location_names",
+      "csv": "location_names.csv",
+      "json": "location_names.json",
+      "rowCount": 23,
+      "recordCount": 22
+    },
+    {
+      "name": "Event_Prompts",
+      "slug": "event_prompts",
+      "csv": "event_prompts.csv",
+      "json": "event_prompts.json",
+      "rowCount": 25,
+      "recordCount": 24
+    },
+    {
+      "name": "Battle_System",
+      "slug": "battle_system",
+      "csv": "battle_system.csv",
+      "json": "battle_system.json",
+      "rowCount": 1,
+      "recordCount": 0
+    },
+    {
+      "name": "Build_Status",
+      "slug": "build_status",
+      "csv": "build_status.csv",
+      "json": "build_status.json",
+      "rowCount": 10,
+      "recordCount": 8
+    }
+  ]
+}

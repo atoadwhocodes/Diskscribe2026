@@ -1,0 +1,140 @@
+{
+  "ccd": "D:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).ccd",
+  "img": "D:\\Users\\Toadius\\Downloads\\Alshark_TurboGrafx-CD_JA\\Alshark (Japan).img",
+  "track": {
+    "number": 15,
+    "control": 4,
+    "isData": true,
+    "startLba": 160238,
+    "endLba": 197253,
+    "sectorCount": 37015,
+    "rawSectorSize": 2352,
+    "userDataOffset": 16,
+    "userDataSizePerSector": 2048,
+    "userBytes": 75806720,
+    "sha256": "0a084bb04737c671a65c111e3481b99ffeb0aaabbf99612818c371c35d388e7c",
+    "output": "track15_user.bin"
+  },
+  "tracks": [
+    {
+      "number": 1,
+      "control": 0,
+      "isData": false,
+      "startLba": 0,
+      "endLba": 3590,
+      "sectorCount": 3590
+    },
+    {
+      "number": 2,
+      "control": 4,
+      "isData": true,
+      "startLba": 3590,
+      "endLba": 40904,
+      "sectorCount": 37314
+    },
+    {
+      "number": 3,
+      "control": 0,
+      "isData": false,
+      "startLba": 40904,
+      "endLba": 55883,
+      "sectorCount": 14979
+    },
+    {
+      "number": 4,
+      "control": 0,
+      "isData": false,
+      "startLba": 55883,
+      "endLba": 58557,
+      "sectorCount": 2674
+    },
+    {
+      "number": 5,
+      "control": 0,
+      "isData": false,
+      "startLba": 58557,
+      "endLba": 69463,
+      "sectorCount": 10906
+    },
+    {
+      "number": 6,
+      "control": 0,
+      "isData": false,
+      "startLba": 69463,
+      "endLba": 76888,
+      "sectorCount": 7425
+    },
+    {
+      "number": 7,
+      "control": 0,
+      "isData": false,
+      "startLba": 76888,
+      "endLba": 84835,
+      "sectorCount": 7947
+    },
+    {
+      "number": 8,
+      "control": 0,
+      "isData": false,
+      "startLba": 84835,
+      "endLba": 90532,
+      "sectorCount": 5697
+    },
+    {
+      "number": 9,
+      "control": 0,
+      "isData": false,
+      "startLba": 90532,
+      "endLba": 96843,
+      "sectorCount": 6311
+    },
+    {
+      "number": 10,
+      "control": 0,
+      "isData": false,
+      "startLba": 96843,
+      "endLba": 106171,
+      "sectorCount": 9328
+    },
+    {
+      "number": 11,
+      "control": 0,
+      "isData": false,
+      "startLba": 106171,
+      "endLba": 113538,
+      "sectorCount": 7367
+    },
+    {
+      "number": 12,
+      "control": 0,
+      "isData": false,
+      "startLba": 113538,
+      "endLba": 125756,
+      "sectorCount": 12218
+    },
+    {
+      "number": 13,
+      "control": 0,
+      "isData": false,
+      "startLba": 125756,
+      "endLba": 142507,
+      "sectorCount": 16751
+    },
+    {
+      "number": 14,
+      "control": 0,
+      "isData": false,
+      "startLba": 142507,
+      "endLba": 160238,
+      "sectorCount": 17731
+    },
+    {
+      "number": 15,
+      "control": 4,
+      "isData": true,
+      "startLba": 160238,
+      "endLba": 197253,
+      "sectorCount": 37015
+    }
+  ]
+}

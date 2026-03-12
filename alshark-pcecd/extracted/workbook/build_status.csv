@@ -1,0 +1,10 @@
+Current Build Status,,
+Translated sample messages,4,
+Validation valid,True,
+Story free bytes,3057,
+Warnings,3,
+,,
+Warning Details,,
+msg 0,grows_beyond_original_slot,Okay for phase 6.5+ repacking as long as total bank still fits.
+msg 4,grows_beyond_original_slot,Okay for phase 6.5+ repacking as long as total bank still fits.
+msg 6,grows_beyond_original_slot,Okay for phase 6.5+ repacking as long as total bank still fits.

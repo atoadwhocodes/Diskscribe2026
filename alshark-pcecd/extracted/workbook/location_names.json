@@ -1,0 +1,259 @@
+{
+  "sheetName": "Location_Names",
+  "rowCount": 23,
+  "header": [
+    "index",
+    "file_offset",
+    "rel_offset",
+    "old_length",
+    "tokenized_original",
+    "plain_japanese",
+    "english_text",
+    "status",
+    "notes"
+  ],
+  "records": [
+    {
+      "index": "0",
+      "file_offset": "0x04802100",
+      "rel_offset": "0x0000",
+      "old_length": "20",
+      "tokenized_original": "]リアス資源発掘基地[END]",
+      "plain_japanese": "]リアス資源発掘基地",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "1",
+      "file_offset": "0x04802114",
+      "rel_offset": "0x0014",
+      "old_length": "21",
+      "tokenized_original": "ゾリアス燃料精錬基地[END]",
+      "plain_japanese": "ゾリアス燃料精錬基地",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "2",
+      "file_offset": "0x04802129",
+      "rel_offset": "0x0029",
+      "old_length": "21",
+      "tokenized_original": "マ－ズ連邦軍総司令部[END]",
+      "plain_japanese": "マ－ズ連邦軍総司令部",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "3",
+      "file_offset": "0x0480213E",
+      "rel_offset": "0x003E",
+      "old_length": "17",
+      "tokenized_original": "帝国星軍総司令部[END]",
+      "plain_japanese": "帝国星軍総司令部",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "4",
+      "file_offset": "0x0480214F",
+      "rel_offset": "0x004F",
+      "old_length": "17",
+      "tokenized_original": "マウンドキャスル[END]",
+      "plain_japanese": "マウンドキャスル",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "5",
+      "file_offset": "0x04802160",
+      "rel_offset": "0x0060",
+      "old_length": "19",
+      "tokenized_original": "ザ－テ・コセの宮殿[END]",
+      "plain_japanese": "ザ－テ・コセの宮殿",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "6",
+      "file_offset": "0x04802173",
+      "rel_offset": "0x0073",
+      "old_length": "15",
+      "tokenized_original": "ラミュ－の住処[END]",
+      "plain_japanese": "ラミュ－の住処",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "7",
+      "file_offset": "0x04802182",
+      "rel_offset": "0x0082",
+      "old_length": "7",
+      "tokenized_original": "植民船[END]",
+      "plain_japanese": "植民船",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "8",
+      "file_offset": "0x04802189",
+      "rel_offset": "0x0089",
+      "old_length": "17",
+      "tokenized_original": "ゾリアス兵器工場[END]",
+      "plain_japanese": "ゾリアス兵器工場",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "9",
+      "file_offset": "0x0480219A",
+      "rel_offset": "0x009A",
+      "old_length": "21",
+      "tokenized_original": "ゾリアスバイオ研究所[END]",
+      "plain_japanese": "ゾリアスバイオ研究所",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "10",
+      "file_offset": "0x048021AF",
+      "rel_offset": "0x00AF",
+      "old_length": "13",
+      "tokenized_original": "ノ－ザンの砦[END]",
+      "plain_japanese": "ノ－ザンの砦",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "11",
+      "file_offset": "0x048021BC",
+      "rel_offset": "0x00BC",
+      "old_length": "5",
+      "tokenized_original": "廃坑[END]",
+      "plain_japanese": "廃坑",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "12",
+      "file_offset": "0x048021C1",
+      "rel_offset": "0x00C1",
+      "old_length": "5",
+      "tokenized_original": "鉱山[END]",
+      "plain_japanese": "鉱山",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "13",
+      "file_offset": "0x048021C6",
+      "rel_offset": "0x00C6",
+      "old_length": "7",
+      "tokenized_original": "ダスト[END]",
+      "plain_japanese": "ダスト",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "14",
+      "file_offset": "0x048021CD",
+      "rel_offset": "0x00CD",
+      "old_length": "13",
+      "tokenized_original": "コ－リスの塔[END]",
+      "plain_japanese": "コ－リスの塔",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "15",
+      "file_offset": "0x048021DA",
+      "rel_offset": "0x00DA",
+      "old_length": "19",
+      "tokenized_original": "ザクセンキャニオン[END]",
+      "plain_japanese": "ザクセンキャニオン",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "16",
+      "file_offset": "0x048021ED",
+      "rel_offset": "0x00ED",
+      "old_length": "5",
+      "tokenized_original": "墓地[END]",
+      "plain_japanese": "墓地",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "17",
+      "file_offset": "0x048021F2",
+      "rel_offset": "0x00F2",
+      "old_length": "15",
+      "tokenized_original": "ザイザルの火口[END]",
+      "plain_japanese": "ザイザルの火口",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "18",
+      "file_offset": "0x04802201",
+      "rel_offset": "0x0101",
+      "old_length": "13",
+      "tokenized_original": "ジョ－の部屋[END]",
+      "plain_japanese": "ジョ－の部屋",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "19",
+      "file_offset": "0x0480220E",
+      "rel_offset": "0x010E",
+      "old_length": "17",
+      "tokenized_original": "マ－ズ民間航宙船[END]",
+      "plain_japanese": "マ－ズ民間航宙船",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "20",
+      "file_offset": "0x0480221F",
+      "rel_offset": "0x011F",
+      "old_length": "5",
+      "tokenized_original": "船内[END]",
+      "plain_japanese": "船内",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    },
+    {
+      "index": "21",
+      "file_offset": "0x04802224",
+      "rel_offset": "0x0124",
+      "old_length": "21",
+      "tokenized_original": "ラッセルガイヤ－艦内[END]",
+      "plain_japanese": "ラッセルガイヤ－艦内",
+      "english_text": "",
+      "status": "todo",
+      "notes": ""
+    }
+  ]
+}

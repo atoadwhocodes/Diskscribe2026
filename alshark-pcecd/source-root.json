@@ -1,0 +1,15 @@
+{
+  "id": "alshark_pcecd_root_source",
+  "name": "Alshark PC Engine CD Root Source",
+  "translationType": "pcecd_disc_translation",
+  "rootPath": "alshark-pcecd",
+  "paths": {
+    "notes": "alshark-pcecd/notes",
+    "research": "alshark-pcecd/research",
+    "scripts": "alshark-pcecd/scripts",
+    "extracted": "alshark-pcecd/extracted",
+    "translated": "alshark-pcecd/translated",
+    "patched": "alshark-pcecd/patched",
+    "scratch": "alshark-pcecd/scratch"
+  }
+}

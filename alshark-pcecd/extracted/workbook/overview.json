@@ -1,0 +1,46 @@
+{
+  "sheetName": "Overview",
+  "rowCount": 10,
+  "header": [
+    "Master Workbook",
+    "Alshark PC Engine CD Translation Workbook"
+  ],
+  "records": [
+    {
+      "master_workbook": "Source IMG",
+      "alshark_pc_engine_cd_translation_workbook": "Alshark (Japan).img"
+    },
+    {
+      "master_workbook": "Track 02 user-data size",
+      "alshark_pc_engine_cd_translation_workbook": "76,419,072 bytes"
+    },
+    {
+      "master_workbook": "Story bank offset",
+      "alshark_pc_engine_cd_translation_workbook": "0x007D1000"
+    },
+    {
+      "master_workbook": "Story pointer-table messages",
+      "alshark_pc_engine_cd_translation_workbook": "17"
+    },
+    {
+      "master_workbook": "Location names",
+      "alshark_pc_engine_cd_translation_workbook": "22"
+    },
+    {
+      "master_workbook": "Event prompts",
+      "alshark_pc_engine_cd_translation_workbook": "24"
+    },
+    {
+      "master_workbook": "Battle/system entries",
+      "alshark_pc_engine_cd_translation_workbook": "0"
+    },
+    {
+      "master_workbook": "Translated sample messages in current test build",
+      "alshark_pc_engine_cd_translation_workbook": "4"
+    },
+    {
+      "master_workbook": "Current sample build free bytes in story bank",
+      "alshark_pc_engine_cd_translation_workbook": "3057"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-03-12T13:29:00Z",
+  "tracks": {
+    "track02": {
+      "userBytes": 76419072,
+      "sha256": "e77ebc75cb8f32a62045a6b9d51209f7c2086e1c0e7935cf22548ef1f3895dde"
+    },
+    "track15": {
+      "userBytes": 75806720,
+      "sha256": "0a084bb04737c671a65c111e3481b99ffeb0aaabbf99612818c371c35d388e7c"
+    }
+  },
+  "comparison": {
+    "track15IsPrefixOfTrack02": true,
+    "sharedPrefixBytes": 75806720,
+    "track02ExtraBytes": 612352,
+    "knownBankTargetsMatchAcrossTracks": true,
+    "canonicalTrack": 2,
+    "notes": [
+      "All currently targeted banks match exactly between Track 02 and Track 15.",
+      "Track 15 adds no distinct content for the current extraction targets.",
+      "Use Track 02 as the canonical source for future extraction and reinsertion work."
+    ]
+  }
+}

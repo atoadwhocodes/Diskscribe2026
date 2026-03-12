@@ -1,0 +1,51 @@
+{
+  "sheetName": "Build_Status",
+  "rowCount": 10,
+  "header": [
+    "Current Build Status",
+    "",
+    ""
+  ],
+  "records": [
+    {
+      "current_build_status": "Translated sample messages",
+      "column_2": "4",
+      "column_3": ""
+    },
+    {
+      "current_build_status": "Validation valid",
+      "column_2": "True",
+      "column_3": ""
+    },
+    {
+      "current_build_status": "Story free bytes",
+      "column_2": "3057",
+      "column_3": ""
+    },
+    {
+      "current_build_status": "Warnings",
+      "column_2": "3",
+      "column_3": ""
+    },
+    {
+      "current_build_status": "Warning Details",
+      "column_2": "",
+      "column_3": ""
+    },
+    {
+      "current_build_status": "msg 0",
+      "column_2": "grows_beyond_original_slot",
+      "column_3": "Okay for phase 6.5+ repacking as long as total bank still fits."
+    },
+    {
+      "current_build_status": "msg 4",
+      "column_2": "grows_beyond_original_slot",
+      "column_3": "Okay for phase 6.5+ repacking as long as total bank still fits."
+    },
+    {
+      "current_build_status": "msg 6",
+      "column_2": "grows_beyond_original_slot",
+      "column_3": "Okay for phase 6.5+ repacking as long as total bank still fits."
+    }
+  ]
+}
