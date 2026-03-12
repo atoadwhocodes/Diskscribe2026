@@ -16,6 +16,11 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2));
 }
 
+function writeText(filePath, value) {
+  ensureDirectory(path.dirname(filePath));
+  fs.writeFileSync(filePath, value);
+}
+
 function sha256File(filePath) {
   const hash = crypto.createHash('sha256');
   hash.update(fs.readFileSync(filePath));
@@ -135,6 +140,58 @@ function calculateTotals(diskResults, passthroughResults) {
       passthroughCopied: passthroughResults.length
     }
   );
+}
+
+function mirrorPatchedOutput(profile, report) {
+  const convenienceOutputDir = profile.convenienceOutputDir;
+  if (!convenienceOutputDir) {
+    return null;
+  }
+
+  ensureDirectory(convenienceOutputDir);
+
+  const copiedFiles = [];
+  const copyEntries = [
+    ...report.diskResults.map((entry) => ({
+      fileName: entry.fileName,
+      sourcePath: entry.outputPath
+    })),
+    ...report.passthroughResults
+      .filter((entry) => entry.copied)
+      .map((entry) => ({
+        fileName: entry.fileName,
+        sourcePath: entry.outputPath
+      }))
+  ];
+
+  for (const entry of copyEntries) {
+    if (!entry.sourcePath || !fs.existsSync(entry.sourcePath)) {
+      continue;
+    }
+
+    const destinationPath = path.join(convenienceOutputDir, entry.fileName);
+    fs.copyFileSync(entry.sourcePath, destinationPath);
+    copiedFiles.push({
+      fileName: entry.fileName,
+      sourcePath: entry.sourcePath,
+      destinationPath
+    });
+  }
+
+  writeText(
+    path.join(convenienceOutputDir, 'LATEST-BUILD.txt'),
+    [
+      `Profile: ${profile.displayName}`,
+      `Created: ${report.createdAt}`,
+      `Output source: ${report.outputDir}`,
+      `Artifact report: ${path.join(report.artifactDir, 'patch-report.json')}`
+    ].join('\n')
+  );
+
+  return {
+    directory: convenienceOutputDir,
+    copiedFiles
+  };
 }
 
 function runProjectValidation(profile, options = {}) {
@@ -322,6 +379,11 @@ function runProjectPatch(profile, options = {}) {
     validation,
     totals: calculateTotals(diskResults, passthroughResults)
   };
+  const convenienceOutput = mirrorPatchedOutput(profile, report);
+  if (convenienceOutput) {
+    report.convenienceOutput = convenienceOutput;
+    console.log(`Convenience output: ${convenienceOutput.directory}`);
+  }
   const reportPath = path.join(runRoot, 'patch-report.json');
 
   writeJson(reportPath, report);
