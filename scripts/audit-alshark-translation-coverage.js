@@ -5,16 +5,17 @@ const {
   canonicalIdFromMasterString,
   loadMergedTranslationMaps
 } = require('./alshark-translation-source');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const extractedDir = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV');
-const translatedDir = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-TRANSLATED-REV');
+const { repoRoot, paths } = getAlsharkPc98Roots();
+const extractedDir = paths.extracted;
+const translatedDir = paths.translated;
 
 const masterPath = path.join(extractedDir, 'alshark-master.json');
 const flagsPath = path.join(extractedDir, 'flagged-garbled-entries.json');
 const translationsPath = path.join(translatedDir, 'translations.json');
-const csvPath = path.join(repoRoot, 'ALSHARK-ALL-LINES.csv');
-const cleanMappedPath = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN-MAPPED.txt');
+const csvPath = paths.allLinesCsv;
+const cleanMappedPath = paths.regenCleanMapped;
 const reportPath = path.join(extractedDir, 'translation-coverage-report.json');
 
 function parseMappedEntries(text) {

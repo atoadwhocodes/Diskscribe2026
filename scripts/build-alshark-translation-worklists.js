@@ -5,11 +5,13 @@ const {
   canonicalIdFromMasterString,
   getEffectiveTranslation
 } = require('./alshark-translation-source');
+const { getPatchProfile } = require('./lib/patch-profiles');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const extractedDir = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV');
-const translatedDir = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-TRANSLATED-REV');
-const artifactRoot = path.join(repoRoot, 'alshark-project', 'output', 'ALSHARK-PATCHED-HW-ARTIFACTS');
+const { paths } = getAlsharkPc98Roots();
+const extractedDir = paths.extracted;
+const translatedDir = paths.translated;
+const artifactRoot = path.join(paths.output, 'ALSHARK-PATCHED-HW-ARTIFACTS');
 
 const masterPath = path.join(extractedDir, 'alshark-master.json');
 const flagsPath = path.join(extractedDir, 'flagged-garbled-entries.json');
@@ -38,18 +40,78 @@ function loadLatestFitPriorityList() {
 
   const candidates = fs.readdirSync(artifactRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name.startsWith('alshark-'))
-    .map((entry) => path.join(artifactRoot, entry.name, 'patch-fit-priority-list.json'))
-    .filter((filePath) => fs.existsSync(filePath))
-    .sort();
+    .map((entry) => {
+      const artifactDir = path.join(artifactRoot, entry.name);
+      const reportPath = path.join(artifactDir, 'patch-report.json');
+      if (!fs.existsSync(reportPath)) {
+        return null;
+      }
+
+      return {
+        artifactDir,
+        reportPath,
+        priorityPath: path.join(artifactDir, 'patch-fit-priority-list.json'),
+        reportMtimeMs: fs.statSync(reportPath).mtimeMs
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.reportMtimeMs - left.reportMtimeMs);
 
   if (!candidates.length) {
     return null;
   }
 
+  const latest = candidates[0];
+  if (fs.existsSync(latest.priorityPath)) {
+    return {
+      path: latest.priorityPath,
+      data: readJson(latest.priorityPath)
+    };
+  }
+
+  const report = readJson(latest.reportPath);
+  const profile = getPatchProfile(report.profileId || 'alshark');
+  const entries = buildPrioritizedEntriesFromReport(report, profile);
   return {
-    path: candidates[candidates.length - 1],
-    data: readJson(candidates[candidates.length - 1])
+    path: latest.priorityPath,
+    data: {
+      createdAt: new Date().toISOString(),
+      reportPath: latest.reportPath,
+      profileId: report.profileId,
+      totals: report.totals || {},
+      entries
+    }
   };
+}
+
+function comparePriority(left, right) {
+  return (right.priority.score || 0) - (left.priority.score || 0) ||
+    (left.priority.tier || 99) - (right.priority.tier || 99) ||
+    (right.overflowBytes || 0) - (left.overflowBytes || 0) ||
+    String(left.id || '').localeCompare(String(right.id || ''));
+}
+
+function buildPrioritizedEntriesFromReport(report, profile) {
+  const rankEntry = profile && typeof profile.rankPatchFitEntry === 'function'
+    ? profile.rankPatchFitEntry.bind(profile)
+    : ((entry) => ({
+        tier: 4,
+        tierLabel: 'Tier 4 - Unclassified',
+        score: 100 + Number(entry.overflowBytes || 0),
+        severity: Number(entry.overflowBytes || 0) > 10 ? 'large' : 'small',
+        rationale: `Default ranking; overflow ${Number(entry.overflowBytes || 0)} bytes`,
+        rules: []
+      }));
+
+  return (report.diskResults || []).flatMap((disk) => (
+    (disk.truncatedEntries || []).map((entry) => ({
+      ...entry,
+      disk: disk.disk,
+      patched: disk.patched || 0,
+      fitAdjusted: disk.fitAdjusted || 0,
+      priority: rankEntry(entry, { disk: disk.disk, diskResult: disk, profile, report })
+    }))
+  )).sort(comparePriority);
 }
 
 function buildTranslationMap(translationsData) {

@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const regenMapped = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN-MAPPED.txt');
-const outCsv = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-canonical-clean.csv');
+const { paths } = getAlsharkPc98Roots();
+const regenMapped = paths.regenCleanMapped;
+const outCsv = path.join(paths.extracted, 'alshark-canonical-clean.csv');
 
 function parseEntries(text) {
   const lines = text.split(/\r?\n/);

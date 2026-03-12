@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const masterPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-master.json');
-const batchesDir = path.join(repoRoot, 'all-alshark-lines-batch500');
-const regenPath = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN.txt');
-const regenOut = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-MAPPED.txt');
+const { paths } = getAlsharkPc98Roots();
+const masterPath = path.join(paths.extracted, 'alshark-master.json');
+const batchesDir = paths.batch500;
+const regenPath = paths.regenFull;
+const regenOut = paths.regenMapped;
 
 function diskFullName(short) {
   const map = {

@@ -6,25 +6,14 @@ const {
   loadMergedTranslationMaps,
   normalizeJP
 } = require('./alshark-translation-source');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const regenClean = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN.txt');
-const regenMapped = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN-MAPPED.txt');
-const csvPath = path.join(repoRoot, 'ALSHARK-ALL-LINES.csv');
-const translationsPath = path.join(
-  repoRoot,
-  'alshark-project',
-  'data',
-  'ALSHARK-TRANSLATED-REV',
-  'translations.json'
-);
-const outCsv = path.join(
-  repoRoot,
-  'alshark-project',
-  'data',
-  'ALSHARK-EXTRACTED-REV',
-  'applied-translations.csv'
-);
+const { paths } = getAlsharkPc98Roots();
+const regenClean = paths.regenClean;
+const regenMapped = paths.regenCleanMapped;
+const csvPath = paths.allLinesCsv;
+const translationsPath = path.join(paths.translated, 'translations.json');
+const outCsv = path.join(paths.extracted, 'applied-translations.csv');
 
 function parseEntries(text) {
   const lines = text.split(/\r?\n/);

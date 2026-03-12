@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const masterPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-master.json');
-const flagsPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'flagged-garbled-entries.json');
-const outDir = path.join(repoRoot, 'all-alshark-lines-batch500-clean');
-const regenOut = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN.txt');
+const { paths } = getAlsharkPc98Roots();
+const masterPath = path.join(paths.extracted, 'alshark-master.json');
+const flagsPath = path.join(paths.extracted, 'flagged-garbled-entries.json');
+const outDir = paths.batch500Clean;
+const regenOut = paths.regenClean;
 
 function pad(n, width) { return String(n).padStart(width, '0'); }
 function diskFullName(short) {
@@ -36,7 +37,7 @@ for (let i = 0; i < strings.length; i++) {
   clean.push({ id, disk, offsetHex, text: s.text || '' });
 }
 
-if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
+if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
 // write regen clean file
 {

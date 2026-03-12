@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-03-12T00:00:00.000Z",
+  "roots": [
+    {
+      "id": "alshark_pc98",
+      "translationType": "pc98_disk_translation",
+      "rootPath": "alshark-pc98",
+      "manifestPath": "alshark-pc98/source-root.json"
+    },
+    {
+      "id": "alshark_pcecd",
+      "translationType": "pcecd_disc_translation",
+      "rootPath": "alshark-pcecd",
+      "manifestPath": "alshark-pcecd/source-root.json"
+    }
+  ]
+}

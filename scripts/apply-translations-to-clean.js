@@ -6,19 +6,14 @@ const {
   loadMergedTranslationMaps,
   normalizeJP
 } = require('./alshark-translation-source');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const csvPath = path.join(repoRoot, 'ALSHARK-ALL-LINES.csv');
-const translationsPath = path.join(
-  repoRoot,
-  'alshark-project',
-  'data',
-  'ALSHARK-TRANSLATED-REV',
-  'translations.json'
-);
-const cleanBatchesDir = path.join(repoRoot, 'all-alshark-lines-batch500-clean');
-const regenClean = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN.txt');
-const regenOut = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN-CLEAN-MAPPED.txt');
+const { repoRoot, paths } = getAlsharkPc98Roots();
+const csvPath = paths.allLinesCsv;
+const translationsPath = path.join(paths.translated, 'translations.json');
+const cleanBatchesDir = paths.batch500Clean;
+const regenClean = paths.regenClean;
+const regenOut = paths.regenCleanMapped;
 
 function levenshtein(a, b) {
   if (a === b) return 0;

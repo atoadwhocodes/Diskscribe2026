@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { readNullTerminatedAscii, validatePatchSet } = require('../patch-validation');
+const { getAlsharkPc98Roots } = require('../alshark-roots');
 const {
   buildControlSafePatch,
   replaceAndWithAmpersandTransform,
@@ -15,13 +16,13 @@ const {
   trimWordsTransform
 } = require('../text-slot-patcher');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const PROJECT_ROOT = path.join(REPO_ROOT, 'alshark-project');
-const SOURCE_DIR = path.join(PROJECT_ROOT, 'disks');
-const OUTPUT_DIR = path.join(PROJECT_ROOT, 'output', 'ALSHARK-PATCHED-HW');
-const ARTIFACT_ROOT = path.join(PROJECT_ROOT, 'output', 'ALSHARK-PATCHED-HW-ARTIFACTS');
-const TRANSLATED_DIR = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV');
-const EXTRACTED_DIR = path.join(PROJECT_ROOT, 'data', 'ALSHARK-EXTRACTED-REV');
+const { repoRoot: REPO_ROOT, paths } = getAlsharkPc98Roots();
+const SOURCE_DIR = paths.disks;
+const OUTPUT_DIR = path.join(paths.output, 'ALSHARK-PATCHED-HW');
+const ARTIFACT_ROOT = path.join(paths.output, 'ALSHARK-PATCHED-HW-ARTIFACTS');
+const CONVENIENCE_OUTPUT_DIR = paths.currentBuild;
+const TRANSLATED_DIR = paths.translated;
+const EXTRACTED_DIR = paths.extracted;
 const TRANSLATIONS_FILE = path.join(TRANSLATED_DIR, 'translations.json');
 
 const PATCH_TARGETS = [
@@ -79,6 +80,26 @@ const PRIORITY_LABELS = {
   4: 'Tier 4 - Main Narrative / High-Visibility Dialogue',
   5: 'Tier 5 - Flavor / Low-Risk Dialogue'
 };
+const OPENING_FULL_WIDTH_OFFSET_LIMIT = 0x5000;
+
+const FULL_WIDTH_BYTE_MAP = Object.create(null);
+for (let code = 0x41; code <= 0x5A; code++) FULL_WIDTH_BYTE_MAP[String.fromCharCode(code)] = [0x82, 0x60 + (code - 0x41)];
+for (let code = 0x61; code <= 0x7A; code++) FULL_WIDTH_BYTE_MAP[String.fromCharCode(code)] = [0x82, 0x81 + (code - 0x61)];
+for (let code = 0x30; code <= 0x39; code++) FULL_WIDTH_BYTE_MAP[String.fromCharCode(code)] = [0x82, 0x4F + (code - 0x30)];
+Object.assign(FULL_WIDTH_BYTE_MAP, {
+  ' ': [0x81, 0x40],
+  '!': [0x81, 0x49],
+  ',': [0x81, 0x43],
+  '.': [0x81, 0x44],
+  '?': [0x81, 0x48],
+  ':': [0x81, 0x46],
+  ';': [0x81, 0x47],
+  '\'': [0x81, 0x66],
+  '"': [0x81, 0x68],
+  '(': [0x81, 0x69],
+  ')': [0x81, 0x6A],
+  '-': [0x81, 0x7C]
+});
 
 function caseAware(lower, capitalized) {
   return (match) => (/^[A-Z]/.test(match) ? capitalized : lower);
@@ -127,6 +148,133 @@ const ALSHARK_FIT_OPTIONS = {
     replaceAndWithAmpersandTransform()
   ]
 };
+
+function shouldUseOpeningFullWidthPatch(entry, target) {
+  return target && target.key === 'Opening' && Number(entry.offset) < OPENING_FULL_WIDTH_OFFSET_LIMIT;
+}
+
+function sanitizeFullWidthAscii(text) {
+  return String(text || '')
+    .replace(/[‘’]/g, '\'')
+    .replace(/[“”]/g, '"')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\r?\n/g, '@')
+    .replace(/[^@A-Za-z0-9 !?,.:;'"()\-]/g, ' ');
+}
+
+function findStringLength(buffer, offset, maxBytes) {
+  const limit = maxBytes ? Math.min(buffer.length, offset + maxBytes) : buffer.length;
+  let end = offset;
+  while (end < limit && buffer[end] !== 0x00) {
+    end++;
+  }
+  return end - offset;
+}
+
+function parseTerminalSuffix(buffer, offset, length) {
+  let suffixStart = length;
+
+  while (suffixStart > 0 && buffer[offset + suffixStart - 1] === 0x20) {
+    suffixStart--;
+  }
+
+  if (suffixStart >= 3 && buffer[offset + suffixStart - 3] === 0x30 && buffer[offset + suffixStart - 2] === 0x23) {
+    const letter = buffer[offset + suffixStart - 1];
+    if (letter >= 0x41 && letter <= 0x5A) {
+      return {
+        suffix: Buffer.from(buffer.slice(offset + suffixStart - 3, offset + suffixStart)),
+        textLength: suffixStart - 3
+      };
+    }
+  }
+
+  if (suffixStart >= 2 && buffer[offset + suffixStart - 2] === 0x23) {
+    const letter = buffer[offset + suffixStart - 1];
+    if (letter >= 0x41 && letter <= 0x5A) {
+      return {
+        suffix: Buffer.from(buffer.slice(offset + suffixStart - 2, offset + suffixStart)),
+        textLength: suffixStart - 2
+      };
+    }
+  }
+
+  return {
+    suffix: Buffer.alloc(0),
+    textLength: length
+  };
+}
+
+function encodeFullWidthText(text, availableBytes) {
+  const bytes = [];
+  const normalized = sanitizeFullWidthAscii(text);
+
+  for (const char of normalized) {
+    if (char === '@') {
+      if (bytes.length + 1 > availableBytes) {
+        break;
+      }
+      bytes.push(0x40);
+      continue;
+    }
+
+    const pair = FULL_WIDTH_BYTE_MAP[char] || FULL_WIDTH_BYTE_MAP[' '];
+    if (bytes.length + pair.length > availableBytes) {
+      break;
+    }
+    bytes.push(...pair);
+  }
+
+  return Buffer.from(bytes);
+}
+
+function buildOpeningFullWidthPatch(options) {
+  const length = findStringLength(options.originalBuffer, options.offset, options.maxBytes);
+  if (length < 2) {
+    return null;
+  }
+
+  const { suffix, textLength } = parseTerminalSuffix(options.originalBuffer, options.offset, length);
+  const capacity = Math.max(0, textLength);
+  if (capacity < 2) {
+    return null;
+  }
+
+  const region = Buffer.alloc(length, 0x20);
+  const sourceText = typeof options.translation === 'string' ? options.translation : '';
+  const encoded = encodeFullWidthText(sourceText, capacity);
+  if (!encoded.length) {
+    return null;
+  }
+
+  encoded.copy(region, 0, 0, encoded.length);
+  if (suffix.length && encoded.length + suffix.length <= region.length) {
+    suffix.copy(region, encoded.length, 0, suffix.length);
+  }
+
+  const originalLength = Buffer.byteLength(sanitizeFullWidthAscii(sourceText), 'ascii');
+  const finalLength = encoded.length;
+  const overflowBytes = Math.max(0, originalLength * 2 - capacity);
+
+  return {
+    region,
+    length,
+    capacity,
+    used: finalLength,
+    truncated: overflowBytes > 0,
+    fit: {
+      text: sanitizeFullWidthAscii(sourceText),
+      originalLength: originalLength * 2,
+      finalLength,
+      preTruncateLength: originalLength * 2,
+      savedBytes: Math.max(0, originalLength * 2 - finalLength),
+      adjusted: overflowBytes > 0,
+      truncated: overflowBytes > 0,
+      overflowBytes,
+      appliedStrategies: ['sanitize-ascii', 'opening-fullwidth-ui']
+    }
+  };
+}
 
 function loadTranslations() {
   if (!fs.existsSync(TRANSLATIONS_FILE)) {
@@ -199,16 +347,26 @@ function patchDisk(context) {
     }
 
     try {
-      const patchText = typeof entry.patchText === 'string' && entry.patchText.trim()
-        ? entry.patchText.trim()
-        : entry.translation;
-      const patch = buildControlSafePatch({
-        originalBuffer,
-        offset: entry.offset,
-        maxBytes: entry.maxBytes,
-        translation: patchText,
-        fitOptions: ALSHARK_FIT_OPTIONS
-      });
+      const useOpeningFullWidth = shouldUseOpeningFullWidthPatch(entry, context.target);
+      const patchText = useOpeningFullWidth
+        ? (typeof entry.patchText === 'string' ? entry.patchText : entry.translation)
+        : (typeof entry.patchText === 'string' && entry.patchText.trim()
+            ? entry.patchText.trim()
+            : entry.translation);
+      const patch = useOpeningFullWidth
+        ? buildOpeningFullWidthPatch({
+            originalBuffer,
+            offset: entry.offset,
+            maxBytes: entry.maxBytes,
+            translation: patchText
+          })
+        : buildControlSafePatch({
+            originalBuffer,
+            offset: entry.offset,
+            maxBytes: entry.maxBytes,
+            translation: patchText,
+            fitOptions: ALSHARK_FIT_OPTIONS
+          });
       if (!patch) {
         skipped++;
         skippedEntries.push({
@@ -416,6 +574,7 @@ module.exports = {
   sourceDir: SOURCE_DIR,
   outputDir: OUTPUT_DIR,
   artifactRoot: ARTIFACT_ROOT,
+  convenienceOutputDir: CONVENIENCE_OUTPUT_DIR,
   translationArtifacts: [
     TRANSLATIONS_FILE,
     path.join(TRANSLATED_DIR, 'checkpoint.json'),
@@ -423,7 +582,7 @@ module.exports = {
     path.join(TRANSLATED_DIR, 'gemma3-checkpoint.json'),
     path.join(TRANSLATED_DIR, 'google-checkpoint.json'),
     path.join(TRANSLATED_DIR, 'woolsey-checkpoint.json'),
-    path.join(REPO_ROOT, 'ALSHARK-ALL-LINES.csv'),
+    paths.allLinesCsv,
     path.join(EXTRACTED_DIR, 'alshark-canonical-clean.csv'),
     path.join(EXTRACTED_DIR, 'applied-translations.csv'),
     path.join(EXTRACTED_DIR, 'translation-coverage-report.json')

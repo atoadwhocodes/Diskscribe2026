@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.join(__dirname, '..');
-const inFile = path.join(repoRoot, 'ALSHARK-ALL-LINES-REGEN.txt');
-const outDir = path.join(repoRoot, 'all-alshark-lines-batch500');
+const { paths } = getAlsharkPc98Roots();
+const inFile = paths.regenFull;
+const outDir = paths.batch500;
 
 if (!fs.existsSync(inFile)) {
   console.error('Input file missing:', inFile);

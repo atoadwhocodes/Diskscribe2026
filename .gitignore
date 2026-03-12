@@ -55,6 +55,7 @@ test-projects/
 
 # Local Alshark scratch exports and review notes
 /ALSHARK-ALL-LINES*
+/ALSHARK-CURRENT/
 /all-alshark-lines/
 /all-alshark-lines-batch500/
 /all-alshark-lines-batch500-clean/

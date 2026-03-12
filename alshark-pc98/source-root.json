@@ -1,0 +1,25 @@
+{
+  "id": "alshark_pc98_root_source",
+  "name": "Alshark PC-98 Root Source",
+  "translationType": "pc98_disk_translation",
+  "rootPath": "alshark-pc98",
+  "legacyProjectPath": "alshark-project",
+  "paths": {
+    "extracted": "alshark-project/data/ALSHARK-EXTRACTED-REV",
+    "translated": "alshark-project/data/ALSHARK-TRANSLATED-REV",
+    "disks": "alshark-project/disks",
+    "output": "alshark-project/output",
+    "reference": "alshark-project/reference",
+    "scripts": "alshark-project/scripts",
+    "currentBuild": "ALSHARK-CURRENT",
+    "allLinesText": "ALSHARK-ALL-LINES.txt",
+    "allLinesCsv": "ALSHARK-ALL-LINES.csv",
+    "allLinesParts": "all-alshark-lines",
+    "regenFull": "ALSHARK-ALL-LINES-REGEN.txt",
+    "regenMapped": "ALSHARK-ALL-LINES-REGEN-MAPPED.txt",
+    "regenClean": "ALSHARK-ALL-LINES-REGEN-CLEAN.txt",
+    "regenCleanMapped": "ALSHARK-ALL-LINES-REGEN-CLEAN-MAPPED.txt",
+    "batch500": "all-alshark-lines-batch500",
+    "batch500Clean": "all-alshark-lines-batch500-clean"
+  }
+}

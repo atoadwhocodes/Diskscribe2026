@@ -1,22 +1,23 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
+const { repoRoot, paths } = getAlsharkPc98Roots();
 
 const steps = [
-  'alshark-project/scripts/extract-alshark-rev-eng.js',
-  'scripts/flag-garbled-entries.js',
-  'scripts/build-full-export.js',
-  'scripts/split-batches-fixed.js',
-  'scripts/map-ids-and-rewrite-batches.js',
-  'scripts/add-batch-headers.js',
-  'scripts/verify-mapped-counts.js',
-  'scripts/generate-clean-batches.js',
-  'scripts/apply-translations-to-clean.js',
-  'scripts/export-canonical-clean-csv.js',
-  'scripts/generate-applied-diff-csv.js',
-  'scripts/audit-alshark-translation-coverage.js',
-  'scripts/build-alshark-translation-worklists.js'
+  path.join(paths.scripts, 'extract-alshark-rev-eng.js'),
+  path.join(repoRoot, 'scripts', 'flag-garbled-entries.js'),
+  path.join(repoRoot, 'scripts', 'build-full-export.js'),
+  path.join(repoRoot, 'scripts', 'split-batches-fixed.js'),
+  path.join(repoRoot, 'scripts', 'map-ids-and-rewrite-batches.js'),
+  path.join(repoRoot, 'scripts', 'add-batch-headers.js'),
+  path.join(repoRoot, 'scripts', 'verify-mapped-counts.js'),
+  path.join(repoRoot, 'scripts', 'generate-clean-batches.js'),
+  path.join(repoRoot, 'scripts', 'apply-translations-to-clean.js'),
+  path.join(repoRoot, 'scripts', 'export-canonical-clean-csv.js'),
+  path.join(repoRoot, 'scripts', 'generate-applied-diff-csv.js'),
+  path.join(repoRoot, 'scripts', 'audit-alshark-translation-coverage.js'),
+  path.join(repoRoot, 'scripts', 'build-alshark-translation-worklists.js')
 ];
 
 for (const step of steps) {

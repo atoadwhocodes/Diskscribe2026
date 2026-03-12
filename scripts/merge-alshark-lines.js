@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.join(__dirname, '..');
-const partsDir = path.join(repoRoot, 'all-alshark-lines');
-const outFile = path.join(repoRoot, 'ALSHARK-ALL-LINES.txt');
+const { paths } = getAlsharkPc98Roots();
+const partsDir = paths.allLinesParts;
+const outFile = paths.allLinesText;
 
 let files = fs.readdirSync(partsDir).filter(f => /^alshark-lines-\d{1,4}-\d{1,4}\.txt$/.test(f));
 files.sort((a,b)=>{

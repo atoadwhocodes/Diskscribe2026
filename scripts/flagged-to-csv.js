@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const flagsPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'flagged-garbled-entries.json');
-const outCsv = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'flagged-garbled-entries.csv');
+const { paths } = getAlsharkPc98Roots();
+const flagsPath = path.join(paths.extracted, 'flagged-garbled-entries.json');
+const outCsv = path.join(paths.extracted, 'flagged-garbled-entries.csv');
 
 if (!fs.existsSync(flagsPath)) {
   console.error('Flags JSON not found at', flagsPath);

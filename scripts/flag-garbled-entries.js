@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.resolve(__dirname, '..');
-const masterPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-master.json');
-const outPath = path.join(repoRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV', 'flagged-garbled-entries.json');
+const { paths } = getAlsharkPc98Roots();
+const masterPath = path.join(paths.extracted, 'alshark-master.json');
+const outPath = path.join(paths.extracted, 'flagged-garbled-entries.json');
 
 if (!fs.existsSync(masterPath)) {
   console.error('Master JSON missing', masterPath);

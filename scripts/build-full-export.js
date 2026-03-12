@@ -7,14 +7,15 @@ const {
   loadMergedTranslationMaps,
   normalizeJP
 } = require('./alshark-translation-source');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const projectRoot = path.join(__dirname, '..');
-const extractedDir = path.join(projectRoot, 'alshark-project', 'data', 'ALSHARK-EXTRACTED-REV');
-const translatedDir = path.join(projectRoot, 'alshark-project', 'data', 'ALSHARK-TRANSLATED-REV');
+const { paths } = getAlsharkPc98Roots();
+const extractedDir = paths.extracted;
+const translatedDir = paths.translated;
 const masterJson = path.join(extractedDir, 'alshark-master.json');
 const translationsJson = path.join(translatedDir, 'translations.json');
-const csvFile = path.join(projectRoot, 'ALSHARK-ALL-LINES.csv');
-const outTxt = path.join(projectRoot, 'ALSHARK-ALL-LINES-REGEN.txt');
+const csvFile = paths.allLinesCsv;
+const outTxt = paths.regenFull;
 
 if (!fs.existsSync(masterJson)) {
   console.error('Master JSON not found:', masterJson);

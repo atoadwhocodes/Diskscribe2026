@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { getAlsharkPc98Roots } = require('./lib/alshark-roots');
 
-const repoRoot = path.join(__dirname, '..');
-const dir = path.join(repoRoot, 'all-alshark-lines-batch500');
+const { paths } = getAlsharkPc98Roots();
+const dir = paths.batch500;
 if (!fs.existsSync(dir)) {
   console.error('Batch dir not found:', dir);
   process.exit(1);
