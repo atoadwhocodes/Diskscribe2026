@@ -10,7 +10,6 @@ const path = require('path');
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 const INPUT = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV', 'translations.json');
-const SOURCE = path.join(PROJECT_ROOT, 'data', 'ALSHARK-EXTRACTED-REV', 'alshark-translation-ready.json');
 const CHECKPOINT = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV', 'woolsey-checkpoint.json');
 const OUTPUT = path.join(PROJECT_ROOT, 'data', 'ALSHARK-TRANSLATED-REV', 'translations-woolsey.json');
 
@@ -145,8 +144,7 @@ async function main() {
     process.exit(1);
   }
 
-  // Load source and current translations
-  const srcData = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
+  // Load current translations. Each row already carries its source text.
   const transData = JSON.parse(fs.readFileSync(INPUT, 'utf8'));
   
   // Load checkpoint if exists
@@ -158,12 +156,6 @@ async function main() {
     } catch (e) {
       console.log('Invalid checkpoint, starting fresh');
     }
-  }
-
-  // Build source map
-  const sourceMap = {};
-  for (const s of srcData.strings) {
-    sourceMap[s.id] = s;
   }
 
   // Create output with refined translations
@@ -179,10 +171,10 @@ async function main() {
 
   while (i < transData.translations.length) {
     const trans = transData.translations[i];
-    const source = sourceMap[trans.id];
+    const japanese = typeof trans.source === 'string' ? trans.source : '';
 
     // Skip errors and empties
-    if (trans.translation === '[ERROR]' || trans.translation === '[EMPTY]' || !source) {
+    if (trans.translation === '[ERROR]' || trans.translation === '[EMPTY]' || !japanese) {
       output.translations.push(trans);
       i++;
       continue;
@@ -194,8 +186,8 @@ async function main() {
                        !trans.translation.match(/^[0-9\s\-\.]+$/);
 
     if (shouldRefine) {
-      const context = inferContext(source.sourceText);
-      const refined = await refineWithGemini(trans.translation, source.sourceText, context);
+      const context = inferContext(japanese);
+      const refined = await refineWithGemini(trans.translation, japanese, context);
       
       output.translations.push({
         ...trans,
