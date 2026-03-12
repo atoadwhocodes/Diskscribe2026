@@ -1,8 +1,12 @@
 from google import genai
 import os
 
-# 1. Setup Client (It automatically looks for GEMINI_API_KEY in your env)
-client = genai.Client(api_key="***REMOVED***")
+# 1. Setup Client from the local environment
+api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+if not api_key:
+    raise RuntimeError("Set GEMINI_API_KEY before running this script.")
+
+client = genai.Client(api_key=api_key)
 
 # 2. Define your translation task
 texts_to_translate = [
