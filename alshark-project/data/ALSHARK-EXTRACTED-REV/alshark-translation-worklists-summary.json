@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-03-10T02:05:50.101Z",
+  "generatedAt": "2026-03-11T23:34:48.558Z",
   "masterStrings": 14459,
-  "translatedStrings": 1232,
-  "cleanBacklogCount": 8938,
+  "translatedStrings": 1236,
+  "cleanBacklogCount": 8934,
   "flaggedBacklogCount": 4289,
-  "polishQueueCount": 626,
-  "fitPriorityPath": "E:\\diskscribe2026\\alshark-project\\output\\ALSHARK-PATCHED-HW-ARTIFACTS\\alshark-2026-03-10T02-05-01-540Z\\patch-fit-priority-list.json",
+  "polishQueueCount": 483,
+  "fitPriorityPath": "E:\\diskscribe2026\\alshark-project\\output\\ALSHARK-PATCHED-HW-ARTIFACTS\\alshark-2026-03-11T22-57-26-446Z\\patch-fit-priority-list.json",
   "byDisk": {
     "System": {
       "translated": 1174,
       "cleanBacklog": 3415,
       "flaggedBacklog": 606,
-      "polishQueue": 621
+      "polishQueue": 482
     },
     "Opening": {
-      "translated": 18,
-      "cleanBacklog": 592,
+      "translated": 22,
+      "cleanBacklog": 588,
       "flaggedBacklog": 470,
-      "polishQueue": 1
+      "polishQueue": 0
     },
     "Ending": {
       "translated": 14,
@@ -35,184 +35,184 @@
       "translated": 26,
       "cleanBacklog": 442,
       "flaggedBacklog": 385,
-      "polishQueue": 4
+      "polishQueue": 1
     }
   },
   "topPolish": [
     {
-      "id": "system_6cf3c",
-      "disk": "System",
-      "overflowBytes": 31,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "What do you think, do you want to look at other weapons?"
-    },
-    {
-      "id": "system_51339",
-      "disk": "System",
-      "overflowBytes": 14,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Would you like to go with me?"
-    },
-    {
-      "id": "system_645cc",
-      "disk": "System",
-      "overflowBytes": 14,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything else you need?"
-    },
-    {
-      "id": "system_5172a",
-      "disk": "System",
-      "overflowBytes": 12,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "I guess you want to go to Paris?"
-    },
-    {
-      "id": "system_6cf85",
-      "disk": "System",
-      "overflowBytes": 12,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything else you need?"
-    },
-    {
-      "id": "system_6cfa4",
-      "disk": "System",
-      "overflowBytes": 11,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything else you need?"
-    },
-    {
-      "id": "system_5cd58",
-      "disk": "System",
-      "overflowBytes": 21,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Are you leaving for the spaceport on the planet Mars?"
-    },
-    {
-      "id": "system_62f2b",
-      "disk": "System",
-      "overflowBytes": 13,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Are there any other items you need?"
-    },
-    {
-      "id": "system_534e7",
-      "disk": "System",
-      "overflowBytes": 11,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Are you looking for an informant?"
-    },
-    {
-      "id": "system_5f0d4",
-      "disk": "System",
-      "overflowBytes": 19,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Would you like to use the interstellar bus?"
-    },
-    {
-      "id": "system_5f397",
-      "disk": "System",
-      "overflowBytes": 19,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Would you like to use the interstellar bus?"
-    },
-    {
-      "id": "system_65870",
-      "disk": "System",
-      "overflowBytes": 8,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do you need something?"
-    },
-    {
-      "id": "system_7108e",
+      "id": "system_5a54d",
       "disk": "System",
       "overflowBytes": 9,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do you want information?"
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "The mastermind is Commander Geist, from the military station. I... I only did it for Kidun..."
     },
     {
-      "id": "system_63882",
+      "id": "system_71a3b",
       "disk": "System",
-      "overflowBytes": 13,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "y “Whisper _Do you need anything else?”"
+      "overflowBytes": 5,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "If you're looking for a weak spot, try Planet Poreda. Their tech is ancient."
     },
     {
-      "id": "system_5b7a5",
+      "id": "system_8181a",
       "disk": "System",
-      "overflowBytes": 6,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do you need something?"
+      "overflowBytes": 3,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Vyute is a colony world in the M861 system, same as your home planet Hom."
     },
     {
-      "id": "system_60385",
-      "disk": "System",
-      "overflowBytes": 9,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do you need anything else?"
-    },
-    {
-      "id": "system_527ac",
-      "disk": "System",
-      "overflowBytes": 6,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "What about other items?"
-    },
-    {
-      "id": "system_6cf20",
-      "disk": "System",
-      "overflowBytes": 6,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "What about other armor?"
-    },
-    {
-      "id": "system_6cf68",
-      "disk": "System",
-      "overflowBytes": 9,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything you need?"
-    },
-    {
-      "id": "system_57df9",
-      "disk": "System",
-      "overflowBytes": 6,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do you need anything else?"
-    },
-    {
-      "id": "system_57b22",
-      "disk": "System",
-      "overflowBytes": 10,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything else you need?"
-    },
-    {
-      "id": "system_60317",
-      "disk": "System",
-      "overflowBytes": 10,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Is there anything else you need?"
-    },
-    {
-      "id": "system_73516",
+      "id": "system_80d95",
       "disk": "System",
       "overflowBytes": 1,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Need anything else?"
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "But Ulyria's at war with the Zolius Empire, so no starliners from Mars."
     },
     {
-      "id": "system_6feab",
-      "disk": "System",
-      "overflowBytes": 30,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "In that case, how about I use my power to transport you close to your spaceship?"
-    },
-    {
-      "id": "system_638f9",
+      "id": "system_5ec27",
       "disk": "System",
       "overflowBytes": 4,
-      "priorityTier": "Tier 1 - Critical UI / Required Interaction",
-      "translation": "Do I need anything else?"
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Alright. I'll have Ulyria's army escort Dr. Penrose to the Mars Federation."
+    },
+    {
+      "id": "system_6b866",
+      "disk": "System",
+      "overflowBytes": 5,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Mars military? Deserters looking for merc work, I'd guess. Whatever. Let 'em in."
+    },
+    {
+      "id": "system_5ffb5",
+      "disk": "System",
+      "overflowBytes": 5,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "The Mars system is well-colonized. You'll find a lot of beautiful worlds here."
+    },
+    {
+      "id": "visual_4258",
+      "disk": "Visual",
+      "overflowBytes": 3,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "No use, Sion! A nuke couldn't scratch this door. And the jerk locked it from the inside!"
+    },
+    {
+      "id": "system_60de9",
+      "disk": "System",
+      "overflowBytes": 2,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "We-Dumnah's Orb flashed! His hands were suddenly sheathed in platinum light!"
+    },
+    {
+      "id": "system_53642",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "The woman you're looking for? Word is she went to the spaceport. Probably on a ship to Mars."
+    },
+    {
+      "id": "system_6f8cf",
+      "disk": "System",
+      "overflowBytes": 3,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Their pursuit was relentless. In the end, only We-Dumnah's colony ship escaped."
+    },
+    {
+      "id": "system_67b4f",
+      "disk": "System",
+      "overflowBytes": 3,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "In the planet's central lake are two islands: larger Koris, and smaller Zaizaru."
+    },
+    {
+      "id": "system_767e3",
+      "disk": "System",
+      "overflowBytes": 6,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "You won't make it running. Take my private elevator! You can reach your ship in under a minute."
+    },
+    {
+      "id": "system_565d8",
+      "disk": "System",
+      "overflowBytes": 17,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "As they approached, the mummy spoke. \"To my successor... A sky-faring ship is hidden at the pole of Yosnu. There, my friend We-Dumnah's coffin lies.\""
+    },
+    {
+      "id": "system_73781",
+      "disk": "System",
+      "overflowBytes": 15,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Psst, listen. In the Zolius fortress Barbas, a bridge blocks the path. You'll have to find a hidden switch inside to get it down."
+    },
+    {
+      "id": "system_7fbf8",
+      "disk": "System",
+      "overflowBytes": 2,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "We've got the orb, but we're at a dead end. We should report back to King Eele-Kose."
+    },
+    {
+      "id": "system_6171e",
+      "disk": "System",
+      "overflowBytes": 10,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "A Martian, eh? You're a long way from home. Here's a tip: Prince Zate of Tirus is looking for some hired muscle. The pay's supposed to be great."
+    },
+    {
+      "id": "system_6f485",
+      "disk": "System",
+      "overflowBytes": 4,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "But something was different. The vision I saw when I touched We-Dumnah's coffin... it's all coming back."
+    },
+    {
+      "id": "system_739cd",
+      "disk": "System",
+      "overflowBytes": 25,
+      "priorityTier": "Tier 3 - Core Gameplay / System Explanation",
+      "translation": "Would you like to receive the empire's secret weapon?"
+    },
+    {
+      "id": "system_5f694",
+      "disk": "System",
+      "overflowBytes": 5,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "Planet Juke? It's an ice world, just recently settled. Most of it's a frozen wasteland, 'cept for a few green zones."
+    },
+    {
+      "id": "system_698fe",
+      "disk": "System",
+      "overflowBytes": 4,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "\"I won't let you kill King Eele-Kose!\" The knight drew his Raysword, his armor glinting from beneath a swirling cape."
+    },
+    {
+      "id": "system_5550a",
+      "disk": "System",
+      "overflowBytes": 1,
+      "priorityTier": "Tier 2 - Critical Progression / Mandatory Scene",
+      "translation": "My apologies. Your fathers were an obstacle to my great mission. I had no choice. Their lives were a small price to pay..."
+    },
+    {
+      "id": "system_55b01",
+      "disk": "System",
+      "overflowBytes": 19,
+      "priorityTier": "Tier 3 - Core Gameplay / System Explanation",
+      "translation": "Punched out the arm of the Ass soldier."
+    },
+    {
+      "id": "system_69d7c",
+      "disk": "System",
+      "overflowBytes": 7,
+      "priorityTier": "Tier 3 - Core Gameplay / System Explanation",
+      "translation": "I threw away my weapon."
+    },
+    {
+      "id": "system_718bd",
+      "disk": "System",
+      "overflowBytes": 38,
+      "priorityTier": "Tier 3 - Core Gameplay / System Explanation",
+      "translation": "I'll give you information about the Imperial Army's new weapon development."
     }
   ]
 }

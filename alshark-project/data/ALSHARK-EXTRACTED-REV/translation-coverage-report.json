@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-03-10T02:05:41.572Z",
+  "generatedAt": "2026-03-12T09:23:04.646Z",
   "masterStrings": 14459,
   "cleanStrings": 10154,
   "flaggedStrings": 4305,
-  "translatedRows": 1232,
-  "exactCleanMatches": 1216,
+  "translatedRows": 1236,
+  "exactCleanMatches": 1220,
   "excludedFromCleanCount": 16,
   "cleanMappedTranslated": 1219,
   "fullCsvRows": 14459,
   "fullCsvTranslatedRows": 1232,
-  "translationsJsonRows": 1232,
+  "translationsJsonRows": 1236,
   "excludedFromClean": [
     {
       "id": "system_3d7d",

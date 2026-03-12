@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-03-10T02:05:50.101Z",
+  "generatedAt": "2026-03-11T23:34:48.558Z",
   "game": "Alshark",
   "category": "clean-untranslated",
-  "count": 8938,
+  "count": 8934,
   "strings": [
     {
       "id": "system_61c85",
@@ -31136,24 +31136,6 @@
       "category": "clean-untranslated"
     },
     {
-      "id": "opening_2863",
-      "disk": "Opening",
-      "offset": 10339,
-      "offsetHex": "0x2863",
-      "maxBytes": 54,
-      "sourceText": "ディスクを@１ドライブに入れて@何かキーを押してください",
-      "category": "clean-untranslated"
-    },
-    {
-      "id": "opening_28a6",
-      "disk": "Opening",
-      "offset": 10406,
-      "offsetHex": "0x28a6",
-      "maxBytes": 90,
-      "sourceText": "ディスクを１ドライブに@　　　　　　ディスクを１ドライブに@入れて、何かキーを押してください",
-      "category": "clean-untranslated"
-    },
-    {
       "id": "opening_46d9",
       "disk": "Opening",
       "offset": 18137,
@@ -31847,15 +31829,6 @@
       "category": "clean-untranslated"
     },
     {
-      "id": "opening_2816",
-      "disk": "Opening",
-      "offset": 10262,
-      "offsetHex": "0x2816",
-      "maxBytes": 12,
-      "sourceText": "システム::::",
-      "category": "clean-untranslated"
-    },
-    {
       "id": "opening_284a",
       "disk": "Opening",
       "offset": 10314,
@@ -32294,15 +32267,6 @@
       "offsetHex": "0x0",
       "maxBytes": 8,
       "sourceText": "己借厲ﾐｼ",
-      "category": "clean-untranslated"
-    },
-    {
-      "id": "opening_2823",
-      "disk": "Opening",
-      "offset": 10275,
-      "offsetHex": "0x2823",
-      "maxBytes": 12,
-      "sourceText": "データ::::::",
       "category": "clean-untranslated"
     },
     {

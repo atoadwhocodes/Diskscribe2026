@@ -236,7 +236,8 @@
       "offset": 339492,
       "maxBytes": 74,
       "source": "アルバイトで在庫整理ﾔｯﾃﾝだｹど、１人じｬ大変で・・・。0@ｿｳだ、手伝ｯﾃﾐﾅｲ？0#Y",
-      "translation": "I'm trying to sort the inventory, but I'm totally swamped... Hey, wanna help?"
+      "translation": "I'm trying to sort the inventory, but I'm totally swamped... Hey, wanna help?",
+      "patchText": "I'm sorting inventory, but I'm swamped... Wanna help?"
     },
     {
       "id": "system_53642",
@@ -268,7 +269,8 @@
       "offset": 343719,
       "maxBytes": 82,
       "source": "三ﾂ葉ﾉ紋章ｶ。@ｺｲﾂﾊﾁｮｯﾄ高ｲぜ。@手ﾆｲﾚﾙﾉが大変だｶﾗﾅ。0_１２００クレジットでどｳだ？0#Y",
-      "translation": "The three-leaf crest... That's a rare one, and tough to get. It'll cost you. 1200 CREDIT?"
+      "translation": "The three-leaf crest... That's a rare one, and tough to get. It'll cost you. 1200 CREDIT?",
+      "patchText": "Three-leaf crest... Rare stuff. 1200 CREDIT?"
     },
     {
       "id": "system_54c4f",
@@ -276,7 +278,8 @@
       "offset": 347215,
       "maxBytes": 72,
       "source": "航行不能状態ﾉ民間航宙6艇だｯﾀ。@6ｿｼﾃ、ｿﾉ影ﾆ隠ﾚﾙﾖｳﾆ@6ｼﾃ接舷ｼﾃｲﾀﾉﾊ‥‥‥0#Z",
-      "translation": "A civilian ship, dead in the water. And using it for cover, another ship..."
+      "translation": "A civilian ship, dead in the water. And using it for cover, another ship...",
+      "patchText": "It was a crippled civilian ship. Another vessel hid behind it..."
     },
     {
       "id": "system_550f8",
@@ -388,7 +391,8 @@
       "offset": 367557,
       "maxBytes": 70,
       "source": "ラッセルガイヤｰﾉ@航路が割ﾘ出ｾﾀぞ！@急ｲで、アトライアﾆ引ｷ上げﾙﾝじｬｨ！#S",
-      "translation": "I've got the Russelgaia's flight path! Get back to the Atlia on the double!"
+      "translation": "I've got the Russelgaia's flight path! Get back to the Atlia on the double!",
+      "patchText": "I found Russelgaia's route! Hurry back to Atlia!"
     },
     {
       "id": "system_5b067",
@@ -508,7 +512,8 @@
       "offset": 388325,
       "maxBytes": 76,
       "source": "私ﾊ、マｰズ連邦ﾆ戻ｯﾃ、@連邦軍ﾉ頭ﾉ固ｲ連中ｦ相手ﾆ、協力ｼﾃｸﾚﾙﾖｳﾆ説得ｼﾃ@ﾐﾏｼｮｳ。0#K",
-      "translation": "I'll head back to the Mars Federation. I'll try to reason with those military stiffs."
+      "translation": "I'll head back to the Mars Federation. I'll try to reason with those military stiffs.",
+      "patchText": "I'll return to Mars Federation and try to sway those hardhead officers."
     },
     {
       "id": "system_5eef8",
@@ -644,7 +649,8 @@
       "offset": 414580,
       "maxBytes": 66,
       "source": "方ﾉ持ｯﾃｲﾙ@三ﾂ葉ﾉ紋章ﾊ、サｰトス老師がドゥムナ老師ﾆ贈ﾗﾚﾀﾓﾉﾅﾉでｽ。0#P",
-      "translation": "That three-leaf crest was a gift from Master Sartos to We-Dumnah."
+      "translation": "That three-leaf crest was a gift from Master Sartos to We-Dumnah.",
+      "patchText": "That three-leaf crest was Sartos's gift to We-Dumnah."
     },
     {
       "id": "system_6593d",
@@ -788,7 +794,8 @@
       "offset": 427256,
       "maxBytes": 69,
       "source": "王ﾊ、何ｦｵ考ｴﾅﾉｶゾリアスﾄ開戦ｼﾃｵｷﾅがﾗ、兵ｦ押ｼ進ﾒﾖｳﾄｾず、@防戦一方。0#P",
-      "translation": "What is the king thinking? We're at war with Zolius, yet we only defend."
+      "translation": "What is the king thinking? We're at war with Zolius, yet we only defend.",
+      "patchText": "Why does the king only defend when we're at war with Zolius?"
     },
     {
       "id": "system_68542",
@@ -876,7 +883,8 @@
       "offset": 438496,
       "maxBytes": 76,
       "source": "武器屋5ゾリアスﾄ戦端が開ｶﾚﾃｶﾗ、ｺﾉ星ﾆﾓ、奴ﾗﾉ殺人兵器が@大量ﾆ送ﾘ込ﾏﾚﾃｷﾃｲﾙ。0#G",
-      "translation": "Weapon Shop: Since the war with Zolius broke out, their weapons are all over."
+      "translation": "Weapon Shop: Since the war with Zolius broke out, their weapons are all over.",
+      "patchText": "Weapon Shop: Since war broke out, Zolius weapons flood this world."
     },
     {
       "id": "system_6b136",
@@ -916,7 +924,8 @@
       "offset": 444153,
       "maxBytes": 75,
       "source": "イｰル様ﾉｵ側ﾆ仕ｴﾃｲﾙ@デュｰク・ギｰデル様ﾊ、@ウュリア人ﾆﾊ珍ｼｲ赤毛ｦ@ﾅｻｯﾃﾏｽﾉ。0#P",
-      "translation": "Duke Giedel, who serves King Eele-Kose, has red hair--a rarity among Ulyrians."
+      "translation": "Duke Giedel, who serves King Eele-Kose, has red hair--a rarity among Ulyrians.",
+      "patchText": "Duke Giedel serves King Eele-Kose and bears rare red hair."
     },
     {
       "id": "system_6d836",
@@ -940,7 +949,8 @@
       "offset": 451862,
       "maxBytes": 90,
       "source": "王ﾊ、慈悲深ｲｵ方だ。0_4$\n5ｺﾚでｵﾏｴ達ﾉ罪ｦ許ｽばｶﾘでﾊﾅｸ、約束通ﾘ、望ﾐｦ@ｶﾅｴﾃﾔﾛｳﾄｵｯｼｬｯﾃ@ｵﾗﾚﾙ。0#Z",
-      "translation": "The King is merciful. Not only are your crimes forgiven, but he will grant your wish as promised."
+      "translation": "The King is merciful. Not only are your crimes forgiven, but he will grant your wish as promised.",
+      "patchText": "The King is merciful. Your crimes are forgiven, and he'll grant your wish."
     },
     {
       "id": "system_6f127",
@@ -1260,7 +1270,8 @@
       "offset": 481894,
       "maxBytes": 68,
       "source": "コｰリスﾉ塔ﾉ最上階で、@6トレジャｰボックスｦ見ﾂｹﾀ。0_3月ﾉ光6ｦ手ﾆｲﾚﾀ。#S",
-      "translation": "Atop Coris Tower, you found a treasure chest. Inside was Moonlight!"
+      "translation": "Atop Coris Tower, you found a treasure chest. Inside was Moonlight!",
+      "patchText": "At Coris Tower's top, you found Moonlight in a chest!"
     },
     {
       "id": "system_78320",
@@ -1332,7 +1343,8 @@
       "offset": 347029,
       "maxBytes": 56,
       "source": "が、操縦席ﾆ腰ｶｹﾙﾄ@6同時ﾆ、艦内ﾉ警報がｹﾀﾀﾏｼ6ｸ鳴ﾘ響ｲﾀ。0#Z",
-      "translation": "The moment he sat down, alarms screamed through the ship."
+      "translation": "The moment he sat down, alarms screamed through the ship.",
+      "patchText": "He sat down, and alarms blared through the ship."
     },
     {
       "id": "system_56e1f",
@@ -1356,7 +1368,8 @@
       "offset": 377242,
       "maxBytes": 58,
       "source": "が握手ｽﾙﾄ、若々ｼｲ@6司令官ﾊ、ﾆｺﾘﾄ微笑ﾝで、@6世辞ｦ述べﾀ。0#P",
-      "translation": "The young commander smiled warmly and offered a compliment."
+      "translation": "The young commander smiled warmly and offered a compliment.",
+      "patchText": "The young commander smiled and praised him."
     },
     {
       "id": "system_60ef4",
@@ -1444,7 +1457,8 @@
       "offset": 520283,
       "maxBytes": 73,
       "source": "だがﾅｧ、一ﾂだｹﾂｹ加ｴｻｼﾃﾓﾗｳﾄﾅｧ。0@アトライアﾊ、盗ﾑﾝじｬﾈｪ。返ｼﾃﾓﾗｳﾝだﾖ！！#S",
-      "translation": "Let me get one thing straight... I'm not stealing the Atlia. I'm taking it back"
+      "translation": "Let me get one thing straight... I'm not stealing the Atlia. I'm taking it back",
+      "patchText": "One thing clear: I'm not stealing Atlia. I'm taking it back!"
     },
     {
       "id": "system_839d7",
@@ -1500,7 +1514,8 @@
       "offset": 442585,
       "maxBytes": 37,
       "source": "防具ﾉ専門店だ。@品ぞﾛｴが自慢だぜ！0#G",
-      "translation": "Armor Shop. We've got the best gear!"
+      "translation": "Armor Shop. We've got the best gear!",
+      "patchText": "Armor Shop. Best gear around!"
     },
     {
       "id": "system_6f70f",
@@ -1516,7 +1531,8 @@
       "offset": 479652,
       "maxBytes": 53,
       "source": "ウェポンショップ5ｻｱｻｱ、ｵ立ﾁ会ｲ！@見ﾃ驚ｸﾝじｬﾈｪﾖ！！0#L",
-      "translation": "Weapon Shop! Step right up! You won't believe your eyes!"
+      "translation": "Weapon Shop! Step right up! You won't believe your eyes!",
+      "patchText": "Weapon Shop! Step right up! Feast your eyes!"
     },
     {
       "id": "system_752b3",
@@ -1540,7 +1556,8 @@
       "offset": 484699,
       "maxBytes": 47,
       "source": "ヒｰト中将5貴様ｧｰｯ！！@総統閣下ｦ愚弄ｽﾙ気ｶ？！0#V",
-      "translation": "You cur! You dare insult the Supreme Commander?!"
+      "translation": "You cur! You dare insult the Supreme Commander?!",
+      "patchText": "Cur! You insult the Supreme Commander?!"
     },
     {
       "id": "system_771e2",
@@ -1572,7 +1589,8 @@
       "offset": 350081,
       "maxBytes": 56,
       "source": "突然、激ｼｲ音ﾄﾄﾓﾆ船体が@6揺ﾚ、ｿｺﾆｲﾀｽべﾃﾉ者達が6ﾖﾛﾒｲﾀ。0#V",
-      "translation": "A sudden blast rocked the ship, sending everyone stumbling."
+      "translation": "A sudden blast rocked the ship, sending everyone stumbling.",
+      "patchText": "A sudden blast rocked the ship. Everyone staggered."
     },
     {
       "id": "system_56a17",
@@ -1708,7 +1726,8 @@
       "offset": 334807,
       "maxBytes": 54,
       "source": "仕方ﾅｲﾜﾈ。@じｬｱ、私ﾊホテルで待ｯﾃﾙｶﾗ、ｼｯｶﾘ稼ｲでｷﾃﾈ。0#K",
-      "translation": "Fine. I'll wait at the hotel. You'd better earn a lot!"
+      "translation": "Fine. I'll wait at the hotel. You'd better earn a lot!",
+      "patchText": "Fine. I'll wait at the hotel. Earn plenty!"
     },
     {
       "id": "system_52d0e",
@@ -1740,7 +1759,8 @@
       "offset": 378854,
       "maxBytes": 45,
       "source": "任務が入ｯﾀﾗｼｲ。@司令官ﾉ個室ﾆ来ﾃｸﾚﾄｲｳｺﾄだ。0#N",
-      "translation": "New mission. Report to the Commander's room."
+      "translation": "New mission. Report to the Commander's room.",
+      "patchText": "New mission. To the commander's room."
     },
     {
       "id": "system_5c928",
@@ -1796,7 +1816,8 @@
       "offset": 442793,
       "maxBytes": 38,
       "source": "で売ﾗﾚﾃｲﾙﾉﾊ、@宇宙戦闘用ﾉ装備だぜ。0#G",
-      "translation": "This shop's got gear for space battles."
+      "translation": "This shop's got gear for space battles.",
+      "patchText": "We sell gear for space fights."
     },
     {
       "id": "system_6d5d4",
@@ -1820,7 +1841,8 @@
       "offset": 459828,
       "maxBytes": 43,
       "source": "ドックﾆｺﾓｯﾃ、@6アトライアﾉ修理ｦ始ﾒﾀ。!!!0#X",
-      "translation": "He holed up in the dock to fix the Atlia!!"
+      "translation": "He holed up in the dock to fix the Atlia!!",
+      "patchText": "Holed up in the dock, fixing Atlia!!"
     },
     {
       "id": "system_73946",
@@ -1972,7 +1994,8 @@
       "offset": 461253,
       "maxBytes": 48,
       "source": "がｱﾉ‥‥@0ノｰザンﾉ砦で名前ﾊﾖｸ聞ｲﾃﾙｶﾗ知ｯﾃｲﾙﾖ。0#P",
-      "translation": "Hey... I know that name. They talk about you at Northern Fort."
+      "translation": "Hey... I know that name. They talk about you at Northern Fort.",
+      "patchText": "I know that name. Heard it at Northern Fort."
     },
     {
       "id": "system_535c2",
@@ -1980,7 +2003,8 @@
       "offset": 341442,
       "maxBytes": 55,
       "source": "世ﾉ中、何でﾓ金ﾖ！！@ﾀだｯﾃｪﾉﾊ、頂ｹﾈｪﾅ。0@@43金ｦ払ｳｶ？0#Y",
-      "translation": "In this world, cash is king! I don't work for free. Pay up?"
+      "translation": "In this world, cash is king! I don't work for free. Pay up?",
+      "patchText": "Money rules the world. Pay up?"
     },
     {
       "id": "system_5b603",
@@ -2148,7 +2172,8 @@
       "offset": 336890,
       "maxBytes": 47,
       "source": "最近、手相ﾆｺｯﾄﾙﾝぢｬ。0@ｵﾏｴｻﾝﾉ未来ｦ占ｯﾃﾔﾛｳｶ？0#Y",
-      "translation": "I've been reading palms. Care to see your future?"
+      "translation": "I've been reading palms. Care to see your future?",
+      "patchText": "I've taken up palmistry. Want a reading?"
     },
     {
       "id": "system_52cbb",
@@ -2172,7 +2197,8 @@
       "offset": 354003,
       "maxBytes": 31,
       "source": "ドゥムナﾉマント6ｦ@6身ﾆﾏﾄｯﾀ。0#N",
-      "translation": "You equipped We-Dumnah's Mantle."
+      "translation": "You equipped We-Dumnah's Mantle.",
+      "patchText": "Equipped We-Dumnah's Mantle."
     },
     {
       "id": "system_56787",
@@ -2196,7 +2222,8 @@
       "offset": 406888,
       "maxBytes": 38,
       "source": "でﾊ、マｰズ連邦ﾉ@歴史ﾆﾂｲﾃｵ教ｴｼﾏｼｮｳ。0#P",
-      "translation": "Let me teach you of the Mars Federation."
+      "translation": "Let me teach you of the Mars Federation.",
+      "patchText": "Let me tell you Mars history."
     },
     {
       "id": "system_637a8",
@@ -2228,7 +2255,8 @@
       "offset": 430018,
       "maxBytes": 32,
       "source": "達ﾊ、ウュリア王宮ﾆ戻ﾙ6ｺﾄﾆﾅﾙ。0#N",
-      "translation": "We must return to Ulyria Palace."
+      "translation": "We must return to Ulyria Palace.",
+      "patchText": "Back to Ulyria Palace."
     },
     {
       "id": "system_6a7c4",
@@ -2284,7 +2312,8 @@
       "offset": 457515,
       "maxBytes": 27,
       "source": "ドゥムナﾉ宝珠ｦ受ｹ6取ｯﾀ。0#P",
-      "translation": "Received the Orb of Dumnah."
+      "translation": "Received the Orb of Dumnah.",
+      "patchText": "Got Dumnah's Orb."
     },
     {
       "id": "system_71c55",
@@ -2420,7 +2449,8 @@
       "offset": 446981,
       "maxBytes": 36,
       "source": "ギｰデルﾉ奴ﾒ。@ｳﾏｲｺﾄ、王ﾆ取ﾘ入ﾘｵｯﾃ0#P",
-      "translation": "Giedel, that snake. He's charmed the King."
+      "translation": "Giedel, that snake. He's charmed the King.",
+      "patchText": "Giedel's won over the king."
     },
     {
       "id": "system_6f185",
@@ -2436,7 +2466,8 @@
       "offset": 463245,
       "maxBytes": 30,
       "source": "地獄ﾉ沙汰ﾓ金ｼだｲｯﾃｲｳ@でｼｮ。0#P",
-      "translation": "It's all about the CREDIT, right?"
+      "translation": "It's all about the CREDIT, right?",
+      "patchText": "Money talks, right?"
     },
     {
       "id": "system_7127f",
@@ -2444,7 +2475,8 @@
       "offset": 463487,
       "maxBytes": 30,
       "source": "で、通路ﾊ全部、調べﾃ@ﾐﾀｶｨ？0#Y",
-      "translation": "So, checked all the passages?"
+      "translation": "So, checked all the passages?",
+      "patchText": "Checked every passage?"
     },
     {
       "id": "system_7322c",
@@ -2452,7 +2484,8 @@
       "offset": 471596,
       "maxBytes": 32,
       "source": "達ﾊ、アトライアﾍ戻ﾙ@6ｼｶﾅｶｯﾀ。0#M",
-      "translation": "We had to get back to the Atlia."
+      "translation": "We had to get back to the Atlia.",
+      "patchText": "We had to return to Atlia."
     },
     {
       "id": "system_56de7",
@@ -2460,7 +2493,8 @@
       "offset": 355815,
       "maxBytes": 37,
       "source": "ど。@ｺｺでﾅﾗ、ｿﾉ航路が分ｶﾙﾄｲｳﾜｹｶｨ。0#P",
-      "translation": "So, we can find the flight path here?"
+      "translation": "So, we can find the flight path here?",
+      "patchText": "So we can find the route here?"
     },
     {
       "id": "system_5a4e7",
@@ -2532,7 +2566,8 @@
       "offset": 458857,
       "maxBytes": 38,
       "source": "イｰル様ｶﾗ直々ﾆｱﾅﾀ方ﾉ@ｺﾄﾊ聞ｲﾃｵﾘﾏｽﾖ。0#P",
-      "translation": "King Eele-Kose himself told me of you."
+      "translation": "King Eele-Kose himself told me of you.",
+      "patchText": "King Eele-Kose told me of you."
     },
     {
       "id": "system_716fb",
@@ -2604,7 +2639,8 @@
       "offset": 357210,
       "maxBytes": 52,
       "source": "ＡＲＭＥＤ5ｲﾗｯｼｬｲ。@気ﾆ入ｯﾀ物がｱｯﾀﾗ、@買ｯﾃｲｯﾃｸﾚ。0#G",
-      "translation": "ARMED: Welcome. If you see something you like, buy it."
+      "translation": "ARMED: Welcome. If you see something you like, buy it.",
+      "patchText": "ARMED: Welcome. See something you like? Buy it."
     },
     {
       "id": "system_57bdf",
@@ -2812,7 +2848,8 @@
       "offset": 418787,
       "maxBytes": 23,
       "source": "メンバｰ6ｶﾗ外ｻﾚﾃｼﾏｳ。0#K",
-      "translation": "Removed from the party."
+      "translation": "Removed from the party.",
+      "patchText": "Removed from party."
     },
     {
       "id": "system_68601",
@@ -3028,7 +3065,8 @@
       "offset": 345953,
       "maxBytes": 69,
       "source": "でｪじｮｳぶだｯﾃ。@俺ﾉ造ｯﾀ船だｶﾗﾅ。@ﾏｱ、マｰズ連邦でｺﾚ以上ﾉﾊ望ﾒﾈｪぜ。0_4$",
-      "translation": "Relax, I built her. Best ship in the whole Mars Federation, guaranteed."
+      "translation": "Relax, I built her. Best ship in the whole Mars Federation, guaranteed.",
+      "patchText": "Relax. I built her. Best ship Mars can offer."
     },
     {
       "id": "system_547bb",
@@ -3324,7 +3362,8 @@
       "offset": 379767,
       "maxBytes": 61,
       "source": "だが・・0ｻﾃ、ｻｯｿｸで申ｼ訳ﾅｲﾉだが、惑星ビュｰトﾍ向ｶｯﾃﾓﾗｲﾀｲ。0_4$",
-      "translation": "But... Sorry, no time to rest. I need you to go to Planet Bute."
+      "translation": "But... Sorry, no time to rest. I need you to go to Planet Bute.",
+      "patchText": "Sorry, no time to rest. Head for Planet Bute."
     },
     {
       "id": "system_5d33e",
@@ -3396,7 +3435,8 @@
       "offset": 388411,
       "maxBytes": 76,
       "source": "ペンロｰズ博士ﾊ、@6ウュリアﾉ兵士達ﾆ護送ｻﾚﾃ@6マｰズ連邦ﾍ戻ｯﾃｲｯﾀ。0_4$\n5ﾄｺﾛで、$",
-      "translation": "Dr. Penrose has returned to the Mars Federation under Ulyrian guard. Anyway..."
+      "translation": "Dr. Penrose has returned to the Mars Federation under Ulyrian guard. Anyway...",
+      "patchText": "Dr. Penrose was escorted back to the Mars Federation. Anyway..."
     },
     {
       "id": "system_5ed8b",
@@ -3500,7 +3540,8 @@
       "offset": 399445,
       "maxBytes": 70,
       "source": "ゾリアス兵ｦ君達が追ｲ払ｯﾃｸﾚﾀﾉｶ。@ｲﾔ、ｱﾘがﾄｳ。@ｺﾚで、町ﾆ戻ﾙｺﾄがでｷﾙ。0?C",
-      "translation": "You got rid of those Zolius troops? Thanks! We can finally return to town."
+      "translation": "You got rid of those Zolius troops? Thanks! We can finally return to town.",
+      "patchText": "You drove off the Zolius troops? Thanks. We can return to town."
     },
     {
       "id": "system_624f3",
@@ -3548,7 +3589,8 @@
       "offset": 408228,
       "maxBytes": 69,
       "source": "最ﾓ優秀ﾅ民族でｱﾙゾリアス人ﾉ血ｦ引ｷﾅがﾗ、マｰズﾔ@ウュリアﾉﾀﾒﾆ戦ｯﾃﾊ。0_4$",
-      "translation": "You carry the blood of the Zolius, yet you side with Mars and Ulyria."
+      "translation": "You carry the blood of the Zolius, yet you side with Mars and Ulyria.",
+      "patchText": "You bear Zolius blood, yet fight for Mars and Ulyria."
     },
     {
       "id": "system_63de2",
@@ -3900,7 +3942,8 @@
       "offset": 452244,
       "maxBytes": 65,
       "source": "彼が、ドゥムナﾉ意志ｦ継ぐ者@ﾅﾉでｽ。@ｿﾉ身ﾆﾏﾄｲｼマントが、@ｿﾉ証。0_4$",
-      "translation": "He is the heir to We-Dumnah's will. The mantle he wears is proof."
+      "translation": "He is the heir to We-Dumnah's will. The mantle he wears is proof.",
+      "patchText": "He is Dumnah's heir. That mantle proves it."
     },
     {
       "id": "system_6e858",
@@ -3908,7 +3951,8 @@
       "offset": 452696,
       "maxBytes": 71,
       "source": "ウュルトリアﾉ補給ステｰションﾆ連絡ｦｲﾚﾃｵｸ。@航宙艦ﾉ整備ﾆでﾓ使ｳが良ｲ。0_4$",
-      "translation": "I'll let the Ulyrian supply station know you're coming. Get your ship fixed."
+      "translation": "I'll let the Ulyrian supply station know you're coming. Get your ship fixed.",
+      "patchText": "I'll notify the Ulyrian supply station. Get your ship fixed."
     },
     {
       "id": "system_6ea28",
@@ -3956,7 +4000,8 @@
       "offset": 457073,
       "maxBytes": 72,
       "source": "長ｷﾆﾜﾀﾙ抵抗ﾓﾑﾅｼｸ、@惑星ラルアﾊ陥落ｼ、カｰマﾉ@勢力ﾊ、一気ﾆ拡大ｼﾀﾉでｽ。0_4$",
-      "translation": "Our long resistance was futile. The planet fell, and their empire grew."
+      "translation": "Our long resistance was futile. The planet fell, and their empire grew.",
+      "patchText": "Our long stand failed. Ralua fell, and Karma's power surged."
     },
     {
       "id": "system_70685",
@@ -4212,7 +4257,8 @@
       "offset": 508607,
       "maxBytes": 79,
       "source": "実ﾊﾅｧ。@以前、惑星ヨスヌﾉ兵器工場ｦ@襲ｯﾀﾄｷﾆ、例ﾉケブレス砲ﾉデｰタｦ頂ｲﾃｷﾀﾝだ。0_4$",
-      "translation": "Remember that raid on the Yosnu weapons factory? I swiped the data for their cannon."
+      "translation": "Remember that raid on the Yosnu weapons factory? I swiped the data for their cannon.",
+      "patchText": "I stole the Kebres cannon data in the Yosnu factory raid."
     },
     {
       "id": "system_7c7bd",
@@ -4228,7 +4274,8 @@
       "offset": 510801,
       "maxBytes": 54,
       "source": "で来ﾀﾜﾈ。@でﾓ、油断ｼﾅｲでﾈ。@相手ﾊ、ゾリアス帝国ﾉ総帥@$",
-      "translation": "You're here. Be careful. You face the Zolius Commander."
+      "translation": "You're here. Be careful. You face the Zolius Commander.",
+      "patchText": "You're here. Be careful. It's Zolius's commander."
     },
     {
       "id": "system_7d09a",
@@ -4260,7 +4307,8 @@
       "offset": 514952,
       "maxBytes": 63,
       "source": "次ﾊ、惑星サチﾈ。@帝国ﾉ開発ｼﾀ新型エンジンｦ@手ﾆ入ﾚﾆ行ｸﾝでｼｮ。0_4$",
-      "translation": "Next up: Planet Sachi. We're there for the Empire's new engine, right?"
+      "translation": "Next up: Planet Sachi. We're there for the Empire's new engine, right?",
+      "patchText": "Next is Sachi. We're after the Empire's new engine, right?"
     },
     {
       "id": "system_7dd7e",
@@ -4268,7 +4316,8 @@
       "offset": 515454,
       "maxBytes": 56,
       "source": "徹底的ﾆ帝国ﾉ@施設ｦ叩ｲﾃﾔﾙ！@ﾏずﾊ、惑星ヨスヌｦ攻ﾒﾙぞ！0_4$",
-      "translation": "We'll crush every Imperial facility! First, we hit Yosnu!"
+      "translation": "We'll crush every Imperial facility! First, we hit Yosnu!",
+      "patchText": "We'll smash every Imperial base! First up: Yosnu!"
     },
     {
       "id": "system_7df3f",
@@ -4292,7 +4341,8 @@
       "offset": 517080,
       "maxBytes": 63,
       "source": "母ﾉ名ﾊ、ファラ。@私ｦ惑星マｰズﾉ片田舎ﾉ病院で産ﾐ落ﾄｼ、死ﾝだ。0_4$",
-      "translation": "My mother, Fara, died when I was born. In some backwater Mars hospital."
+      "translation": "My mother, Fara, died when I was born. In some backwater Mars hospital.",
+      "patchText": "My mother, Fara, died in some backwater Mars hospital."
     },
     {
       "id": "system_7e4d8",
@@ -4348,7 +4398,8 @@
       "offset": 520583,
       "maxBytes": 63,
       "source": "俺が、見張ﾘｦ殴ﾘ飛ばｽｶﾗ、ｿﾉ隙ﾆ、一気ﾆアトライアﾍ@乗ﾘ込ﾑﾝだ。0_4$",
-      "translation": "I'll deck the guard. That's your cue to make a break for the Atlia."
+      "translation": "I'll deck the guard. That's your cue to make a break for the Atlia.",
+      "patchText": "I'll slug the guard. Then make for Atlia."
     },
     {
       "id": "system_7f403",
@@ -4372,7 +4423,8 @@
       "offset": 522289,
       "maxBytes": 71,
       "source": "惑星ヒュリスﾈｪ‥‥0@ﾓｳ迷ｳﾉﾊｲﾔだｶﾗ、@ハンドサテライトｦﾀｯｸｻﾝ@買ｯﾃｷﾏｼｮｳﾈ。",
-      "translation": "Planet Hyulis... I don't want to get lost. Let's buy lots of Hand Satellites."
+      "translation": "Planet Hyulis... I don't want to get lost. Let's buy lots of Hand Satellites.",
+      "patchText": "Planet Hyulis... Let's buy Hand Satellites so we don't get lost."
     },
     {
       "id": "system_80558",
@@ -4460,7 +4512,8 @@
       "offset": 532202,
       "maxBytes": 61,
       "source": "ラシャ大陸ﾉベギｰﾉ町ﾆ、@ドゥムナﾉｺﾄﾆ詳ｼｲ歴史学者がｲﾙﾗｼｲﾜ。0_4$",
-      "translation": "I heard there's a historian in Beggy who knows about We-Dumnah."
+      "translation": "I heard there's a historian in Beggy who knows about We-Dumnah.",
+      "patchText": "There's a historian in Beggy who knows We-Dumnah."
     },
     {
       "id": "system_830b9",
@@ -4532,7 +4585,8 @@
       "offset": 347315,
       "maxBytes": 52,
       "source": "ジョｰｵじｻﾝ！@ｱﾚﾊ、父ｻﾝ達ｦ殺ｼﾀゾリアス兵達ﾉ船だ。0_4$",
-      "translation": "Uncle Joe! That Zolius ship... they killed my father!"
+      "translation": "Uncle Joe! That Zolius ship... they killed my father!",
+      "patchText": "Uncle Joe! That Zolius ship killed my father!"
     },
     {
       "id": "system_55f08",
@@ -4556,7 +4610,8 @@
       "offset": 396573,
       "maxBytes": 58,
       "source": "達ﾊ、カｰマｦ打ﾁ倒ｼﾀ6ｶﾆ見ｴﾀ。0_6ｼｶｼ、ドゥムナﾉ宝珠ﾉ加護ﾉ6ﾅｲ$",
-      "translation": "It seemed Karma was beaten. But without We-Dumnah's Orb..."
+      "translation": "It seemed Karma was beaten. But without We-Dumnah's Orb...",
+      "patchText": "Karma seemed beaten. But without Dumnah's Orb..."
     },
     {
       "id": "system_62d9a",
@@ -4652,7 +4707,8 @@
       "offset": 482570,
       "maxBytes": 58,
       "source": "手ｦﾂｹﾙﾉﾊアトライアﾆ戻ｯﾃｶﾗだﾅ。0_3ザイザｰ原石6ｦ手ﾆｲﾚﾀ。0_4$",
-      "translation": "Let's work on this back on the Atlia. Got 6 Zaiser Ore."
+      "translation": "Let's work on this back on the Atlia. Got 6 Zaiser Ore.",
+      "patchText": "We'll work on it back at Atlia. Got 6 Zaiser Ore."
     },
     {
       "id": "system_78217",
@@ -4844,7 +4900,8 @@
       "offset": 455565,
       "maxBytes": 50,
       "source": "ば、マｰズ人ﾉ源流。@ｽﾅﾜﾁ、本来ﾉ母星ｦラルアﾄｲｳ。0_4$",
-      "translation": "The Martians' true origin... a planet called Ralua."
+      "translation": "The Martians' true origin... a planet called Ralua.",
+      "patchText": "The Martians' true homeworld is Ralua."
     },
     {
       "id": "system_6f41f",
@@ -4908,7 +4965,8 @@
       "offset": 514724,
       "maxBytes": 62,
       "source": "嬢ﾁｬﾝ、ｿﾘｬｱﾅｲだﾛ。ｺﾉ天才が造ｯﾀﾝだｶﾗ、@ｿﾘｬｱスゲエ船ﾅﾝだぜ。0_4$",
-      "translation": "What're you talkin' about? I'm a genius! This ship's a work of art!"
+      "translation": "What're you talkin' about? I'm a genius! This ship's a work of art!",
+      "patchText": "What're you saying? I'm a genius! This ship's incredible!"
     },
     {
       "id": "system_7ee1b",
@@ -4948,7 +5006,8 @@
       "offset": 527841,
       "maxBytes": 42,
       "source": "畜生ﾒ！@アトライアｻｴ使ｳｺﾄがでｷﾀﾗ・・・0_4$",
-      "translation": "Damn it! If only we could use the Atlia..."
+      "translation": "Damn it! If only we could use the Atlia...",
+      "patchText": "Damn it! If only we could use Atlia..."
     },
     {
       "id": "system_80f54",
@@ -5084,7 +5143,8 @@
       "offset": 428618,
       "maxBytes": 54,
       "source": "抜ｹ、ﾏｯｽぐ行ｹば、@ザｰテ様ﾉ玉座。@ｸﾚぐﾚﾓ粗相ﾉﾅｲﾖｳﾆ！0?I",
-      "translation": "Proceed straight ahead to the throne room. Mind your manners before the king!"
+      "translation": "Proceed straight ahead to the throne room. Mind your manners before the king!",
+      "patchText": "Go straight to Lord Zarte's throne. Mind your manners!"
     },
     {
       "id": "system_69a20",
@@ -5092,7 +5152,8 @@
       "offset": 432672,
       "maxBytes": 69,
       "source": "ど。@国王ﾆ飼ｲ慣ﾗｻﾚﾀ、番犬ｶ。だが、私が倒ｾﾙﾓﾉｶ、@ﾔﾚﾙﾓﾝﾅﾗ、ﾔｯﾃﾐﾛ！！0?C",
-      "translation": "Hmph. So you're the king's lap dog? You think you can beat me? Go on, try!"
+      "translation": "Hmph. So you're the king's lap dog? You think you can beat me? Go on, try!",
+      "patchText": "Hmph. The king's lap dog, eh? Think you can beat me? Try!"
     },
     {
       "id": "system_73853",
@@ -5156,7 +5217,8 @@
       "offset": 526975,
       "maxBytes": 74,
       "source": "何ﾆｼﾃﾓ、ｵﾏｴ達ﾉ@ﾔﾛｳﾄｼﾃｲﾙｺﾄが、@何ﾅﾉｶ、ドゥムナﾉ棺ｦ見ﾂｹﾚば、ﾊｯｷﾘｽﾙだﾛｳ。0_4$",
-      "translation": "Whatever you're trying to do, you'll find your answers at We-Dumnah's coffin."
+      "translation": "Whatever you're trying to do, you'll find your answers at We-Dumnah's coffin.",
+      "patchText": "Whatever you're after, We-Dumnah's coffin holds the answer."
     },
     {
       "id": "system_80d5f",
@@ -5172,7 +5234,8 @@
       "offset": 531942,
       "maxBytes": 58,
       "source": "ダイナﾉ村ｶ・・・@ｼｶｼ、ｵﾏｴ達ﾊ、どｳﾓﾖｸﾜｶﾝﾈｪｺﾄが多ｽぎﾙﾅ。0_4$",
-      "translation": "Dyna Village, eh... There's a lot I don't get about you guys."
+      "translation": "Dyna Village, eh... There's a lot I don't get about you guys.",
+      "patchText": "Dyna Village... You people still make no sense to me."
     },
     {
       "id": "system_1751d",
@@ -5252,7 +5315,8 @@
       "offset": 374145,
       "maxBytes": 57,
       "source": "待ｯﾃｸﾚ。@ボスﾊ、ｺｺﾆﾊｲﾈｪﾝだ。@取引で、惑星ｶﾗ離ﾚﾃﾙﾝだ。0_4$",
-      "translation": "Whoa, hold up! The boss is gone. Left the planet for a deal."
+      "translation": "Whoa, hold up! The boss is gone. Left the planet for a deal.",
+      "patchText": "Hold it. The boss is gone. Left planet on a deal."
     },
     {
       "id": "system_5c39e",
@@ -5300,7 +5364,8 @@
       "offset": 418997,
       "maxBytes": 54,
       "source": "でﾊ、次ﾉ試練ｦ受ｹﾙﾀﾒ、@ｺﾉ村ﾉ北、ミカｰﾉ村ｦ@ｵﾀずﾈﾅｻﾚ。0?C",
-      "translation": "Your next trial awaits in Mikaa, a village to the north."
+      "translation": "Your next trial awaits in Mikaa, a village to the north.",
+      "patchText": "Your next trial lies north, in Mikaa village."
     },
     {
       "id": "system_681cb",
@@ -5308,7 +5373,8 @@
       "offset": 426443,
       "maxBytes": 51,
       "source": "誰ﾓｲﾅｸﾅｯﾀ宮殿ﾆ、@6ザｰテﾉ玉座だｹが、ぽﾂﾝﾄ@6残ｻﾚﾃｲﾀ。",
-      "translation": "In the empty palace, only the king's throne remained."
+      "translation": "In the empty palace, only the king's throne remained.",
+      "patchText": "Only Zarte's throne remained in the empty palace."
     },
     {
       "id": "system_682de",
@@ -5364,7 +5430,8 @@
       "offset": 486151,
       "maxBytes": 43,
       "source": "待ｯﾃｲﾀぞ。@ドゥムナﾉ遺志ｦ継ぐ者ﾖ。0_6ﾅﾝﾄ、$",
-      "translation": "I've been waiting for you, We-Dumnah's heir."
+      "translation": "I've been waiting for you, We-Dumnah's heir.",
+      "patchText": "I've awaited you, heir of Dumnah."
     },
     {
       "id": "system_7d824",
@@ -5396,7 +5463,8 @@
       "offset": 522371,
       "maxBytes": 52,
       "source": "５０００クレジットﾓ@ｸﾚﾙﾄﾊ、イｰル王ﾓ気前が@ｲｲﾜｨ。0_4$",
-      "translation": "5000 CREDIT! Can't complain about King Eele-Kose's pay."
+      "translation": "5000 CREDIT! Can't complain about King Eele-Kose's pay.",
+      "patchText": "5000 CREDIT! King Eele pays well."
     },
     {
       "id": "system_1767a",
@@ -5540,7 +5608,8 @@
       "offset": 420576,
       "maxBytes": 36,
       "source": "声がアトライアﾉ船内ﾆ響ｷ@6ﾜﾀﾙ。0_6『$",
-      "translation": "A voice echoed through the Atlia."
+      "translation": "A voice echoed through the Atlia.",
+      "patchText": "A voice rang through the Atlia."
     },
     {
       "id": "system_675b3",
@@ -5556,7 +5625,8 @@
       "offset": 432609,
       "maxBytes": 58,
       "source": "イｰル王ﾉ世話ﾆ@ﾅｯﾃｲﾙ。@ﾕｴﾆ、貴様達ﾆ王ｦ殺ｻｾﾙ@ﾜｹﾆﾊｲｶﾇ！！0_4$",
-      "translation": "I owe King Eele-Kose my life! I can't let you kill him!"
+      "translation": "I owe King Eele-Kose my life! I can't let you kill him!",
+      "patchText": "I owe King Eele-Kose my life! I won't let him die!"
     },
     {
       "id": "system_6e097",
@@ -5620,7 +5690,8 @@
       "offset": 522992,
       "maxBytes": 51,
       "source": "珠が、どﾝﾅ力ｦ@持ｯﾃｲﾙﾉｶ、一度、分析ｻｾﾃﾐﾙ気ﾊﾈｪｶ。0_4$",
-      "translation": "Let me run some tests on that orb. See what it can do."
+      "translation": "Let me run some tests on that orb. See what it can do.",
+      "patchText": "Let me analyze that orb's power."
     },
     {
       "id": "system_8019c",
@@ -5636,7 +5707,8 @@
       "offset": 524788,
       "maxBytes": 44,
       "source": "ドゥムナﾊ、どｺｶﾆ@何ﾗｶﾉ手がｶﾘｦ残ｼﾃﾙﾊずﾖ。0_4$",
-      "translation": "We-Dumnah must've left us a hint somewhere."
+      "translation": "We-Dumnah must've left us a hint somewhere.",
+      "patchText": "We-Dumnah must've left us a clue."
     },
     {
       "id": "system_80598",
@@ -5764,7 +5836,8 @@
       "offset": 427900,
       "maxBytes": 61,
       "source": "分ｶｯﾀ。@要ｽﾙﾆ、イｰル王ｦ殺ｼﾁﾏｴば、ｲｲﾜｹだﾅ。@ﾔｯﾃﾔﾛｳじｬﾈｪｶ！0_4$",
-      "translation": "Got it. So all we gotta do is waste King Eele-Kose. Let's go"
+      "translation": "Got it. So all we gotta do is waste King Eele-Kose. Let's go",
+      "patchText": "Got it. We kill King Eele-Kose. Let's go!"
     },
     {
       "id": "system_6964d",
@@ -5804,7 +5877,8 @@
       "offset": 452536,
       "maxBytes": 50,
       "source": "分ｶﾘﾏｼﾀ。@でﾊ、ｻｯｿｸ、惑星ヒュリスﾍ向ｶｳｺﾄﾆｼﾏｽ。0_4$",
-      "translation": "Yes, sir. I'll depart for Planet Hyuris right away."
+      "translation": "Yes, sir. I'll depart for Planet Hyuris right away.",
+      "patchText": "Understood. I'll leave for Hyulis at once."
     },
     {
       "id": "system_6e927",
@@ -5900,7 +5974,8 @@
       "offset": 524988,
       "maxBytes": 40,
       "source": "ドゥムナﾊ、ｺﾉ時が@来ﾙｺﾄｦ予期ｼﾃｲﾀﾉﾈ。0_4$",
-      "translation": "So We-Dumnah knew this day would come."
+      "translation": "So We-Dumnah knew this day would come.",
+      "patchText": "So We-Dumnah foresaw this day."
     },
     {
       "id": "system_816d1",
@@ -6052,7 +6127,8 @@
       "offset": 451133,
       "maxBytes": 69,
       "source": "良ｶﾛｳ。@ｺﾉ件ﾊ、$\n。@ｵﾏｴﾆ全ﾃ任ｾﾀぞ！0_4$\n5ﾊｲ。ｱﾘがﾄｳござｲﾏｽ。0_6$\nﾊ、$",
-      "translation": "Alright. The mission's all yours. Don't let me down! / Yes, sir. Thank you."
+      "translation": "Alright. The mission's all yours. Don't let me down! / Yes, sir. Thank you.",
+      "patchText": "Very well. It's yours now! / Yes sir. Thank you."
     },
     {
       "id": "system_6e70a",
@@ -6060,7 +6136,8 @@
       "offset": 452362,
       "maxBytes": 34,
       "source": "ば、惑星ヒュリスﾆ向ｶｳ@ｼｶｱﾙﾏｲ。0_4$",
-      "translation": "Our only choice is Planet Hyulis."
+      "translation": "Our only choice is Planet Hyulis.",
+      "patchText": "Our only choice is Hyulis."
     },
     {
       "id": "system_6e962",
@@ -6132,7 +6209,8 @@
       "offset": 531166,
       "maxBytes": 47,
       "source": "惑星マｰズﾆ行ｹﾙﾉがｲﾔﾆｳﾚｼｿｳだｯﾀが、@ﾅﾝｶｱﾙﾉｶ？0_4$",
-      "translation": "He seemed awfully happy about going to Mars. Why?"
+      "translation": "He seemed awfully happy about going to Mars. Why?",
+      "patchText": "He was awfully happy to head for Mars. Why?"
     },
     {
       "id": "system_17555",
@@ -6348,7 +6426,8 @@
       "offset": 457866,
       "maxBytes": 29,
       "source": "が、ドゥムナﾉ遺志ﾄｲｳ@ﾓﾉ。0_4$",
-      "translation": "But it is We-Dumnah's will."
+      "translation": "But it is We-Dumnah's will.",
+      "patchText": "But it was Dumnah's will."
     },
     {
       "id": "system_76173",
@@ -6372,7 +6451,8 @@
       "offset": 520716,
       "maxBytes": 31,
       "source": "マｰズﾆ属ｽﾙ宇宙港ﾆｼﾃﾓ@ｿｳだ。0_4$",
-      "translation": "It's the same at Mars's ports."
+      "translation": "It's the same at Mars's ports.",
+      "patchText": "Same at Mars ports."
     },
     {
       "id": "system_808ce",
@@ -7028,7 +7108,8 @@
       "offset": 420139,
       "maxBytes": 65,
       "source": "サｰトス老師ｺｿ、@遺志ｦ継ぐ者ｦドゥムナ老師ﾉ元ﾍﾄ導ｲﾃｸだｻﾙｺﾄでｼｮｳ0_4$",
-      "translation": "Master Satos will lead the one who carries the will to We-Dumnah."
+      "translation": "Master Satos will lead the one who carries the will to We-Dumnah.",
+      "patchText": "Master Satos will guide Dumnah's heir to We-Dumnah."
     },
     {
       "id": "system_67804",
@@ -7220,7 +7301,8 @@
       "offset": 523117,
       "maxBytes": 38,
       "source": "どｳﾅﾝだ？@ｿﾉ珠ｦ持ﾂﾄ、ﾅﾝｶでｷｿｳﾅﾉｶ？0_4$",
-      "translation": "So? Can you do anything with that orb?"
+      "translation": "So? Can you do anything with that orb?",
+      "patchText": "So? Can that orb do anything?"
     },
     {
       "id": "system_7fb9a",
@@ -7452,7 +7534,8 @@
       "offset": 855223,
       "maxBytes": 54,
       "source": "ペンローズ博士がｿﾉ銃ﾆ触ﾚﾀ瞬間、  異変が起ｺｯﾀ！!#C#Z^#F",
-      "translation": "Dr. Penrose touched the gun... and it went haywire!!"
+      "translation": "Dr. Penrose touched the gun... and it went haywire!!",
+      "patchText": "Dr. Penrose touched the gun, and it went wild!"
     },
     {
       "id": "opening_4747b",
@@ -7471,12 +7554,49 @@
       "translation": "SYSTEM FAIL"
     },
     {
+      "id": "opening_2816",
+      "disk": "Opening",
+      "offset": 10262,
+      "maxBytes": 12,
+      "source": "システム::::",
+      "translation": "System",
+      "patchText": " "
+    },
+    {
+      "id": "opening_2823",
+      "disk": "Opening",
+      "offset": 10275,
+      "maxBytes": 12,
+      "source": "データ::::::",
+      "translation": "Data",
+      "patchText": " "
+    },
+    {
+      "id": "opening_2863",
+      "disk": "Opening",
+      "offset": 10339,
+      "maxBytes": 54,
+      "source": "ディスクを@１ドライブに入れて@何かキーを押してください",
+      "translation": "Insert disk in@Drive 1.@Press any key.",
+      "patchText": " Sys D1.@ Any key."
+    },
+    {
+      "id": "opening_28a6",
+      "disk": "Opening",
+      "offset": 10406,
+      "maxBytes": 90,
+      "source": "ディスクを１ドライブに@　　　　　　ディスクを１ドライブに@入れて、何かキーを押してください",
+      "translation": "Insert disk in Drive 1.@            Insert disk in Drive 2.@Press any key.",
+      "patchText": " Sys D1.@ Dat D2.@ Any key."
+    },
+    {
       "id": "opening_414d",
       "disk": "Opening",
       "offset": 16717,
       "maxBytes": 61,
       "source": "データ表示@ステｰタス@アイテム@作戦@装備変更@特殊能力@システム",
-      "translation": "Data / Status / Items / Tactics / Equip / Skills / System"
+      "translation": "Data / Status / Items / Tactics / Equip / Skills / System",
+      "patchText": "Data@Sts@Item@Plan@Eqp@Skl@Sys"
     },
     {
       "id": "opening_42d7",
@@ -7484,7 +7604,8 @@
       "offset": 17111,
       "maxBytes": 46,
       "source": "システム〉@セｰブ@ロｰド@メッセｰジ@UDフォｰマット",
-      "translation": "System> Save / Load / Message / Format"
+      "translation": "System> Save / Load / Message / Format",
+      "patchText": "Sys@Save@Load@Msg@Fmt"
     },
     {
       "id": "opening_43f8",
@@ -7492,7 +7613,8 @@
       "offset": 17400,
       "maxBytes": 55,
       "source": "アタック@特殊能力@アイテム@装備変更@ステータス@戦闘離脱",
-      "translation": "Attack / Skills / Item / Equip / Status / Flee"
+      "translation": "Attack / Skills / Item / Equip / Status / Flee",
+      "patchText": "Atk@Skl@Item@Eqp@Sts@Flee"
     },
     {
       "id": "opening_4430",
@@ -7500,7 +7622,8 @@
       "offset": 17456,
       "maxBytes": 39,
       "source": "ファイアー@応急修理@データ表示@戦闘離脱",
-      "translation": "Fire / Repair / Scan / Escape"
+      "translation": "Fire / Repair / Scan / Escape",
+      "patchText": "Fire@Rpr@Scan@Flee"
     },
     {
       "id": "opening_4478",
@@ -7508,7 +7631,8 @@
       "offset": 17528,
       "maxBytes": 56,
       "source": "格納庫@武装変更@応急修理@兵器開発@兵器解体@上陸ｽﾙ@離陸ｽﾙ",
-      "translation": "Hangar / Outfit / Repair / Craft / Scrap / Land / Launch"
+      "translation": "Hangar / Outfit / Repair / Craft / Scrap / Land / Launch",
+      "patchText": "Hang@Eqp@Rpr@Dev@Scrp@Lnd@Go"
     },
     {
       "id": "opening_472b",
@@ -7516,7 +7640,8 @@
       "offset": 18219,
       "maxBytes": 81,
       "source": "ャeスト＞@マップ@ビットON@スクロール@戦闘@アイテム@参加@ｵ金@戦闘能力@効果音@音楽@",
-      "translation": "Opt.> Map / Display / Scroll / Battle / Item / Party / Money / Stats / SFX / Music"
+      "translation": "Opt.> Map / Display / Scroll / Battle / Item / Party / Money / Stats / SFX / Music",
+      "patchText": "Opt@Map@Dsp@Scr@Bat@Itm@Pty@$@Sts@SE@BGM"
     },
     {
       "id": "opening_477d",
@@ -7524,7 +7649,8 @@
       "offset": 18301,
       "maxBytes": 52,
       "source": "恒星間移動@宇宙マップ@データ表示@応急修理@コクピット",
-      "translation": "Jump / Star Map / Scan / Repair / Bridge"
+      "translation": "Jump / Star Map / Scan / Repair / Bridge",
+      "patchText": "Jump@Map@Scan@Rpr@Bridge"
     },
     {
       "id": "opening_4849",
@@ -7532,7 +7658,8 @@
       "offset": 18505,
       "maxBytes": 48,
       "source": "操作設定@修復設定@データ表示@ファイター@戦闘離脱",
-      "translation": "Config  Repair  Data  Fighter  Escape"
+      "translation": "Config  Repair  Data  Fighter  Escape",
+      "patchText": "Cfg@Rpr@Data@Ftr@Flee"
     },
     {
       "id": "opening_48c6",
@@ -7540,7 +7667,8 @@
       "offset": 18630,
       "maxBytes": 51,
       "source": "格納庫@武装変更@応急修理@兵器開発@兵器解体@システム",
-      "translation": "Hangar  Equip  Repair  Develop  Scrap  System"
+      "translation": "Hangar  Equip  Repair  Develop  Scrap  System",
+      "patchText": "Hang@Eqp@Rpr@Dev@Scrp@Sys"
     },
     {
       "id": "ending_3d57",
@@ -7780,7 +7908,8 @@
       "offset": 15928,
       "maxBytes": 30,
       "source": "仕方がﾅｲ。!引ｷ返ｿｳ」!#OB!CD!#L",
-      "translation": "It's no use. We have to go back."
+      "translation": "It's no use. We have to go back.",
+      "patchText": "No choice. Let's go back."
     },
     {
       "id": "visual_41a5",
@@ -7788,7 +7917,8 @@
       "offset": 16805,
       "maxBytes": 47,
       "source": "シオンﾊ、完全ﾆ閉じﾗﾚﾃｼﾏｯﾀ扉ﾆ剣ｦ@切ﾘﾂｹﾀ。@!#Z5#T",
-      "translation": "Sion struck the sealed door with his blade."
+      "translation": "Sion struck the sealed door with his blade.",
+      "patchText": "Sion slashed at the sealed door."
     },
     {
       "id": "visual_e69",
@@ -7820,7 +7950,8 @@
       "offset": 15676,
       "maxBytes": 21,
       "source": "１ﾂだｹ方法がｱﾙ」CD!#L",
-      "translation": "There's only one way."
+      "translation": "There's only one way.",
+      "patchText": "Only one way."
     },
     {
       "id": "visual_ff1",
@@ -7899,6 +8030,7 @@
       "maxBytes": 24,
       "source": "ジャグマ総帥ﾊ狂ｯﾃｲﾙ。0#P",
       "translation": "Commander Jagma is crazy.",
+      "patchText": "Jagma's gone mad.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T01:59:49.247Z"
     },
@@ -7909,6 +8041,7 @@
       "maxBytes": 59,
       "source": "要塞バルバスﾊ、冷凍攻撃ｦ@ｼｶｹﾃｸﾙ敵が多ｲﾗｼｲぞ。ﾅﾝｾ、敵ﾊ「氷ﾉ$",
       "translation": "Apparently there are many enemies in the fortress Barbas who use freezing attacks. After all, the enemy is ``Ice $",
+      "patchText": "Fortress Barbas is full of foes that use ice attacks.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T01:59:50.127Z"
     },
@@ -7959,6 +8092,7 @@
       "maxBytes": 82,
       "source": "ジャグマｦ倒ｽﾂﾓﾘだｯﾀﾗ、惑星サｰタリアﾍ行ｹ。ｵﾏｴﾉ持ｯﾃｲﾙ武器でﾊ、@ジャグマｦ倒ｽｺﾄﾊでｷﾝ！",
       "translation": "If you want to defeat Jagma, go to the planet Sartaria. You can't defeat Jagma with the weapons you have!",
+      "patchText": "If you mean to defeat Jagma, go to Sartaria. Your current weapons won't do it.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T01:59:56.447Z"
     },
@@ -8039,6 +8173,7 @@
       "maxBytes": 54,
       "source": "君ﾏでﾓが、私ﾉ使命ｦ妨げﾖｳﾄｲｳﾉｶ。@仕方がﾅｲ・・・・？！#V",
       "translation": "Are you trying to hinder my mission? I can't help it····? !",
+      "patchText": "You'll hinder my mission? Then I have no choice!",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:06.274Z"
     },
@@ -8059,6 +8194,7 @@
       "maxBytes": 77,
       "source": "当店でﾊ、マｰズ連邦ﾉ最新技術ｦ駆使ｼﾃ開発ｻﾚﾀ砲塔ｦ取ﾘ揃ｴﾃｲﾏｽが‥‥0_何ﾆﾅｻｲﾏｽｶ？#G",
       "translation": "Our store has a selection of turrets developed using Mars Federation's latest technology... What would you like?",
+      "patchText": "We stock turrets built with Mars Federation tech... What'll it be?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:08.618Z"
     },
@@ -8129,6 +8265,7 @@
       "maxBytes": 87,
       "source": "事実、惑星ステアﾉミュントスﾉ村ﾍ行ｹば、ウェｰ・ドゥムナﾊ今でﾓ永遠ﾉ友ﾄｼﾃ、祭ﾗﾚﾃｲﾙﾉでｽ。0#P",
       "translation": "In fact, if you go to the village of Myntos on the planet Stair, We Dumna is still worshiped as an eternal friend.",
+      "patchText": "In Myntos on Stair, We-Dumnah is still revered.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:18.310Z"
     },
@@ -8209,6 +8346,7 @@
       "maxBytes": 49,
       "source": "我々ﾊ、マｰズ連邦最強ﾉ部隊、チャウスノｰミュだ！0#P",
       "translation": "We are the Mars Federation's strongest unit, Chaus Nomu!",
+      "patchText": "We're Chaus Nomu, Federation's strongest unit!",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:26.511Z"
     },
@@ -8219,6 +8357,7 @@
       "maxBytes": 57,
       "source": "知ｯﾃﾉ通ﾘ、ウュリアﾉ現国王でｱﾙイｰル・コセﾊ、余ﾉ父でｱﾙ。0#P",
       "translation": "As you know, Iel Kose, the current king of Urria, is my father.",
+      "patchText": "As you know, King Eele-Kose of Ulyria is my father.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:27.682Z"
     },
@@ -8229,6 +8368,7 @@
       "maxBytes": 77,
       "source": "実ﾊ、ﾄｱﾙ事情ｶﾗ、ｺﾉ星ﾉ極点ﾆどｳｼﾃﾓ行ｶﾅｸﾁｬｱﾅﾗﾈｪﾝだが、氷上車がﾅｸﾃｺﾏｯﾄﾙﾝじｬｲ。0#P",
       "translation": "Actually, due to certain circumstances, I have to go to the pole of this planet, but without an ice vehicle, it will be a bit of a hassle.",
+      "patchText": "I need to reach this planet's pole, but without an ice crawler I'm stuck.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:28.732Z"
     },
@@ -8259,6 +8399,7 @@
       "maxBytes": 74,
       "source": "現在、激戦ﾉ繰ﾘ広げﾗﾚﾃｲﾙＺ１２７恒星系ﾆ、ゾリアスﾊ、巨大ﾅ要塞ｦ築ｷ上げﾀ。0#P",
       "translation": "Zorias has built a huge fortress in the Z127 star system, where a fierce battle is currently taking place.",
+      "patchText": "Zorias built a huge fortress in the war-torn Z127 system.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:31.089Z"
     },
@@ -8269,6 +8410,7 @@
       "maxBytes": 81,
       "source": "ザｰテ皇太子ﾊ、惑星ティルスﾆ追放ﾉ身ﾄﾅｯﾃｼﾏｯﾀﾉだが側近ﾉ女ｦ鍛ｴ上げ、親衛隊ﾄｼﾀﾗｼｲ。0#P",
       "translation": "Crown Prince Zate was exiled to the planet Tire, but apparently he trained the women in his inner circle and made them into the Imperial Guard.",
+      "patchText": "Prince Zate was exiled to Tirus, but trained his attendants into a guard.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:32.561Z"
     },
@@ -8369,6 +8511,7 @@
       "maxBytes": 97,
       "source": "Ｚ１２７恒星系ﾉ要塞バルバスﾆ攻ﾒ込ﾑﾂﾓﾘﾅﾗ、惑星ヨスヌﾔ惑星ヴォンﾆｱﾙ帝国ﾉ研究施設ｦ叩ｲﾄｲﾀﾎｳがｲｲぜ。#S",
       "translation": "If you plan on attacking the fortress Barbas in the Z127 star system, you'd better attack the Empire's research facilities on planet Yosnu and planet Von.",
+      "patchText": "Before storming Fortress Barbas in Z127, hit the Empire labs on Yosnu and Von.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:42.081Z"
     },
@@ -8379,6 +8522,7 @@
       "maxBytes": 67,
       "source": "超重力シｰルドｦ止ﾒﾙ秘密ﾊ、要塞バルバスﾉ司令ララウェルが知ｯﾃｲﾙﾗｼｲ。#S",
       "translation": "Apparently Larawell, the commander of the fortress Barbas, knows the secret to stopping the super gravity shield.",
+      "patchText": "Lalawel of Barbas knows how to stop the super-gravity shield.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:43.262Z"
     },
@@ -8419,6 +8563,7 @@
       "maxBytes": 48,
       "source": "ぐだぐだ言ｯﾃﾈｪで、引ｷ上げﾙぞ！@任務ﾊ終ﾜｯﾀﾝだ。#W",
       "translation": "Don't say so much, I'll pull you out! The mission is over.",
+      "patchText": "Enough talk. Pull out! The mission is over.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:47.752Z"
     },
@@ -8429,6 +8574,7 @@
       "maxBytes": 57,
       "source": "別ﾆ商売ｼﾖｳｯﾃﾜｹじｬﾅｲﾝだｹど、必要だｯﾀﾗツｰルｦ売ｯﾃ上げﾙﾖ。0#Y",
       "translation": "It's not like I'm trying to do business, but I'll sell the tools if you need them.",
+      "patchText": "I'm not much for sales, but I'll sell you the tools.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:48.792Z"
     },
@@ -8519,6 +8665,7 @@
       "maxBytes": 46,
       "source": "でﾊ、初代国王ラミュｰ・コセﾆﾂｲﾃ、ｵ教ｴｸだｻｲ。0#P",
       "translation": "So, please tell us about the first king, Lamieux Cosse.",
+      "patchText": "Tell us of the first king, Lamieux Cosse.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:00:57.174Z"
     },
@@ -8639,6 +8786,7 @@
       "maxBytes": 40,
       "source": "マｰズ連邦ﾉ歴史ﾆ関ｽﾙ様々ﾅ6本がﾅﾗﾝでｲﾙ。#B",
       "translation": "There are various books on the history of the Mars Federation.",
+      "patchText": "Books on Mars Federation history.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:11.065Z"
     },
@@ -8649,6 +8797,7 @@
       "maxBytes": 42,
       "source": "でﾊ、マｰズ連邦ﾉ歴史ﾆﾂｲﾃ知ﾙ必要がｱﾘﾏｽﾅ。0#S",
       "translation": "Well then, you need to know about the history of the Mars Federation.",
+      "patchText": "Then you need Mars Federation history.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:12.308Z"
     },
@@ -8679,6 +8828,7 @@
       "maxBytes": 42,
       "source": "首尾ﾖｸ、イｰル王ｦ討ﾂｺﾄがでｷﾀﾖｳで何ﾖﾘだ。0#P",
       "translation": "It's great to see that we were able to successfully defeat King Eel.",
+      "patchText": "Good. King Eel is defeated.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:15.885Z"
     },
@@ -8699,6 +8849,7 @@
       "maxBytes": 51,
       "source": "だｯﾀﾗ、ﾜｼﾉ力で、ｵ主ﾗﾉ航宙船ﾉ近ｸﾏで送ﾘ届ｹﾃﾔﾛｳｶｨ？0#Y",
       "translation": "In that case, how about I use my power to transport you close to your spaceship?",
+      "patchText": "Want me to send you near your ship?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:17.819Z"
     },
@@ -8769,6 +8920,7 @@
       "maxBytes": 34,
       "source": "惑星マｰズﾉ宇宙港ﾍご出立ﾅｻｲﾏｽｶ？0#Y",
       "translation": "Are you leaving for the spaceport on the planet Mars?",
+      "patchText": "Leave for Mars Port?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:24.833Z"
     },
@@ -8799,6 +8951,7 @@
       "maxBytes": 44,
       "source": "我々ﾊ、マｰズ連邦宙軍ﾉ者だ。ｺｺｦ通ｼﾃﾓﾗｲﾀｲ！0#P",
       "translation": "We are members of the Mars Federation Space Force. I want you to come through here!",
+      "patchText": "Mars Space Force. Let us through!",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:28.249Z"
     },
@@ -8869,6 +9022,7 @@
       "maxBytes": 42,
       "source": "仕方がﾈｪ。ﾄﾆｶｸポｰキンﾉ町ﾆ行ｯﾃﾐﾙｼｶﾅｻｿｳだﾅ#M",
       "translation": "I can't help it. Anyway, I guess I have no choice but to go to Pokin town.",
+      "patchText": "No choice. Let's head to Pokin.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:35.736Z"
     },
@@ -8899,6 +9053,7 @@
       "maxBytes": 34,
       "source": "森ｦ西ﾍ行ｸﾄ、コルレルﾉ村がｱﾘﾏｽ。0#P",
       "translation": "If you go west through the forest, you will find the village of Correl.",
+      "patchText": "Go west through the woods to Correl.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:39.211Z"
     },
@@ -8969,6 +9124,7 @@
       "maxBytes": 38,
       "source": "情報ﾅﾗ１０００クレジットで教ｴﾃﾔﾛｳ。0#Y",
       "translation": "I'll give you the information for 1000 credits.",
+      "patchText": "Info's 1000 credits.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:47.274Z"
     },
@@ -8979,6 +9135,7 @@
       "maxBytes": 38,
       "source": "情報ﾅﾗ３０００クレジットで教ｴﾃﾔﾛｳ。0#Y",
       "translation": "I'll give you the information for 3000 credits.",
+      "patchText": "Info's 3000 credits.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:48.076Z"
     },
@@ -8989,6 +9146,7 @@
       "maxBytes": 43,
       "source": "じｬｱ、向ｺｳで端末ﾄﾆﾗﾒｯｺｼﾃﾙマｰズ人ﾆ聞ｲﾃｸﾚ。#S",
       "translation": "Well, ask the Mars guy over there staring at the terminal.",
+      "patchText": "Ask the Martian at the terminal.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:48.927Z"
     },
@@ -9069,6 +9227,7 @@
       "maxBytes": 26,
       "source": "民間化ｻﾚﾀ鉱業惑星でｽｶ。0#P",
       "translation": "A privatized mining planet?",
+      "patchText": "A private mining world?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:56.936Z"
     },
@@ -9079,6 +9238,7 @@
       "maxBytes": 33,
       "source": "君達ﾆ、初ﾒﾃﾉ任務ｦ与ｴﾙﾄｷが来ﾀ。0#V",
       "translation": "The time has come to give you your first mission.",
+      "patchText": "Your first mission begins now.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:01:57.974Z"
     },
@@ -9099,6 +9259,7 @@
       "maxBytes": 37,
       "source": "何ﾆｼﾃﾓ、早ｲﾄｺ片づｹﾃ、基地ﾆ戻ﾛｳぜ。0#P",
       "translation": "In any case, let's get this over with as soon as possible and get back to base.",
+      "patchText": "Let's finish up and return to base.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:00.102Z"
     },
@@ -9109,6 +9270,7 @@
       "maxBytes": 26,
       "source": "星間バスﾉご利用でｼｮｳｶ？0#Y",
       "translation": "Would you like to use the interstellar bus?",
+      "patchText": "Take the space bus?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:01.219Z"
     },
@@ -9269,6 +9431,7 @@
       "maxBytes": 26,
       "source": "星間バスｦご利用ﾅｻｲﾏｽｶ？0#Y",
       "translation": "Would you like to use the interstellar bus?",
+      "patchText": "Take the space bus?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:18.796Z"
     },
@@ -9349,6 +9512,7 @@
       "maxBytes": 41,
       "source": "イｰル王ｶﾗｵﾏｴｦ捕ﾗｴﾃｸﾙﾖｳﾆ命令ｻﾚﾃﾝだﾖ！！0#P",
       "translation": "King Eel has ordered me to capture you! !",
+      "patchText": "King Eel ordered me to seize you!",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:28.866Z"
     },
@@ -9379,6 +9543,7 @@
       "maxBytes": 23,
       "source": "後ﾊ、惑星ゾカヘルｶ。0#P",
       "translation": "Next is the planet Zokahel.",
+      "patchText": "Next, planet Zokahel.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:32.424Z"
     },
@@ -9409,6 +9574,7 @@
       "maxBytes": 24,
       "source": "ぼｳﾔが情報屋ｦ捜ｼﾃﾙﾉ？0#Y",
       "translation": "Are you looking for an informant?",
+      "patchText": "Need an informant?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:37.265Z"
     },
@@ -9449,6 +9615,7 @@
       "maxBytes": 24,
       "source": "他ﾆ必要ﾅ物ﾊござｲﾏｽｶ？0#Y",
       "translation": "Is there anything else you need?",
+      "patchText": "Need anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:41.872Z"
     },
@@ -9499,6 +9666,7 @@
       "maxBytes": 24,
       "source": "他ﾆ必要ﾅ品ﾊござｲﾏｽｶ？0#Y",
       "translation": "Are there any other items you need?",
+      "patchText": "Any other items?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:48.530Z"
     },
@@ -9519,6 +9687,7 @@
       "maxBytes": 28,
       "source": "ｙ｢囁 _他ﾆﾓ何ｶ必要でｽｶｧ。0#Y",
       "translation": "y “Whisper _Do you need anything else?”",
+      "patchText": "y \"Whisper _Need more?\"",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:51.948Z"
     },
@@ -9559,6 +9728,7 @@
       "maxBytes": 26,
       "source": "どｳだ、他ﾉ武器ﾓ見ﾃﾐﾙｶ？0#Y",
       "translation": "What do you think, do you want to look at other weapons?",
+      "patchText": "See other weapons?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:02:56.658Z"
     },
@@ -9649,6 +9819,7 @@
       "maxBytes": 19,
       "source": "他ﾉ品物ﾊどｳだｲ？0#Y",
       "translation": "What about other items?",
+      "patchText": "Other items?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:08.572Z"
     },
@@ -9689,6 +9860,7 @@
       "maxBytes": 22,
       "source": "他ﾆﾓ必要ﾅ物がｱﾙｶｲ？0#Y",
       "translation": "Do you need anything else?",
+      "patchText": "Anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:15.923Z"
     },
@@ -9769,6 +9941,7 @@
       "maxBytes": 24,
       "source": "他ﾆ必要ﾅﾓﾉﾊござｲﾏｽｶ？0#Y",
       "translation": "Is there anything else you need?",
+      "patchText": "Need anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:32.709Z"
     },
@@ -9799,6 +9972,7 @@
       "maxBytes": 22,
       "source": "他ﾆﾓ何ｶ必要でｼｮｳｶ？0#Y",
       "translation": "Do I need anything else?",
+      "patchText": "Anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:36.287Z"
     },
@@ -9869,6 +10043,7 @@
       "maxBytes": 19,
       "source": "他ﾉ防具ﾊどｳだｨ？0#Y",
       "translation": "What about other armor?",
+      "patchText": "Other armor?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:45.380Z"
     },
@@ -9879,6 +10054,7 @@
       "maxBytes": 22,
       "source": "他ﾆﾓ必要ﾅ物がｱﾙｶｨ？0#Y",
       "translation": "Is there anything else you need?",
+      "patchText": "Need anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:46.452Z"
     },
@@ -9889,6 +10065,7 @@
       "maxBytes": 23,
       "source": "他ﾆﾓ必要ﾅ物がｱﾘﾏｽｶ？0#Y",
       "translation": "Is there anything else you need?",
+      "patchText": "Need anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:47.649Z"
     },
@@ -9929,6 +10106,7 @@
       "maxBytes": 20,
       "source": "他ﾆﾓ何ｶ必要でｽｶ？0#Y",
       "translation": "Need anything else?",
+      "patchText": "Anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:03:53.000Z"
     },
@@ -9989,6 +10167,7 @@
       "maxBytes": 28,
       "source": "気づｶﾚﾈｪﾖｳﾆ、ｿｯﾄ接舷ｼﾛﾖ。0#Z",
       "translation": "Gently approach the ship so that no one notices.",
+      "patchText": "Dock softly. Don't be seen.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:01.018Z"
     },
@@ -9999,6 +10178,7 @@
       "maxBytes": 48,
       "source": "サｰビスﾅﾗ、マｰズ人ﾉスクラップ屋ﾆﾓ負ｹﾅｲﾂﾓﾘでｯｾ0#G",
       "translation": "When it comes to service, I'm not going to lose to the Mars scrappers.",
+      "patchText": "My service beats any Mars scrap dealer.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:02.062Z"
     },
@@ -10019,6 +10199,7 @@
       "maxBytes": 18,
       "source": "だ、何ｶ必要ｶﾅ？0#Y",
       "translation": "Do you need something?",
+      "patchText": "Need anything?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:03.994Z"
     },
@@ -10039,6 +10220,7 @@
       "maxBytes": 17,
       "source": "でｽｶ？司令官。0#P",
       "translation": "Is it? Commander.",
+      "patchText": "Yes, Commander?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:06.532Z"
     },
@@ -10059,6 +10241,7 @@
       "maxBytes": 19,
       "source": "他ﾆ、何ｶ必要ｶｲ？0#Y",
       "translation": "Do you need anything else?",
+      "patchText": "Anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:09.699Z"
     },
@@ -10119,6 +10302,7 @@
       "maxBytes": 20,
       "source": "他ﾆ必要ﾅ物ﾊｱﾙｶｨ？0#Y",
       "translation": "Is there anything else you need?",
+      "patchText": "Anything else?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:17.762Z"
     },
@@ -10139,6 +10323,7 @@
       "maxBytes": 16,
       "source": "だ何ｶ必要ｶｨ？0#Y",
       "translation": "Do you need something?",
+      "patchText": "Need anything?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:20.453Z"
     },
@@ -10179,6 +10364,7 @@
       "maxBytes": 20,
       "source": "だ必要ﾅﾓﾉがｱﾙｶﾅ？0#Y",
       "translation": "Is there anything you need?",
+      "patchText": "Need anything?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:25.189Z"
     },
@@ -10189,6 +10375,7 @@
       "maxBytes": 17,
       "source": "情報が欲ｼｲﾉｶ？0#Y",
       "translation": "Do you want information?",
+      "patchText": "Need info?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:26.385Z"
     },
@@ -10239,6 +10426,7 @@
       "maxBytes": 17,
       "source": "一緒ﾆ行ｯﾃﾐﾅｲ？0#Y",
       "translation": "Would you like to go with me?",
+      "patchText": "Come with me?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:31.291Z"
     },
@@ -10249,6 +10437,7 @@
       "maxBytes": 22,
       "source": "ぱﾘ行ｷﾀｸﾅｯﾀﾝでｼｮｳ？0#Y",
       "translation": "I guess you want to go to Paris?",
+      "patchText": "Go to Paris?",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:32.437Z"
     },
@@ -10289,6 +10478,7 @@
       "maxBytes": 36,
       "source": "若者5ｺｺﾊ、惑星ザジルﾉ田舎町ポｰキン#B",
       "translation": "Young Man: This is Pokin, a rural town on the planet Zajil.",
+      "patchText": "Young Man: This is Pokin, on Zajil.",
       "model": "google-translate",
       "translatedAt": "2026-03-10T02:04:36.230Z"
     },
