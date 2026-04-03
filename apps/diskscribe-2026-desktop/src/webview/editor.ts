@@ -26,7 +26,7 @@ function loadPersistedState() {
   return {};
 }
 
-function savePersistedState(value) {
+function savePersistedState(value: unknown) {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(value ?? {}));
@@ -995,7 +995,7 @@ function showModalDialog(title, message) {
     document.removeEventListener('keydown', onKeyDown);
   };
 
-  const onKeyDown = (event) => {
+  const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       closeDialog();
