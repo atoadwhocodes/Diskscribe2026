@@ -424,14 +424,11 @@ export function reflowStrings(
     str.wrappedLines = lines;
     str.wrapped = lines.join('\n');
 
-    // Determine status
-    const totalChars = str.translation.length;
-    const maxChars = widthChars * heightLines;
-
+    // Determine status based on the actual wrapped output. Since this
+    // function does not truncate `lines`/`wrappedLines`, any result that
+    // still exceeds the height constraint must be treated as overflow.
     if (lines.length <= heightLines) {
       str.reflowStatus = lines.length === 1 ? 'ok' : 'wrapped';
-    } else if (totalChars <= maxChars) {
-      str.reflowStatus = 'truncated';
     } else {
       str.reflowStatus = 'overflow';
     }

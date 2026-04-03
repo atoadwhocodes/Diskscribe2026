@@ -7,7 +7,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const extractionPath = 'e:\\diskscribe2026\\alshark-system-extraction\\extraction.json';
+const extractionPathArg = process.argv[2];
+const extractionPathEnv = process.env.ALSHARK_EXTRACTION_PATH;
+const extractionPath = path.resolve(
+  extractionPathArg || extractionPathEnv || path.join(__dirname, 'alshark-system-extraction', 'extraction.json')
+);
 
 console.log('Loading extraction data...\n');
 const rawData = fs.readFileSync(extractionPath, 'utf8');

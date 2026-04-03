@@ -8,6 +8,18 @@ const handlerFiles = [
   path.join(workspaceRoot, 'apps', 'diskscribe-2026-desktop', 'src', 'webview', 'editor.ts')
 ];
 
+if (!fs.existsSync(htmlPath)) {
+  console.error(`UI wiring check failed: expected HTML file not found: ${htmlPath}`);
+  process.exit(1);
+}
+
+for (const filePath of handlerFiles) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`UI wiring check failed: expected handler file not found: ${filePath}`);
+    process.exit(1);
+  }
+}
+
 const html = fs.readFileSync(htmlPath, 'utf8');
 const buttonIds = Array.from(
   new Set(Array.from(html.matchAll(/<button[^>]*\sid="([^"]+)"/g), (match) => match[1]))

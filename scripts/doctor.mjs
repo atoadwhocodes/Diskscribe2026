@@ -11,16 +11,11 @@ const checks = [
   { label: 'Release workflow', path: '.github/workflows/build-win-artifact.yml' }
 ];
 
-const rootPackage = readJson(path.join(workspaceRoot, 'package.json'));
-const desktopPackage = readJson(path.join(workspaceRoot, 'apps', 'diskscribe-2026-desktop', 'package.json'));
-
 console.log('DiskScribe2026 Doctor');
 console.log('=====================');
 console.log(`Date: ${new Date().toISOString()}`);
 console.log(`OS: ${os.type()} ${os.release()} (${os.arch()})`);
 console.log(`Node: ${process.version}`);
-console.log(`Root version: ${rootPackage.version ?? 'unknown'}`);
-console.log(`Desktop version: ${desktopPackage.version ?? 'unknown'}`);
 console.log('');
 
 let hasFailures = false;
@@ -41,9 +36,18 @@ for (const check of checks) {
   }
 }
 
-if (String(rootPackage.version ?? '') !== String(desktopPackage.version ?? '')) {
-  console.log('[MISMATCH] Root and desktop versions differ.');
-  hasFailures = true;
+const rootPkgPath = path.join(workspaceRoot, 'package.json');
+const desktopPkgPath = path.join(workspaceRoot, 'apps', 'diskscribe-2026-desktop', 'package.json');
+
+if (fs.existsSync(rootPkgPath) && fs.existsSync(desktopPkgPath)) {
+  const rootPackage = readJson(rootPkgPath);
+  const desktopPackage = readJson(desktopPkgPath);
+  console.log(`Root version: ${rootPackage.version ?? 'unknown'}`);
+  console.log(`Desktop version: ${desktopPackage.version ?? 'unknown'}`);
+  if (String(rootPackage.version ?? '') !== String(desktopPackage.version ?? '')) {
+    console.log('[MISMATCH] Root and desktop versions differ.');
+    hasFailures = true;
+  }
 }
 
 if (hasFailures) {

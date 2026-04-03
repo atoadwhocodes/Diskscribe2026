@@ -15,5 +15,5 @@
     "Alshark (User disk).hdm",
     "Alshark (Visual disk).hdm"
   ],
-  "diskExtractionsPath": "E:\\diskscribe2026\\alshark-extraction-test"
+  "diskExtractionsPath": "./alshark-extraction-test"
 }

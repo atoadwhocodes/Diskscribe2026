@@ -55,7 +55,7 @@ function checkDiskSpace() {
   // Simplified check - just verify output directory exists
   const outDir = './OUT-OFFLINE';
   return {
-    available: fs.existsSync(outDir) || true,
+    available: fs.existsSync(outDir),
     path: outDir
   };
 }

@@ -3,27 +3,54 @@ import type { Configuration } from 'webpack';
 import { rules } from './webpack.rules';
 import { plugins } from './webpack.plugins';
 
-const rendererRules = rules.filter((rule) => {
+const excludedLoaders = new Set([
+  'node-loader',
+  '@vercel/webpack-asset-relocator-loader',
+]);
+
+const isExcludedLoaderEntry = (entry: unknown): boolean => {
+  if (typeof entry === 'string') {
+    return excludedLoaders.has(entry);
+  }
+
+  if (!entry || typeof entry !== 'object') {
+    return false;
+  }
+
+  return excludedLoaders.has((entry as { loader?: unknown }).loader as string);
+};
+
+const hasExcludedLoader = (rule: unknown): boolean => {
   if (!rule || typeof rule !== 'object') {
+    return false;
+  }
+
+  const candidate = rule as {
+    loader?: unknown;
+    use?: unknown;
+    oneOf?: unknown;
+  };
+
+  if (isExcludedLoaderEntry(candidate.loader)) {
     return true;
   }
 
-  const candidate = rule as { use?: unknown };
-  if (candidate.use === 'node-loader') {
-    return false;
+  if (Array.isArray(candidate.use)) {
+    if (candidate.use.some((entry) => isExcludedLoaderEntry(entry))) {
+      return true;
+    }
+  } else if (isExcludedLoaderEntry(candidate.use)) {
+    return true;
   }
 
-  if (
-    candidate.use &&
-    typeof candidate.use === 'object' &&
-    'loader' in (candidate.use as Record<string, unknown>) &&
-    (candidate.use as { loader?: unknown }).loader === '@vercel/webpack-asset-relocator-loader'
-  ) {
-    return false;
+  if (Array.isArray(candidate.oneOf)) {
+    return candidate.oneOf.some((nestedRule) => hasExcludedLoader(nestedRule));
   }
 
-  return true;
-});
+  return false;
+};
+
+const rendererRules = rules.filter((rule) => !hasExcludedLoader(rule));
 
 rendererRules.push({
   test: /\.css$/,

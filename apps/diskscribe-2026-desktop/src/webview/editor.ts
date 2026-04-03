@@ -10,13 +10,40 @@ import {
 } from './necCharsets';
 
 // State persistence helper
-const fallbackState: { value: unknown } = { value: {} };
+const STATE_STORAGE_KEY = 'diskscribe-2026-desktop:webview-editor-state';
+
+function loadPersistedState() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(STATE_STORAGE_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    }
+  } catch {
+    // Ignore storage/parsing failures and fall back to in-memory state.
+  }
+  return {};
+}
+
+function savePersistedState(value) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(value ?? {}));
+    }
+  } catch {
+    // Ignore storage failures and keep the in-memory fallback updated.
+  }
+}
+
+const fallbackState: { value: unknown } = { value: loadPersistedState() };
 const stateManager = {
   getState() {
     return fallbackState.value;
   },
   setState(value) {
     fallbackState.value = value;
+    savePersistedState(value);
     return value;
   }
 };
@@ -344,7 +371,7 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-const allowedMessageOrigins = new Set(['', 'null', window.location.origin]);
+const allowedMessageOrigins = new Set(['null', window.location.origin]);
 
 window.addEventListener('message', (event) => {
   const origin = typeof event.origin === 'string' ? event.origin : '';
@@ -925,6 +952,10 @@ function showModalDialog(title, message) {
   `;
 
   const box = document.createElement('div');
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-labelledby', 'modal-title');
+  box.setAttribute('aria-describedby', 'modal-message');
   box.style.cssText = `
     background: white;
     border-radius: 8px;
@@ -935,11 +966,13 @@ function showModalDialog(title, message) {
   `;
 
   const titleEl = document.createElement('h2');
+  titleEl.id = 'modal-title';
   titleEl.textContent = title;
   titleEl.style.cssText = 'margin: 0 0 16px 0; font-size: 18px; color: #1a1a1a;';
   box.appendChild(titleEl);
 
   const msgEl = document.createElement('p');
+  msgEl.id = 'modal-message';
   msgEl.textContent = message;
   msgEl.style.cssText = 'margin: 0 0 24px 0; font-size: 14px; color: #555555; line-height: 1.6; white-space: pre-wrap;';
   box.appendChild(msgEl);
@@ -956,13 +989,26 @@ function showModalDialog(title, message) {
     cursor: pointer;
     font-weight: 500;
   `;
-  btn.onclick = () => {
-    dialog.remove();
-  };
-  box.appendChild(btn);
 
+  const closeDialog = () => {
+    dialog.remove();
+    document.removeEventListener('keydown', onKeyDown);
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeDialog();
+    }
+  };
+
+  btn.onclick = closeDialog;
+  document.addEventListener('keydown', onKeyDown);
+
+  box.appendChild(btn);
   dialog.appendChild(box);
   document.body.appendChild(dialog);
+  btn.focus();
 }
 
 function requireExpertMode(actionLabel) {
@@ -1572,6 +1618,8 @@ function appendCell(row, value) {
 function post(message) {
   if (window.diskScribeDesktop && typeof window.diskScribeDesktop.postMessage === 'function') {
     void window.diskScribeDesktop.postMessage(message);
+  } else {
+    console.warn('diskScribeDesktop.postMessage is unavailable; dropping message.', message);
   }
 }
 

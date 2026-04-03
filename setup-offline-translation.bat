@@ -16,7 +16,25 @@ if %ERRORLEVEL% NEQ 0 (
     powershell -Command "& {Invoke-WebRequest -Uri 'https://ollama.com/download/OllamaSetup.exe' -OutFile '%TEMP%\OllamaSetup.exe'}"
     
     echo Running installer...
-    start /wait %TEMP%\OllamaSetup.exe
+    powershell -Command "& { $sig = Get-AuthenticodeSignature '%TEMP%\OllamaSetup.exe'; if ($sig.Status -ne 'Valid') { Write-Host 'Installer signature validation failed:' $sig.Status; exit 1 } }"
+    if %ERRORLEVEL% NEQ 0 (
+        echo.
+        echo Error: The downloaded Ollama installer failed signature verification.
+        echo Aborting setup to avoid running an untrusted installer.
+        pause
+        exit /b 1
+    )
+
+    echo.
+    echo The Ollama installer was downloaded from the internet and its signature was validated.
+    choice /M "Do you want to run the installer now"
+    if %ERRORLEVEL% NEQ 1 (
+        echo Installer execution cancelled by user.
+        exit /b 1
+    )
+
+    echo Running installer...
+    start /wait "%TEMP%\OllamaSetup.exe"
     
     echo.
     echo Ollama installed! Please restart this script.

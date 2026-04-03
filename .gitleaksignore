@@ -5,8 +5,9 @@
 # Contains benign URL auth parsing code that triggers false positives
 apps/diskscribe-2026-desktop/.webpack/**
 
-# Benign translation service API parameter names (not actual secrets)
-src/translation-service.js:*apiKey*
+# Do not broadly suppress `apiKey`-like findings in src/translation-service.js.
+# If a false positive remains, ignore only the exact gitleaks fingerprint or
+# a specific placeholder string so real secrets in that file are still detected.
 
 # Test and example scripts with placeholder references
 test-*.js
