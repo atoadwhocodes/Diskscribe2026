@@ -1,0 +1,7 @@
+[allowlist]
+  description = "Allowlisted paths with placeholder/example values"
+  paths = [
+    '''apps/diskscribe-2026-desktop/\.webpack/''',
+    '''test-.*\.js''',
+    '''.*-GUIDE\.js''',
+  ]

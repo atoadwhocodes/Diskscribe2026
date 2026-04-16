@@ -1,15 +1,5 @@
 # Gitleaks ignore file for false positive suppressions
 # https://github.com/gitleaks/gitleaks#gitleaksignore
-
-# Webpack build artifacts (already in .gitignore)
-# Contains benign URL auth parsing code that triggers false positives
-apps/diskscribe-2026-desktop/.webpack/**
-
-# Do not broadly suppress `apiKey`-like findings in src/translation-service.js.
-# If a false positive remains, ignore only the exact gitleaks fingerprint or
-# a specific placeholder string so real secrets in that file are still detected.
-
-# Test and example scripts with placeholder references
-test-*.js
-*-GUIDE.js
-ALSHARK-TRANSLATION-GUIDE.js
+# NOTE: entries here must be exact fingerprints in the format:
+#   <commitSHA>:<file>:<rule>:<startLine>
+# For path-based suppressions, use .gitleaks.toml [allowlist] instead.
