@@ -8,12 +8,21 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-win:
     name: Build Windows Artifact
     runs-on: windows-latest
+    timeout-minutes: 45
     permissions:
       contents: write
+    env:
+      APP_DIR: apps/diskscribe-2026-desktop
+      ARTIFACT_DIR: apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64
+
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -28,14 +37,18 @@ jobs:
           cache-dependency-path: apps/diskscribe-2026-desktop/package-lock.json
 
       - name: Install desktop dependencies
-        run: npm --prefix apps/diskscribe-2026-desktop ci
+        run: npm --prefix ${{ env.APP_DIR }} ci --no-audit --no-fund
 
       - name: Validate tag matches app version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
           $tagVersion = "${{ github.ref_name }}".Substring(1)
-          $appVersion = node -p "require('./apps/diskscribe-2026-desktop/package.json').version"
+          $appVersion = node -p "require('./${{ env.APP_DIR }}/package.json').version"
+
           if ($tagVersion -ne $appVersion) {
             throw "Tag version ($tagVersion) does not match desktop app version ($appVersion)."
           }
@@ -44,42 +57,161 @@ jobs:
         id: app_version
         shell: pwsh
         run: |
-          $appVersion = node -p "require('./apps/diskscribe-2026-desktop/package.json').version"
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $appVersion = node -p "require('./${{ env.APP_DIR }}/package.json').version"
           "value=$appVersion" >> $env:GITHUB_OUTPUT
 
-      - name: Build desktop packages
-        run: npm --prefix apps/diskscribe-2026-desktop run make
+      - name: Require signing secrets for tagged releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
 
-      - name: Generate SHA256 checksums
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_PFX_B64)) {
+            throw "Tagged releases require the WINDOWS_CERT_PFX_B64 secret."
+          }
+
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_PASSWORD)) {
+            throw "Tagged releases require the WINDOWS_CERT_PASSWORD secret."
+          }
+
+      - name: Prepare Windows signing certificate
+        id: signing
+        if: ${{ secrets.WINDOWS_CERT_PFX_B64 != '' }}
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $certPath = Join-Path $env:RUNNER_TEMP "windows-codesign.pfx"
+          $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_B64)
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+          if (-not (Test-Path $certPath)) {
+            throw "Failed to write signing certificate to $certPath"
+          }
+
+          "cert_path=$certPath" >> $env:GITHUB_OUTPUT
+
+      - name: Build desktop packages
+        env:
+          WINDOWS_CERT_FILE: ${{ steps.signing.outputs.cert_path }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: npm --prefix ${{ env.APP_DIR }} run make
+
+      - name: Validate and capture release assets
+        id: assets
         shell: pwsh
         run: |
-          $artifactDir = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64"
-          $checksumFile = Join-Path $artifactDir "SHA256SUMS.txt"
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          if (-not (Test-Path $env:ARTIFACT_DIR)) {
+            throw "Artifact directory not found: $env:ARTIFACT_DIR"
+          }
+
+          $setupFiles = @(Get-ChildItem $env:ARTIFACT_DIR -File | Where-Object { $_.Name -like "*Setup.exe" } | Sort-Object Name)
+          $nupkgFiles = @(Get-ChildItem $env:ARTIFACT_DIR -File | Where-Object { $_.Name -like "*-full.nupkg" } | Sort-Object Name)
+          $releasesFile = Join-Path $env:ARTIFACT_DIR "RELEASES"
+
+          if ($setupFiles.Count -ne 1) {
+            throw "Expected exactly 1 setup exe, found $($setupFiles.Count)."
+          }
+
+          if ($nupkgFiles.Count -ne 1) {
+            throw "Expected exactly 1 full nupkg, found $($nupkgFiles.Count)."
+          }
+
+          if (-not (Test-Path $releasesFile)) {
+            throw "Missing RELEASES file."
+          }
+
+          $setupExe = $setupFiles[0]
+          $fullNupkg = $nupkgFiles[0]
+
+          if ($setupExe.Name -eq "Setup.exe") {
+            throw "Generic Setup.exe is not allowed. Use a branded/versioned installer filename."
+          }
+
+          "setup_exe=$($setupExe.FullName)" >> $env:GITHUB_OUTPUT
+          "full_nupkg=$($fullNupkg.FullName)" >> $env:GITHUB_OUTPUT
+          "releases_file=$releasesFile" >> $env:GITHUB_OUTPUT
+
+      - name: Generate SHA256 checksums
+        id: checksums
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $checksumFile = Join-Path $env:ARTIFACT_DIR "SHA256SUMS.txt"
+
           if (Test-Path $checksumFile) {
             Remove-Item $checksumFile -Force
           }
 
-          Get-ChildItem $artifactDir | Where-Object {
-            $_.Name -match "Setup\\.exe$|-full\\.nupkg$|^RELEASES$"
-          } | ForEach-Object {
-            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
-            "$hash *$($_.Name)" | Out-File -FilePath $checksumFile -Encoding ascii -Append
+          $filesToHash = @(
+            "${{ steps.assets.outputs.setup_exe }}",
+            "${{ steps.assets.outputs.full_nupkg }}",
+            "${{ steps.assets.outputs.releases_file }}"
+          )
+
+          foreach ($filePath in $filesToHash) {
+            if (-not (Test-Path $filePath)) {
+              throw "Missing file for checksum generation: $filePath"
+            }
+
+            $file = Get-Item $filePath
+            $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash *$($file.Name)" | Out-File -FilePath $checksumFile -Encoding ascii -Append
           }
 
           if (-not (Test-Path $checksumFile)) {
             throw "Checksum file was not generated."
           }
 
+          $lineCount = (Get-Content $checksumFile).Count
+          if ($lineCount -ne 3) {
+            throw "Expected 3 checksum entries, found $lineCount."
+          }
+
+          "file=$checksumFile" >> $env:GITHUB_OUTPUT
+
+      - name: Verify installer signature
+        if: ${{ steps.signing.outputs.cert_path != '' }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $setupExe = "${{ steps.assets.outputs.setup_exe }}"
+          $signature = Get-AuthenticodeSignature -FilePath $setupExe
+
+          if ($signature.Status -ne 'Valid') {
+            throw "Installer signature is not valid. Status: $($signature.Status)"
+          }
+
+          Write-Host "Verified signature subject: $($signature.SignerCertificate.Subject)"
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: DiskScribe2026-Windows-v${{ steps.app_version.outputs.value }}
           path: |
-            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe
-            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg
-            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES
-            apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt
+            ${{ steps.assets.outputs.setup_exe }}
+            ${{ steps.assets.outputs.full_nupkg }}
+            ${{ steps.assets.outputs.releases_file }}
+            ${{ steps.checksums.outputs.file }}
           if-no-files-found: error
+          retention-days: 30
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -87,23 +219,39 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
           $tag = "${{ github.ref_name }}"
-          $setupExe = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*Setup.exe" | Select-Object -First 1).FullName
-          $fullNupkg = (Get-ChildItem "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/*-full.nupkg" | Select-Object -First 1).FullName
-          $releasesFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES"
-          $checksumsFile = "apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/SHA256SUMS.txt"
+          $setupExe = "${{ steps.assets.outputs.setup_exe }}"
+          $fullNupkg = "${{ steps.assets.outputs.full_nupkg }}"
+          $releasesFile = "${{ steps.assets.outputs.releases_file }}"
+          $checksumsFile = "${{ steps.checksums.outputs.file }}"
+
+          $assetNames = @(
+            (Split-Path $setupExe -Leaf),
+            (Split-Path $fullNupkg -Leaf),
+            (Split-Path $releasesFile -Leaf),
+            (Split-Path $checksumsFile -Leaf)
+          )
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY 1>$null 2>$null
-          if ($LASTEXITCODE -ne 0) {
+          $releaseExists = ($LASTEXITCODE -eq 0)
+
+          if (-not $releaseExists) {
             gh release create $tag `
               --repo $env:GITHUB_REPOSITORY `
               --title "DiskScribe2026 Desktop $tag" `
-              --notes "Automated desktop release for $tag." `
+              --generate-notes `
               $setupExe `
               $fullNupkg `
               $releasesFile `
               $checksumsFile
           } else {
+            foreach ($assetName in $assetNames) {
+              gh release delete-asset $tag $assetName --repo $env:GITHUB_REPOSITORY --yes 1>$null 2>$null
+            }
+
             gh release upload $tag `
               --repo $env:GITHUB_REPOSITORY `
               --clobber `
@@ -111,4 +259,13 @@ jobs:
               $fullNupkg `
               $releasesFile `
               $checksumsFile
+          }
+
+      - name: Clean up signing certificate
+        if: ${{ always() && steps.signing.outputs.cert_path != '' }}
+        shell: pwsh
+        run: |
+          $certPath = "${{ steps.signing.outputs.cert_path }}"
+          if (Test-Path $certPath) {
+            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
           }
