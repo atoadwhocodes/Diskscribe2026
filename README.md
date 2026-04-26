@@ -1,8 +1,14 @@
 # DiskScribe2026
 
-Status: alpha / work in progress.
+DiskScribe2026 is a desktop tool for inspecting PC-98 disk images such as `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, and `.fdd`.
 
-DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy PC-98 disk images.
+It focuses on safe read-first exploration, partition/FAT inspection, hex review, Shift-JIS text handling, translation support, batch analysis, and file/byte export.
+
+Status: alpha / work in progress. Read-only and non-destructive workflows are the priority.
+
+## Why it exists
+
+PC-98 disk images often contain legacy partition structures, Japanese encodings, emulator-specific formats, and partially understood data layouts. DiskScribe2026 aims to make those images easier to inspect, document, translate, and preserve without modifying the original source image.
 
 ## Included Features
 
@@ -56,10 +62,26 @@ Build output:
 
 ## Roadmap
 
+### v0.1 / Alpha hardening
+
 - Improve parser reliability on edge-case and partially corrupted images
-- Expand filesystem and partition introspection depth
-- Add first-class diagnostics bundle export from the app
-- Harden installer upgrade/uninstall flow coverage in CI
+- Expand FAT and partition introspection
+- Add compatibility notes for known-good sample images
+- Improve diagnostics for unsupported or malformed images
+
+### v0.2
+
+- Add text search across decoded Shift-JIS regions
+- Add richer hex annotations for filesystem structures
+- Add diagnostics bundle export
+- Improve batch reporting output
+
+### v0.3
+
+- Add batch export workflows
+- Add image comparison tools
+- Expand format-specific metadata views
+- Continue installer and CI hardening
 
 ## Release Flow
 
