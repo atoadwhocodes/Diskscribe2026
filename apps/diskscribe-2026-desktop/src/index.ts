@@ -5,57 +5,23 @@ import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
 import type { DiskSummary } from './core/diskSummary';
 import { buildDiskSummaryFromPath, isSupportedDiskPath } from './core/diskSummary';
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
+import {
+  APP_BATCH_PLAN_VERSION,
+  DISK_IMAGE_FILTERS,
+  HEX_SETTINGS
+} from './mainProcessConfig';
+import type {
+  BatchItemStatus,
+  BatchQueueItemPayload,
+  DesktopSession,
+  HexMode,
+  HexSelection
+} from './mainProcessTypes';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-type HexMode = 'disk' | 'raw';
-
-interface HexSelection {
-  mode: HexMode;
-  start: number;
-  end: number;
-}
-
-type BatchItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
-
-interface BatchQueueItemPayload {
-  id: string;
-  filePath: string;
-}
-
-interface BatchRunState {
-  activeRunId: number;
-  running: boolean;
-  cancelRequested: boolean;
-}
-
-interface DesktopSession {
-  windowId: number;
-  rendererReady: boolean;
-  filePath: string | undefined;
-  summary: DiskSummary | undefined;
-  reader: PagedFileByteReader | undefined;
-  mode: HexMode;
-  selection: HexSelection | undefined;
-  cursorOffset: number | undefined;
-  batch: BatchRunState;
-}
-
-const HEX_SETTINGS = {
-  pageBytes: 65536,
-  maxCachedPages: 32,
-  defaultMode: 'disk' as HexMode
-};
-
 const sessionsByWindowId = new Map<number, DesktopSession>();
-const DISK_IMAGE_FILTERS = [
-  {
-    name: 'PC-98 Disk Images',
-    extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
-  }
-];
-const APP_BATCH_PLAN_VERSION = 1;
 
 if (require('electron-squirrel-startup')) {
   app.quit();

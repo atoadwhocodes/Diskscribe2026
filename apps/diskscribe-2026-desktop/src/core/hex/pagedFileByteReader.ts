@@ -76,7 +76,7 @@ export class PagedFileByteReader {
     if (handlePromise) {
       void handlePromise
         .then(async (handle) => handle.close())
-        .catch(() => undefined);
+        .catch((): undefined => undefined);
     }
   }
 

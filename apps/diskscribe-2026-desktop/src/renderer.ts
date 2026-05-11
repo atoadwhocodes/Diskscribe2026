@@ -1,61 +1,23 @@
 import './desktopTheme.css';
 import './webview/editor.css';
 import { APP_DESKTOP_NAME } from './appMeta';
-
-type QueueItemStatus = 'queued' | 'running' | 'done' | 'error' | 'canceled';
-type StatusTone = 'info' | 'success' | 'warning' | 'error' | 'busy';
+import type {
+  BatchPlanEntryPayload,
+  DesktopBridge,
+  QueueItem,
+  QueueItemStatus,
+  StatusTone,
+  VsCodeApi
+} from './rendererTypes';
 
 const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/i;
 const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
-
-interface BatchPlanEntryPayload {
-  id: string;
-  filePath: string;
-}
-
-interface BatchPlanSaveResult {
-  saved: boolean;
-  filePath?: string;
-  error?: string;
-}
-
-interface BatchPlanLoadResult {
-  filePath?: string;
-  entries: BatchPlanEntryPayload[];
-  error?: string;
-}
-
-interface DesktopBridge {
-  postMessage(message: unknown): Promise<void>;
-  openDiskDialog(): Promise<string | undefined>;
-  openDisksDialog(): Promise<string[]>;
-  openDiskFolderDialog(): Promise<string[]>;
-  writeClipboard(text: string): Promise<void>;
-  saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
-  loadBatchPlan(): Promise<BatchPlanLoadResult>;
-  onHostMessage(handler: (message: unknown) => void): () => void;
-}
-
-interface VsCodeApi {
-  postMessage(message: unknown): void;
-  getState(): unknown;
-  setState(value: unknown): unknown;
-}
 
 declare global {
   interface Window {
     diskScribeDesktop: DesktopBridge;
     acquireVsCodeApi: () => VsCodeApi;
   }
-}
-
-interface QueueItem {
-  id: string;
-  filePath: string;
-  status: QueueItemStatus;
-  parserId?: string;
-  sizeBytes?: number;
-  message?: string;
 }
 
 const stateStore: { value: unknown } = {
@@ -477,7 +439,7 @@ async function runQueue(): Promise<void> {
   }
 
   queueState.isRunning = true;
-  queueState.items = queueState.items.map((item) => ({
+  queueState.items = queueState.items.map((item): QueueItem => ({
     ...item,
     status: 'queued',
     parserId: undefined,

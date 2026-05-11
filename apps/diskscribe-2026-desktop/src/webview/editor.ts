@@ -8,54 +8,20 @@ import {
   glyphForByteForCharset,
   normalizeCharsetId
 } from './necCharsets';
+import {
+  BYTES_PER_ROW,
+  CHUNK_BYTES,
+  MAX_CHAR_FRAME_BYTES,
+  MAX_CHUNKS_PER_MODE,
+  MAX_TRANSLATION_BYTES,
+  OVERSCAN_ROWS,
+  ROW_HEIGHT
+} from './editorConstants';
+import { editorElements as elements } from './editorElements';
 
 const vscode = acquireVsCodeApi();
 
-const BYTES_PER_ROW = 16;
-const ROW_HEIGHT = 20;
-const OVERSCAN_ROWS = 24;
-const CHUNK_BYTES = 65536;
-const MAX_CHUNKS_PER_MODE = 128;
-const MAX_TRANSLATION_BYTES = 8192;
-const MAX_CHAR_FRAME_BYTES = 192;
-
 const persisted = vscode.getState() || {};
-
-const elements = {
-  status: document.getElementById('status'),
-  fileName: document.getElementById('fileName'),
-  format: document.getElementById('format'),
-  parserId: document.getElementById('parserId'),
-  dataOffsetBytes: document.getElementById('dataOffsetBytes'),
-  sizeBytes: document.getElementById('sizeBytes'),
-  sectorSize: document.getElementById('sectorSize'),
-  totalSectors: document.getElementById('totalSectors'),
-  geometry: document.getElementById('geometry'),
-  partitionRows: document.getElementById('partitionRows'),
-  jumpResult: document.getElementById('jumpResult'),
-  hexModeSelect: document.getElementById('hexModeSelect'),
-  hexRangeMeta: document.getElementById('hexRangeMeta'),
-  hexScroller: document.getElementById('hexScroller'),
-  hexSpacer: document.getElementById('hexSpacer'),
-  hexRows: document.getElementById('hexRows'),
-  shiftJisPreview: document.getElementById('shiftJisPreview'),
-  notes: document.getElementById('notes'),
-  refreshButton: document.getElementById('refreshButton'),
-  jumpOffsetButton: document.getElementById('jumpOffsetButton'),
-  jumpLbaButton: document.getElementById('jumpLbaButton'),
-  copyOffsetButton: document.getElementById('copyOffsetButton'),
-  copyLbaButton: document.getElementById('copyLbaButton'),
-  extractSelectionButton: document.getElementById('extractSelectionButton'),
-  translationEncoding: document.getElementById('translationEncoding'),
-  translationMeta: document.getElementById('translationMeta'),
-  decodedSelection: document.getElementById('decodedSelection'),
-  translationDraft: document.getElementById('translationDraft'),
-  copyDecodedButton: document.getElementById('copyDecodedButton'),
-  copyDraftButton: document.getElementById('copyDraftButton'),
-  clearDraftButton: document.getElementById('clearDraftButton'),
-  charsetLegend: document.getElementById('charsetLegend'),
-  charFrameRows: document.getElementById('charFrameRows')
-};
 
 const hasPersistedTranslationEncoding =
   typeof persisted.translationEncoding === 'string' && persisted.translationEncoding.length > 0;
@@ -1294,4 +1260,3 @@ function persistState() {
 }
 
 export {};
-
