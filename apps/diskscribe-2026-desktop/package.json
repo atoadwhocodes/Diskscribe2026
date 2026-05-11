@@ -32,7 +32,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
     "css-loader": "^6.11.0",
-    "electron": "40.6.0",
+    "electron": "^40.10.0",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
     "fork-ts-checker-webpack-plugin": "^7.3.0",
@@ -42,6 +42,16 @@
     "typescript": "~4.5.4"
   },
   "dependencies": {
+    "diskscribe2026": "file:../..",
     "electron-squirrel-startup": "^1.0.1"
+  },
+  "overrides": {
+    "@electron/rebuild": "^4.0.4",
+    "@tootallnate/once": "^3.0.1",
+    "cacache": "^20.0.4",
+    "make-fetch-happen": "^15.0.5",
+    "tar": "^7.5.15",
+    "tmp": "^0.2.5",
+    "webpack-dev-server": "^5.2.3"
   }
 }
