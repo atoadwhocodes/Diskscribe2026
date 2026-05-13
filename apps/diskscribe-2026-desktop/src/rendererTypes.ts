@@ -18,6 +18,12 @@ export interface BatchPlanLoadResult {
   error?: string;
 }
 
+export interface DiagnosticsExportResult {
+  saved: boolean;
+  filePath?: string;
+  error?: string;
+}
+
 export interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
@@ -26,6 +32,7 @@ export interface DesktopBridge {
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
+  exportDiagnostics(): Promise<DiagnosticsExportResult>;
   onHostMessage(handler: (message: unknown) => void): () => void;
 }
 

@@ -1,0 +1,396 @@
+const assert = require('node:assert/strict');
+const { mkdtemp, rm, writeFile } = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
+const test = require('node:test');
+
+const {
+  parseD88,
+  parseHDI,
+  parseHDM,
+  parseNHD
+} = require('../src/core/diskParsers');
+const {
+  buildDiskSummaryFromPath,
+  isSupportedDiskPath
+} = require('../src/core/diskSummary');
+const { buildFatClusterChain } = require('../src/core/fat');
+const { extractFatFileBytes } = require('../src/core/fatExtract');
+const { PagedFileByteReader } = require('../src/core/hex/pagedFileByteReader');
+
+const SECTOR_SIZE = 512;
+
+test('supported disk path detection is extension based and case insensitive', () => {
+  assert.equal(isSupportedDiskPath('game.HDM'), true);
+  assert.equal(isSupportedDiskPath('archive.nhd'), true);
+  assert.equal(isSupportedDiskPath('notes.txt'), false);
+  assert.equal(isSupportedDiskPath('disk.hdm.bak'), false);
+});
+
+test('HDI parser detects an MBR at a common data offset', () => {
+  const bytes = new Uint8Array(0x2000 + SECTOR_SIZE);
+  writeMbr(bytes, 0x1000, [{ typeCode: 0x06, startLba: 2, totalSectors: 32 }]);
+
+  const parsed = parseHDI(bytes, bytes.length);
+
+  assert.equal(parsed.parserKind, 'HDI');
+  assert.equal(parsed.dataOffsetBytes, 0x1000);
+  assert.equal(parsed.partitions.length, 1);
+  assert.equal(parsed.partitions[0].typeName, 'FAT16');
+  assert.equal(parsed.partitions[0].startOffsetBytes, 0x1000 + 2 * SECTOR_SIZE);
+});
+
+test('NHD parser honors a valid header size field when signature is present', () => {
+  const bytes = new Uint8Array(0x1000 + SECTOR_SIZE);
+  writeAscii(bytes, 0, 'T98HDDIMAGE.R0');
+  writeUint32LE(bytes, 0x10, 0x1000);
+  writeMbr(bytes, 0x1000, [{ typeCode: 0x0e, startLba: 1, totalSectors: 64 }]);
+
+  const parsed = parseNHD(bytes, bytes.length);
+
+  assert.equal(parsed.parserKind, 'NHD');
+  assert.equal(parsed.dataOffsetBytes, 0x1000);
+  assert.equal(parsed.partitions.length, 1);
+  assert.equal(parsed.partitions[0].typeName, 'FAT16 (LBA)');
+});
+
+test('HDM parser reads a FAT boot sector BPB from raw floppy-style images', () => {
+  const bytes = new Uint8Array(1261568);
+  writeFatBpb(bytes, { bytesPerSector: 1024, sectorsPerCluster: 1, totalSectors: 1232 });
+
+  const parsed = parseHDM(bytes, bytes.length);
+
+  assert.equal(parsed.parserKind, 'HDM');
+  assert.equal(parsed.dataOffsetBytes, 0);
+  assert.equal(parsed.sectorSize, 1024);
+  assert.equal(parsed.filesystems.length, 1);
+  assert.equal(parsed.filesystems[0].type, 'FAT12');
+  assert.equal(parsed.filesystems[0].firstDataLba, 14);
+  assert.match(parsed.headerSummary.join('\n'), /1024 bytes\/sector/);
+});
+
+test('HDI parser reports FAT metadata from a partition boot sector in the preview window', () => {
+  const bytes = new Uint8Array(0x1000 + 128 * SECTOR_SIZE);
+  writeMbr(bytes, 0x1000, [{ typeCode: 0x06, startLba: 1, totalSectors: 96 }]);
+  writeFatBpb(bytes, {
+    offset: 0x1000 + SECTOR_SIZE,
+    bytesPerSector: SECTOR_SIZE,
+    sectorsPerCluster: 2,
+    totalSectors: 96
+  });
+
+  const parsed = parseHDI(bytes, bytes.length);
+
+  assert.equal(parsed.filesystems.length, 1);
+  assert.equal(parsed.filesystems[0].source, 'Partition Boot Sector');
+  assert.equal(parsed.filesystems[0].offsetBytes, 0x1000 + SECTOR_SIZE);
+  assert.equal(parsed.filesystems[0].sectorsPerCluster, 2);
+});
+
+test('parsers tolerate short and malformed images without throwing', () => {
+  const tiny = new Uint8Array(32);
+  const hdi = parseHDI(tiny, tiny.length);
+  const nhd = parseNHD(tiny, tiny.length);
+  const d88 = parseD88(tiny, tiny.length);
+  const hdm = parseHDM(tiny, tiny.length);
+
+  assert.equal(hdi.partitions.length, 0);
+  assert.equal(nhd.partitions.length, 0);
+  assert.equal(d88.partitions.length, 0);
+  assert.equal(hdm.sectorSize, SECTOR_SIZE);
+  assert.equal(hdm.filesystems.length, 0);
+});
+
+test('NHD parser rejects unusable signature header sizes and falls back safely', () => {
+  const bytes = new Uint8Array(0x1000 + SECTOR_SIZE);
+  writeAscii(bytes, 0, 'T98HDDIMAGE.R0');
+  writeUint32LE(bytes, 0x10, 123);
+
+  const parsed = parseNHD(bytes, bytes.length);
+
+  assert.equal(parsed.dataOffsetBytes, 0x1000);
+  assert.match(parsed.parserNotes.join('\n'), /Header size field not usable/);
+  assert.equal(parsed.partitions.length, 0);
+});
+
+test('D88 parser defaults safely when the track table is empty', () => {
+  const bytes = new Uint8Array(0x2b0);
+
+  const parsed = parseD88(bytes, bytes.length);
+
+  assert.equal(parsed.dataOffsetBytes, 0x2b0);
+  assert.match(parsed.parserNotes.join('\n'), /Track table offset is empty/);
+});
+
+test('disk summary builds geometry and notes for a temporary HDM image', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-test-'));
+  const diskPath = path.join(dir, 'sample.hdm');
+  try {
+    const bytes = new Uint8Array(80 * 2 * 8 * SECTOR_SIZE);
+    writeFatBpb(bytes, { bytesPerSector: SECTOR_SIZE, sectorsPerCluster: 1, totalSectors: 1280 });
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+
+    assert.equal(summary.format, 'HDM');
+    assert.equal(summary.totalSectors, 1280);
+    assert.deepEqual(summary.geometry, { cylinders: 80, heads: 2, sectorsPerTrack: 8 });
+    assert.equal(summary.notes.includes('No partitions detected.'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('disk summary extracts FAT12/FAT16 root directory short entries', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-rootdir-'));
+  const diskPath = path.join(dir, 'rootdir.hdm');
+  try {
+    const bytes = new Uint8Array(80 * 2 * 8 * SECTOR_SIZE);
+    writeFatBpb(bytes, {
+      bytesPerSector: SECTOR_SIZE,
+      sectorsPerCluster: 1,
+      totalSectors: 1280,
+      rootEntries: 32,
+      sectorsPerFat: 1
+    });
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE, {
+      name: 'README',
+      extension: 'TXT',
+      attribute: 0x20,
+      startCluster: 2,
+      sizeBytes: 1234
+    });
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE + 32, {
+      name: 'GAMES',
+      extension: '',
+      attribute: 0x10,
+      startCluster: 4,
+      sizeBytes: 0
+    });
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+
+    assert.deepEqual(
+      summary.rootDirectoryEntries.map((entry) => ({
+        name: entry.name,
+        attributes: entry.attributes,
+        startCluster: entry.startCluster,
+        sizeBytes: entry.sizeBytes
+      })),
+      [
+        { name: 'README.TXT', attributes: ['ARCH'], startCluster: 2, sizeBytes: 1234 },
+        { name: 'GAMES', attributes: ['DIR'], startCluster: 4, sizeBytes: 0 }
+      ]
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('disk summary extracts subdirectories, long names, and deleted FAT entries', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-tree-'));
+  const diskPath = path.join(dir, 'tree.hdm');
+  try {
+    const bytes = new Uint8Array(80 * 2 * 8 * SECTOR_SIZE);
+    writeFatBpb(bytes, {
+      bytesPerSector: SECTOR_SIZE,
+      sectorsPerCluster: 1,
+      totalSectors: 1280,
+      rootEntries: 32,
+      sectorsPerFat: 1
+    });
+    writeFat12Entry(bytes, SECTOR_SIZE, 4, 0xfff);
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE, {
+      name: 'GAMES',
+      extension: '',
+      attribute: 0x10,
+      startCluster: 4,
+      sizeBytes: 0
+    });
+    writeFatLongNameEntry(bytes, 3 * SECTOR_SIZE + 32, 'Scenario.txt');
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE + 64, {
+      name: 'SCENAR~1',
+      extension: 'TXT',
+      attribute: 0x20,
+      startCluster: 2,
+      sizeBytes: 42
+    });
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE + 96, {
+      name: 'OLD',
+      extension: 'BIN',
+      attribute: 0x20,
+      startCluster: 5,
+      sizeBytes: 12,
+      deleted: true
+    });
+    writeFatDirectoryEntry(bytes, 7 * SECTOR_SIZE, {
+      name: 'MAP',
+      extension: 'DAT',
+      attribute: 0x20,
+      startCluster: 6,
+      sizeBytes: 9
+    });
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.path === 'GAMES/MAP.DAT'), true);
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.name === 'Scenario.txt'), true);
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.isDeleted), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('FAT chain parsing and extraction follow fragmented files', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-extract-'));
+  const diskPath = path.join(dir, 'extract.hdm');
+  try {
+    const bytes = new Uint8Array(80 * 2 * 8 * SECTOR_SIZE);
+    writeFatBpb(bytes, {
+      bytesPerSector: SECTOR_SIZE,
+      sectorsPerCluster: 1,
+      totalSectors: 1280,
+      rootEntries: 32,
+      sectorsPerFat: 1
+    });
+    writeFat12Entry(bytes, SECTOR_SIZE, 2, 5);
+    writeFat12Entry(bytes, SECTOR_SIZE, 5, 0xfff);
+    bytes.fill(0x41, 5 * SECTOR_SIZE, 6 * SECTOR_SIZE);
+    bytes.fill(0x42, 8 * SECTOR_SIZE, 9 * SECTOR_SIZE);
+    writeFatDirectoryEntry(bytes, 3 * SECTOR_SIZE, {
+      name: 'FRAG',
+      extension: 'BIN',
+      attribute: 0x20,
+      startCluster: 2,
+      sizeBytes: 700
+    });
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+    const entry = summary.rootDirectoryEntries.find((candidate) => candidate.name === 'FRAG.BIN');
+    assert.ok(entry);
+
+    const fat = bytes.subarray(SECTOR_SIZE, 2 * SECTOR_SIZE);
+    assert.deepEqual(buildFatClusterChain(fat, summary.filesystems[0], 2, 4), [2, 5]);
+
+    const extracted = await extractFatFileBytes(diskPath, summary.filesystems[0], entry);
+    assert.equal(extracted.length, 700);
+    assert.equal(extracted[0], 0x41);
+    assert.equal(extracted[511], 0x41);
+    assert.equal(extracted[512], 0x42);
+    assert.equal(extracted[699], 0x42);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('paged byte reader clamps ranges and reads across page boundaries', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-reader-'));
+  const filePath = path.join(dir, 'bytes.bin');
+  try {
+    const bytes = Buffer.alloc(10000);
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = index % 251;
+    }
+    await writeFile(filePath, bytes);
+
+    const reader = new PagedFileByteReader(filePath, bytes.length, {
+      pageBytes: 4096,
+      maxCachedPages: 2
+    });
+    try {
+      assert.deepEqual(
+        Array.from(await reader.readFileBytes(4090, 20)),
+        Array.from(bytes.subarray(4090, 4110))
+      );
+      assert.deepEqual(
+        Array.from(await reader.readFileBytes(9990, 30)),
+        Array.from(bytes.subarray(9990))
+      );
+      assert.equal((await reader.readFileBytes(10000, 10)).length, 0);
+    } finally {
+      reader.dispose();
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+function writeMbr(bytes, offset, entries) {
+  bytes[offset + 510] = 0x55;
+  bytes[offset + 511] = 0xaa;
+
+  entries.forEach((entry, index) => {
+    const base = offset + 446 + index * 16;
+    bytes[base] = entry.bootable ? 0x80 : 0x00;
+    bytes[base + 4] = entry.typeCode;
+    writeUint32LE(bytes, base + 8, entry.startLba);
+    writeUint32LE(bytes, base + 12, entry.totalSectors);
+  });
+}
+
+function writeFatBpb(bytes, options) {
+  const offset = options.offset || 0;
+  bytes[offset] = 0xeb;
+  bytes[offset + 1] = 0x3c;
+  bytes[offset + 2] = 0x90;
+  writeAscii(bytes, offset + 3, 'DISKSCRB');
+  writeUint16LE(bytes, offset + 11, options.bytesPerSector);
+  bytes[offset + 13] = options.sectorsPerCluster;
+  writeUint16LE(bytes, offset + 14, 1);
+  bytes[offset + 16] = 2;
+  writeUint16LE(bytes, offset + 17, options.rootEntries || 224);
+  writeUint16LE(bytes, offset + 19, options.totalSectors);
+  writeUint16LE(bytes, offset + 22, options.sectorsPerFat || 3);
+  bytes[offset + 510] = 0x55;
+  bytes[offset + 511] = 0xaa;
+}
+
+function writeFatDirectoryEntry(bytes, offset, entry) {
+  const name = entry.name.padEnd(8, ' ').slice(0, 8);
+  const extension = entry.extension.padEnd(3, ' ').slice(0, 3);
+  writeAscii(bytes, offset, name + extension);
+  if (entry.deleted) {
+    bytes[offset] = 0xe5;
+  }
+  bytes[offset + 11] = entry.attribute;
+  writeUint16LE(bytes, offset + 26, entry.startCluster);
+  writeUint32LE(bytes, offset + 28, entry.sizeBytes);
+}
+
+function writeFat12Entry(bytes, fatOffset, cluster, value) {
+  const offset = fatOffset + Math.floor(cluster + cluster / 2);
+  const current = bytes[offset] | (bytes[offset + 1] << 8);
+  const next = cluster % 2 === 0 ? (current & 0xf000) | (value & 0x0fff) : (current & 0x000f) | ((value & 0x0fff) << 4);
+  bytes[offset] = next & 0xff;
+  bytes[offset + 1] = (next >>> 8) & 0xff;
+}
+
+function writeFatLongNameEntry(bytes, offset, text) {
+  bytes[offset] = 0x41;
+  bytes[offset + 11] = 0x0f;
+  const codes = Array.from(text, (char) => char.charCodeAt(0));
+  const positions = [1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30];
+  positions.forEach((position, index) => {
+    const value = index < codes.length ? codes[index] : index === codes.length ? 0x0000 : 0xffff;
+    writeUint16LE(bytes, offset + position, value);
+  });
+}
+
+function writeAscii(bytes, offset, text) {
+  Buffer.from(text, 'ascii').copy(Buffer.from(bytes.buffer), offset);
+}
+
+function writeUint16LE(bytes, offset, value) {
+  bytes[offset] = value & 0xff;
+  bytes[offset + 1] = (value >>> 8) & 0xff;
+}
+
+function writeUint32LE(bytes, offset, value) {
+  bytes[offset] = value & 0xff;
+  bytes[offset + 1] = (value >>> 8) & 0xff;
+  bytes[offset + 2] = (value >>> 16) & 0xff;
+  bytes[offset + 3] = (value >>> 24) & 0xff;
+}

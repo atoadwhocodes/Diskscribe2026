@@ -34,6 +34,9 @@ const state = {
   dataOffset: 0,
   sectorSize: 512,
   geometry: undefined,
+  currentDirectory: typeof persisted.currentDirectory === 'string' ? persisted.currentDirectory : '',
+  selectedRootEntryPath: typeof persisted.selectedRootEntryPath === 'string' ? persisted.selectedRootEntryPath : '',
+  showDeletedEntries: persisted.showDeletedEntries === true,
   translationEncoding: normalizeCharsetId(persisted.translationEncoding),
   translationDraft: typeof persisted.translationDraft === 'string' ? persisted.translationDraft : '',
   selectionStart: Number.isInteger(persisted.selectionStart) ? persisted.selectionStart : 0,
@@ -84,6 +87,33 @@ if (elements.copyLbaButton) {
 if (elements.extractSelectionButton) {
   elements.extractSelectionButton.addEventListener('click', () => {
     void requestExtractSelection();
+  });
+}
+
+if (elements.exportDiagnosticsButton) {
+  elements.exportDiagnosticsButton.addEventListener('click', () => {
+    post({ type: 'desktop.exportDiagnostics' });
+  });
+}
+
+if (elements.directoryUpButton) {
+  elements.directoryUpButton.addEventListener('click', () => {
+    navigateDirectory(getParentDirectory(state.currentDirectory));
+  });
+}
+
+if (elements.extractFileButton) {
+  elements.extractFileButton.addEventListener('click', () => {
+    requestExtractSelectedFile();
+  });
+}
+
+if (elements.showDeletedEntries) {
+  elements.showDeletedEntries.addEventListener('change', () => {
+    state.showDeletedEntries = elements.showDeletedEntries.checked === true;
+    state.selectedRootEntryPath = '';
+    persistState();
+    renderRootDirectory(state.summary?.rootDirectoryEntries || []);
   });
 }
 
@@ -216,6 +246,41 @@ if (elements.partitionRows) {
   });
 }
 
+if (elements.rootDirectoryRows) {
+  elements.rootDirectoryRows.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target.closest('[data-root-entry-offset]') : null;
+    if (!target) {
+      return;
+    }
+
+    const offset = Number.parseInt(target.getAttribute('data-root-entry-offset') || '', 10);
+    if (!Number.isFinite(offset) || offset < 0) {
+      return;
+    }
+
+    const entry = findRootEntryByOffset(offset);
+    if (entry?.isDirectory && !entry.isDeleted) {
+      navigateDirectory(entry.path || '');
+      return;
+    }
+
+    state.selectedRootEntryPath = entry?.path || '';
+    persistState();
+    renderRootDirectory(state.summary?.rootDirectoryEntries || []);
+    post({
+      type: 'hex.jump',
+      mode: 'raw',
+      offset
+    });
+    setText(
+      elements.jumpResult,
+      `Jump target: root directory entry at raw offset ${formatNumber(offset)} (0x${offset
+        .toString(16)
+        .toUpperCase()})`
+    );
+  });
+}
+
 syncTranslatorInputs();
 refreshTranslationPanels();
 
@@ -282,6 +347,8 @@ function renderSummary(summary) {
   state.dataOffset = Number(summary.dataOffsetBytes) || 0;
   state.sectorSize = Number(summary.sectorSize) || 512;
   state.geometry = summary.geometry;
+  state.currentDirectory = '';
+  state.selectedRootEntryPath = '';
 
   setText(elements.status, 'Disk image loaded.');
   setText(elements.fileName, summary.fileName);
@@ -301,7 +368,10 @@ function renderSummary(summary) {
     setText(elements.geometry, 'Unknown');
   }
 
+  renderFilesystemSummary(summary.filesystems || []);
+  renderFilesystemDetails(summary.filesystems || []);
   renderPartitions(summary.partitions || []);
+  renderRootDirectory(summary.rootDirectoryEntries || []);
   setText(elements.shiftJisPreview, summary.shiftJisPreview || '(no preview)');
   setText(
     elements.notes,
@@ -430,6 +500,8 @@ function renderError(message) {
   setText(elements.status, 'Unable to load disk image.');
   setText(elements.jumpResult, 'No active jump target.');
   renderPartitions([]);
+  renderRootDirectory([]);
+  renderFilesystemDetails([]);
   setText(elements.hexRangeMeta, 'No range selected.');
   if (elements.hexRows) {
     elements.hexRows.textContent = '';
@@ -474,6 +546,159 @@ function renderPartitions(partitions) {
     appendCell(row, `${formatNumber(partition.startOffsetBytes)} bytes`);
     elements.partitionRows.appendChild(row);
   }
+}
+
+function renderFilesystemSummary(filesystems) {
+  if (!elements.filesystem) {
+    return;
+  }
+
+  if (!Array.isArray(filesystems) || filesystems.length === 0) {
+    setText(elements.filesystem, 'None detected');
+    return;
+  }
+
+  const primary = filesystems[0];
+  setText(
+    elements.filesystem,
+    `${primary.type || 'FAT'} (${formatNumber(primary.clusterCount)} clusters, data LBA ${formatNumber(
+      primary.firstDataLba
+    )})`
+  );
+}
+
+function renderFilesystemDetails(filesystems) {
+  if (!elements.filesystemDetails) {
+    return;
+  }
+
+  elements.filesystemDetails.innerHTML = '';
+  if (!Array.isArray(filesystems) || filesystems.length === 0) {
+    appendDefinition(elements.filesystemDetails, 'Status', 'No filesystem metadata loaded.');
+    return;
+  }
+
+  const filesystem = filesystems[0];
+  appendDefinition(elements.filesystemDetails, 'Type', filesystem.type || 'FAT');
+  appendDefinition(elements.filesystemDetails, 'Offset', `${formatNumber(filesystem.offsetBytes)} bytes`);
+  appendDefinition(elements.filesystemDetails, 'Reserved', `${formatNumber(filesystem.reservedSectors)} sectors`);
+  appendDefinition(elements.filesystemDetails, 'FATs', formatNumber(filesystem.fatCount));
+  appendDefinition(elements.filesystemDetails, 'FAT Size', `${formatNumber(filesystem.sectorsPerFat)} sectors`);
+  appendDefinition(elements.filesystemDetails, 'Root LBA', formatNumber(filesystem.firstRootDirectoryLba));
+  appendDefinition(elements.filesystemDetails, 'Data LBA', formatNumber(filesystem.firstDataLba));
+  appendDefinition(elements.filesystemDetails, 'Clusters', formatNumber(filesystem.clusterCount));
+}
+
+function renderRootDirectory(entries) {
+  if (!elements.rootDirectoryRows) {
+    return;
+  }
+
+  elements.rootDirectoryRows.innerHTML = '';
+  syncDirectoryControls();
+
+  const visibleEntries = getVisibleDirectoryEntries(entries);
+  if (elements.directoryPath) {
+    elements.directoryPath.textContent = state.currentDirectory ? `/${state.currentDirectory}` : '/';
+    elements.directoryPath.title = elements.directoryPath.textContent;
+  }
+
+  if (visibleEntries.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.textContent = 'No root directory entries detected.';
+    row.appendChild(cell);
+    elements.rootDirectoryRows.appendChild(row);
+    return;
+  }
+
+  for (const entry of visibleEntries) {
+    const row = document.createElement('tr');
+    const offset = Number(entry.offsetBytes || 0);
+    row.setAttribute('data-root-entry-offset', String(offset));
+    row.title = entry.isDirectory && !entry.isDeleted ? 'Click to open this directory.' : 'Click to select and jump.';
+    if (entry.path && entry.path === state.selectedRootEntryPath) {
+      row.classList.add('is-selected');
+    }
+    if (entry.isDeleted) {
+      row.classList.add('is-deleted');
+    }
+
+    appendCell(row, `${entry.isDirectory ? '[' : ''}${entry.name || '(unnamed)'}${entry.isDirectory ? ']' : ''}`);
+    appendCell(row, Array.isArray(entry.attributes) && entry.attributes.length > 0 ? entry.attributes.join(',') : 'FILE');
+    appendCell(row, formatNumber(entry.startCluster));
+    appendCell(row, `${formatNumber(entry.sizeBytes)} bytes`);
+    elements.rootDirectoryRows.appendChild(row);
+  }
+}
+
+function getVisibleDirectoryEntries(entries) {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  return entries.filter((entry) => {
+    if (!state.showDeletedEntries && entry.isDeleted) {
+      return false;
+    }
+    return (entry.parentPath || '') === state.currentDirectory;
+  });
+}
+
+function navigateDirectory(path) {
+  state.currentDirectory = path || '';
+  state.selectedRootEntryPath = '';
+  persistState();
+  renderRootDirectory(state.summary?.rootDirectoryEntries || []);
+}
+
+function getParentDirectory(path) {
+  const text = typeof path === 'string' ? path : '';
+  const slashIndex = text.lastIndexOf('/');
+  return slashIndex > 0 ? text.slice(0, slashIndex) : '';
+}
+
+function findRootEntryByOffset(offset) {
+  const entries = state.summary?.rootDirectoryEntries || [];
+  return entries.find((entry) => Number(entry.offsetBytes || 0) === offset);
+}
+
+function findSelectedRootEntry() {
+  const entries = state.summary?.rootDirectoryEntries || [];
+  return entries.find((entry) => entry.path === state.selectedRootEntryPath);
+}
+
+function syncDirectoryControls() {
+  if (elements.directoryUpButton) {
+    elements.directoryUpButton.disabled = !state.currentDirectory;
+  }
+  if (elements.showDeletedEntries && elements.showDeletedEntries.checked !== state.showDeletedEntries) {
+    elements.showDeletedEntries.checked = state.showDeletedEntries;
+  }
+  if (elements.extractFileButton) {
+    const selected = findSelectedRootEntry();
+    elements.extractFileButton.disabled = !selected || selected.isDirectory || selected.isDeleted;
+  }
+}
+
+function requestExtractSelectedFile() {
+  const selected = findSelectedRootEntry();
+  if (!selected || selected.isDirectory || selected.isDeleted) {
+    setText(elements.status, 'Select a file entry before extracting.');
+    return;
+  }
+
+  post({
+    type: 'desktop.extractFile',
+    entry: {
+      filesystemOffsetBytes: selected.filesystemOffsetBytes,
+      path: selected.path,
+      name: selected.name,
+      startCluster: selected.startCluster,
+      sizeBytes: selected.sizeBytes
+    }
+  });
 }
 
 function renderHexViewport(force) {
@@ -1242,6 +1467,17 @@ function appendCell(row, value) {
   row.appendChild(cell);
 }
 
+function appendDefinition(list, term, detail) {
+  const wrap = document.createElement('div');
+  const dt = document.createElement('dt');
+  const dd = document.createElement('dd');
+  dt.textContent = term;
+  dd.textContent = detail;
+  wrap.appendChild(dt);
+  wrap.appendChild(dd);
+  list.appendChild(wrap);
+}
+
 function post(message) {
   vscode.postMessage(message);
 }
@@ -1255,7 +1491,10 @@ function persistState() {
     selectionStart: state.selectionStart,
     selectionEnd: state.selectionEnd,
     cursorOffset: state.cursorOffset,
-    anchorOffset: state.anchorOffset
+    anchorOffset: state.anchorOffset,
+    currentDirectory: state.currentDirectory,
+    selectedRootEntryPath: state.selectedRootEntryPath,
+    showDeletedEntries: state.showDeletedEntries
   });
 }
 

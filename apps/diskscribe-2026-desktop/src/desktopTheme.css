@@ -13,7 +13,7 @@
   --app-ink-soft: #5b6a70;
   --app-accent: #0f7a69;
   --app-accent-strong: #0b5f52;
-  --app-accent-warm: #cf7b2f;
+  --app-accent-cool: #2f6f8f;
 
   --app-status-info: #365f6d;
   --app-status-success: #0f7a69;
@@ -34,7 +34,7 @@ body {
 body {
   background:
     radial-gradient(850px 360px at 0% -10%, rgba(66, 133, 148, 0.28), transparent 72%),
-    radial-gradient(820px 420px at 105% -5%, rgba(215, 136, 61, 0.2), transparent 68%),
+    radial-gradient(820px 420px at 105% -5%, rgba(47, 111, 143, 0.2), transparent 68%),
     linear-gradient(180deg, var(--app-bg-0) 0%, var(--app-bg-1) 100%);
   color: var(--app-ink);
   font-family: var(--app-font-sans);
@@ -87,7 +87,7 @@ body {
 
 .brandMark {
   align-items: center;
-  background: linear-gradient(140deg, #1d6f7f, #d07f30);
+  background: linear-gradient(140deg, #1d6f7f, #2f6f8f);
   border-radius: 14px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   color: #fff;
@@ -155,7 +155,7 @@ button {
 }
 
 button:hover:enabled {
-  background: linear-gradient(180deg, #ffffff, #f2dfc4);
+  background: linear-gradient(180deg, #ffffff, #dcebef);
   box-shadow: 0 6px 16px rgba(26, 41, 48, 0.16);
   transform: translateY(-1px);
 }
@@ -306,7 +306,7 @@ body.is-dropping .workspace {
 }
 
 .statusBar.tone-busy::before {
-  background: var(--app-accent-warm);
+  background: var(--app-accent-cool);
 }
 
 .statusText {

@@ -3,7 +3,8 @@ import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
 import type { DiskSummary } from './core/diskSummary';
-import { buildDiskSummaryFromPath, isSupportedDiskPath } from './core/diskSummary';
+import { buildDiskSummaryFromPath, formatSummaryAsText, isSupportedDiskPath } from './core/diskSummary';
+import { extractFatFileBytes } from './core/fatExtract';
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
 import {
   APP_BATCH_PLAN_VERSION,
@@ -169,6 +170,15 @@ ipcMain.handle('desktop:loadBatchPlan', async (event) => {
   }
 });
 
+ipcMain.handle('desktop:exportDiagnostics', async (event) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+  const session = ownerWindow ? sessionsByWindowId.get(ownerWindow.id) : undefined;
+  if (!ownerWindow || !session) {
+    return { saved: false, error: 'No active DiskScribe window.' };
+  }
+  return exportDiagnosticsBundle(session, ownerWindow);
+});
+
 ipcMain.handle('desktop:writeClipboard', async (_event, text: unknown): Promise<void> => {
   clipboard.writeText(typeof text === 'string' ? text : String(text ?? ''));
 });
@@ -234,6 +244,12 @@ async function handleIncomingMessage(session: DesktopSession, rawMessage: unknow
       return;
     case 'desktop.batchStop':
       requestBatchStop(session);
+      return;
+    case 'desktop.exportDiagnostics':
+      await exportDiagnosticsBundle(session);
+      return;
+    case 'desktop.extractFile':
+      await handleExtractFile(session, rawMessage.entry);
       return;
     case 'hex.read':
       await handleHexRead(session, rawMessage);
@@ -825,6 +841,109 @@ async function extractRangeToFile(
   });
 }
 
+async function handleExtractFile(session: DesktopSession, rawEntry: unknown): Promise<void> {
+  if (!session.summary || !session.filePath) {
+    postStatus(session, 'Open a disk image before extracting files.');
+    return;
+  }
+  if (!isRecord(rawEntry)) {
+    postStatus(session, 'Select a file entry before extracting.');
+    return;
+  }
+
+  const entryPath = typeof rawEntry.path === 'string' ? rawEntry.path : '';
+  const filesystemOffsetBytes = numberOrUndefined(rawEntry.filesystemOffsetBytes);
+  const selected = session.summary.rootDirectoryEntries.find(
+    (entry) =>
+      entry.path === entryPath &&
+      entry.filesystemOffsetBytes === filesystemOffsetBytes &&
+      !entry.isDirectory &&
+      !entry.isDeleted
+  );
+  if (!selected) {
+    postStatus(session, 'Selected file entry is no longer available.');
+    return;
+  }
+
+  const filesystem = session.summary.filesystems.find(
+    (candidate) => candidate.offsetBytes === selected.filesystemOffsetBytes
+  );
+  if (!filesystem) {
+    postStatus(session, 'No filesystem metadata found for selected file.');
+    return;
+  }
+
+  const defaultPath = path.join(path.dirname(session.filePath), sanitizeFileName(selected.name || 'extracted.bin'));
+  const window = BrowserWindow.fromId(session.windowId) ?? undefined;
+  const targetPath = await dialog.showSaveDialog(window, {
+    title: 'Extract FAT File',
+    defaultPath,
+    buttonLabel: 'Extract',
+    filters: [
+      { name: 'All files', extensions: ['*'] },
+      { name: 'Binary', extensions: ['bin'] }
+    ]
+  });
+  if (targetPath.canceled || !targetPath.filePath) {
+    return;
+  }
+
+  try {
+    postStatus(session, `Extracting ${selected.path}...`, { busy: true });
+    const bytes = await extractFatFileBytes(session.filePath, filesystem, selected);
+    await fs.writeFile(targetPath.filePath, bytes);
+    postStatus(
+      session,
+      `Extracted ${selected.path} (${bytes.length.toLocaleString()} bytes) to ${path.basename(targetPath.filePath)}.`,
+      { busy: false }
+    );
+  } catch (error: unknown) {
+    postError(session, `Failed to extract ${selected.path}: ${toErrorMessage(error)}`);
+  }
+}
+
+async function exportDiagnosticsBundle(
+  session: DesktopSession,
+  ownerWindow: BrowserWindow | undefined = BrowserWindow.fromId(session.windowId) ?? undefined
+): Promise<{ saved: boolean; filePath?: string; error?: string }> {
+  if (!session.summary || !session.filePath) {
+    const message = 'Open a disk image before exporting diagnostics.';
+    postStatus(session, message);
+    return { saved: false, error: message };
+  }
+
+  const sourceBaseName = path.parse(session.filePath).name || 'disk-image';
+  const defaultPath = path.join(path.dirname(session.filePath), `${sourceBaseName}.diagnostics.json`);
+  const saveResult = await dialog.showSaveDialog(ownerWindow, {
+    title: 'Export Diagnostics Bundle',
+    defaultPath,
+    buttonLabel: 'Export',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { saved: false };
+  }
+
+  try {
+    const payload = {
+      appName: APP_NAME,
+      appDesktopName: APP_DESKTOP_NAME,
+      appVersion: app.getVersion(),
+      exportedAt: new Date().toISOString(),
+      sourcePath: session.filePath,
+      summary: session.summary,
+      reportText: formatSummaryAsText(session.summary)
+    };
+    await fs.writeFile(saveResult.filePath, JSON.stringify(payload, null, 2), 'utf8');
+    postStatus(session, `Exported diagnostics to ${path.basename(saveResult.filePath)}.`);
+    return { saved: true, filePath: saveResult.filePath };
+  } catch (error: unknown) {
+    const message = toErrorMessage(error);
+    postError(session, `Failed to export diagnostics: ${message}`);
+    return { saved: false, filePath: saveResult.filePath, error: message };
+  }
+}
+
 function postRendererMessage(session: DesktopSession, message: unknown): void {
   if (!session.rendererReady) {
     return;
@@ -894,6 +1013,10 @@ function normalizeSelection(mode: HexMode, start: number, end: number): HexSelec
 
 function normalizeMode(value: unknown, fallback: HexMode): HexMode {
   return value === 'raw' || value === 'disk' ? value : fallback;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
 function getSelection(session: DesktopSession): HexSelection | undefined {
@@ -987,6 +1110,16 @@ function toErrorMessage(error: unknown): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function sanitizeFileName(value: string): string {
+  const sanitized = Array.from(value, (char) => {
+    const code = char.charCodeAt(0);
+    return code < 0x20 || '<>:"/\\|?*'.includes(char) ? '_' : char;
+  })
+    .join('')
+    .trim();
+  return sanitized || 'extracted.bin';
 }
 
 function getLaunchDiskPath(): string | undefined {

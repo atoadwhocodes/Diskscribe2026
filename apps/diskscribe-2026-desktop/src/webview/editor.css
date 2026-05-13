@@ -86,8 +86,65 @@ h3 {
   cursor: pointer;
 }
 
-.partitionRow:hover td {
+.partitionRow:hover td,
+.rootDirectoryTable tbody tr:hover td {
   background: color-mix(in srgb, rgba(15, 122, 105, 0.2), transparent 44%);
+}
+
+.rootDirectoryTable tbody tr[data-root-entry-offset] {
+  cursor: pointer;
+}
+
+.rootDirectoryTable tbody tr.is-selected td {
+  background: color-mix(in srgb, rgba(15, 122, 105, 0.24), transparent 28%);
+}
+
+.rootDirectoryTable tbody tr.is-deleted td {
+  color: color-mix(in srgb, var(--app-status-error), var(--app-ink-soft) 45%);
+  text-decoration: line-through;
+}
+
+.rootDirectoryTable th:nth-child(3) {
+  width: 78px;
+}
+
+.rootDirectoryTable th:nth-child(4) {
+  width: 96px;
+}
+
+.directoryControls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+
+.directoryControls button {
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.directoryPath {
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-mono);
+  font-size: 0.74rem;
+  margin: 0 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inlineToggle {
+  align-items: center;
+  color: var(--app-ink-soft);
+  display: inline-flex;
+  font-family: var(--app-font-head);
+  font-size: 0.72rem;
+  gap: 5px;
+  letter-spacing: 0.04em;
+  min-height: 28px;
+  text-transform: uppercase;
 }
 
 .queueButtons {
@@ -280,8 +337,8 @@ h3 {
 
 .hexByte.is-cursor,
 .asciiByte.is-cursor {
-  background: color-mix(in srgb, rgba(205, 126, 46, 0.48), transparent 15%);
-  outline: 1px solid rgba(167, 92, 24, 0.9);
+  background: color-mix(in srgb, rgba(47, 111, 143, 0.42), transparent 12%);
+  outline: 1px solid rgba(32, 93, 122, 0.9);
 }
 
 #jumpResult,
@@ -295,7 +352,7 @@ h3 {
 }
 
 .panelTranslator {
-  border-left: 4px solid color-mix(in srgb, var(--app-accent), var(--app-accent-warm) 35%);
+  border-left: 4px solid color-mix(in srgb, var(--app-accent), var(--app-accent-cool) 35%);
 }
 
 .translatorControls {

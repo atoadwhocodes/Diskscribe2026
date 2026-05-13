@@ -2,7 +2,8 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as iconv from 'iconv-lite';
-import { parseGenericByExtension, type PartitionEntry } from './diskParsers';
+import { parseGenericByExtension, type FileSystemInfo, type PartitionEntry } from './diskParsers';
+import { parseFatDirectoryTree, type FatDirectoryEntry } from './fat';
 
 const MAX_PREVIEW_BYTES = 262144;
 const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm', '.hdd', '.fdi', '.fdd']);
@@ -40,9 +41,26 @@ export interface DiskSummary {
   totalSectors: number;
   geometry?: GeometryGuess;
   partitions: PartitionEntry[];
+  filesystems: FileSystemInfo[];
+  rootDirectoryEntries: RootDirectoryEntry[];
   hexPreview: string;
   shiftJisPreview: string;
   notes: string[];
+}
+
+export interface RootDirectoryEntry {
+  filesystemOffsetBytes: number;
+  offsetBytes: number;
+  parentPath: string;
+  path: string;
+  name: string;
+  shortName: string;
+  longName?: string;
+  attributes: string[];
+  isDirectory: boolean;
+  isDeleted: boolean;
+  startCluster: number;
+  sizeBytes: number;
 }
 
 export function isSupportedDiskPath(filePath: string): boolean {
@@ -64,6 +82,9 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
   const geometry = guessGeometry(totalSectors);
 
   const notes: string[] = [...parsedImage.parserNotes];
+  const rootDirectoryEntries = parseFatDirectoryTree(previewBytes, parsedImage.filesystems, notes, {
+    includeDeleted: true
+  }).map(toRootDirectoryEntry);
   if (stat.size === 0) {
     notes.push('Disk image is empty.');
   }
@@ -79,6 +100,9 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
   if (parsedImage.partitions.length === 0) {
     notes.push('No partitions detected.');
   }
+  if (parsedImage.filesystems.length === 0) {
+    notes.push('No FAT boot sector metadata detected in the preview window.');
+  }
 
   return {
     uri: pathToFileURL(filePath).toString(),
@@ -93,6 +117,8 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
     totalSectors,
     geometry,
     partitions: parsedImage.partitions,
+    filesystems: parsedImage.filesystems,
+    rootDirectoryEntries,
     hexPreview: toHexPreview(previewBytes, 16, 16),
     shiftJisPreview: decodeShiftJisPreview(previewBytes.subarray(0, 1024)),
     notes
@@ -149,6 +175,34 @@ export function formatSummaryAsText(summary: DiskSummary): string {
   }
 
   lines.push('');
+  lines.push('Filesystems:');
+  if (summary.filesystems.length === 0) {
+    lines.push('- none');
+  } else {
+    for (const filesystem of summary.filesystems) {
+      lines.push(
+        `- ${filesystem.source} ${filesystem.type} at offset ${filesystem.offsetBytes.toLocaleString()} bytes: ` +
+          `${filesystem.bytesPerSector} bytes/sector, ${filesystem.sectorsPerCluster} sectors/cluster, ` +
+          `${filesystem.clusterCount.toLocaleString()} clusters, first data LBA ${filesystem.firstDataLba.toLocaleString()}`
+      );
+    }
+  }
+
+  lines.push('');
+  lines.push('Root Directory:');
+  if (summary.rootDirectoryEntries.length === 0) {
+    lines.push('- none');
+  } else {
+    for (const entry of summary.rootDirectoryEntries) {
+      const deletedPrefix = entry.isDeleted ? '[deleted] ' : '';
+      lines.push(
+        `- ${deletedPrefix}${entry.path} ${entry.attributes.join(',') || 'FILE'} cluster ${entry.startCluster.toLocaleString()}, ` +
+          `${entry.sizeBytes.toLocaleString()} bytes, offset ${entry.offsetBytes.toLocaleString()}`
+      );
+    }
+  }
+
+  lines.push('');
   lines.push('Notes:');
   if (summary.notes.length === 0) {
     lines.push('- none');
@@ -167,6 +221,23 @@ export function formatSummaryAsText(summary: DiskSummary): string {
   lines.push(summary.shiftJisPreview);
 
   return lines.join('\n');
+}
+
+function toRootDirectoryEntry(entry: FatDirectoryEntry): RootDirectoryEntry {
+  return {
+    filesystemOffsetBytes: entry.filesystemOffsetBytes,
+    offsetBytes: entry.offsetBytes,
+    parentPath: entry.parentPath,
+    path: entry.path,
+    name: entry.name,
+    shortName: entry.shortName,
+    longName: entry.longName,
+    attributes: entry.attributes,
+    isDirectory: entry.isDirectory,
+    isDeleted: entry.isDeleted,
+    startCluster: entry.startCluster,
+    sizeBytes: entry.sizeBytes
+  };
 }
 
 function detectFormat(extension: string): DiskFormat {

@@ -26,6 +26,7 @@
           <button id="copyOffsetButton" type="button">Copy Offset</button>
           <button id="copyLbaButton" type="button">Copy LBA</button>
           <button id="extractSelectionButton" type="button">Extract Bytes</button>
+          <button id="exportDiagnosticsButton" type="button">Diagnostics</button>
           <button id="refreshButton" type="button">Reload</button>
         </div>
         <p class="toolbarHint">
@@ -50,6 +51,7 @@
             <div><dt>Sector Size</dt><dd id="sectorSize">-</dd></div>
             <div><dt>Total Sectors</dt><dd id="totalSectors">-</dd></div>
             <div><dt>Geometry Guess</dt><dd id="geometry">-</dd></div>
+            <div><dt>Filesystem</dt><dd id="filesystem">-</dd></div>
           </dl>
         </section>
 
@@ -71,6 +73,41 @@
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section class="panel">
+          <h2>Root Directory</h2>
+          <div class="directoryControls">
+            <button id="directoryUpButton" type="button">Up</button>
+            <button id="extractFileButton" type="button">Extract File</button>
+            <label class="inlineToggle" for="showDeletedEntries">
+              <input id="showDeletedEntries" type="checkbox" />
+              Deleted
+            </label>
+          </div>
+          <p id="directoryPath" class="directoryPath">/</p>
+          <div class="tableWrap">
+            <table class="summaryTable rootDirectoryTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Attr</th>
+                  <th>Cluster</th>
+                  <th>Size</th>
+                </tr>
+              </thead>
+              <tbody id="rootDirectoryRows">
+                <tr><td colspan="4">No root directory entries loaded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Filesystem Details</h2>
+          <dl id="filesystemDetails" class="summaryGrid">
+            <div><dt>Status</dt><dd>No filesystem metadata loaded.</dd></div>
+          </dl>
         </section>
 
         <section class="panel panelQueue">
