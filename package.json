@@ -1,6 +1,6 @@
 {
   "name": "diskscribe2026",
-  "version": "1.0.0",
+  "version": "1.1.0-alpha.1",
   "private": true,
   "description": "Standalone desktop app for PC-98 disk images (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd) with partition/FAT inspection and Shift-JIS tools.",
   "license": "MIT",

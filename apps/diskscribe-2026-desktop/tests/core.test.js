@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { mkdtemp, rm, writeFile } = require('node:fs/promises');
+const { mkdtemp, readFile, rm, writeFile } = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
@@ -12,6 +12,7 @@ const {
 } = require('../src/core/diskParsers');
 const {
   buildDiskSummaryFromPath,
+  formatSummaryAsText,
   isSupportedDiskPath
 } = require('../src/core/diskSummary');
 const { buildFatClusterChain } = require('../src/core/fat');
@@ -286,6 +287,40 @@ test('FAT chain parsing and extraction follow fragmented files', async () => {
   }
 });
 
+test('alpha smoke fixture loads, reports, and extracts FAT entries', async () => {
+  const fixture = await readAlphaSmokeFixture();
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-alpha-smoke-'));
+  const diskPath = path.join(dir, `${fixture.name.toLowerCase()}.hdm`);
+  try {
+    const bytes = materializeFat12Fixture(fixture);
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+    const reportText = formatSummaryAsText(summary);
+
+    assert.equal(summary.format, fixture.format);
+    assert.equal(summary.filesystems[0].type, 'FAT12');
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.path === 'ALPHA.TXT'), true);
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.path === 'TOOLS/RUN.COM'), true);
+    assert.equal(summary.rootDirectoryEntries.some((entry) => entry.name === 'Smoke.txt'), true);
+    assert.match(reportText, /Filesystems:/);
+    assert.match(reportText, /Root Directory:/);
+    assert.match(reportText, /TOOLS\/RUN\.COM/);
+
+    const alphaEntry = summary.rootDirectoryEntries.find((entry) => entry.path === 'ALPHA.TXT');
+    const runEntry = summary.rootDirectoryEntries.find((entry) => entry.path === 'TOOLS/RUN.COM');
+    assert.ok(alphaEntry);
+    assert.ok(runEntry);
+
+    const alphaBytes = await extractFatFileBytes(diskPath, summary.filesystems[0], alphaEntry);
+    const runBytes = await extractFatFileBytes(diskPath, summary.filesystems[0], runEntry);
+    assert.deepEqual(Buffer.from(alphaBytes), Buffer.from(fixture.rootDirectory[0].dataText, 'utf8'));
+    assert.deepEqual(Buffer.from(runBytes), Buffer.from(fixture.directories.TOOLS[0].dataHex, 'hex'));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('paged byte reader clamps ranges and reads across page boundaries', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-reader-'));
   const filePath = path.join(dir, 'bytes.bin');
@@ -317,6 +352,90 @@ test('paged byte reader clamps ranges and reads across page boundaries', async (
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+async function readAlphaSmokeFixture() {
+  const fixturePath = path.resolve(__dirname, '../../tests/fixtures/alpha-fat12-smoke.json');
+  return JSON.parse(await readFile(fixturePath, 'utf8'));
+}
+
+function materializeFat12Fixture(fixture) {
+  const disk = fixture.disk;
+  const bytes = new Uint8Array(disk.totalSectors * disk.bytesPerSector);
+  writeFatBpb(bytes, {
+    bytesPerSector: disk.bytesPerSector,
+    sectorsPerCluster: disk.sectorsPerCluster,
+    totalSectors: disk.totalSectors,
+    rootEntries: disk.rootEntries,
+    sectorsPerFat: disk.sectorsPerFat
+  });
+
+  const rootDirectoryOffset = getFixtureRootDirectoryOffset(disk);
+  writeFixtureDirectoryEntries(bytes, rootDirectoryOffset, fixture.rootDirectory);
+
+  const allEntries = [
+    ...fixture.rootDirectory,
+    ...Object.values(fixture.directories).flat()
+  ];
+  for (const entry of allEntries) {
+    if (entry.cluster >= 2) {
+      for (let fatIndex = 0; fatIndex < 2; fatIndex += 1) {
+        const fatOffset = disk.bytesPerSector + fatIndex * disk.sectorsPerFat * disk.bytesPerSector;
+        writeFat12Entry(bytes, fatOffset, entry.cluster, 0xfff);
+      }
+    }
+    if (entry.kind === 'file') {
+      const data = fixtureEntryData(entry);
+      bytes.set(data, getFixtureClusterOffset(disk, entry.cluster));
+    }
+  }
+
+  for (const [directoryPath, entries] of Object.entries(fixture.directories)) {
+    const directory = fixture.rootDirectory.find((entry) => entry.path === directoryPath);
+    assert.ok(directory, `Missing directory fixture entry for ${directoryPath}`);
+    writeFixtureDirectoryEntries(bytes, getFixtureClusterOffset(disk, directory.cluster), entries);
+  }
+
+  return bytes;
+}
+
+function writeFixtureDirectoryEntries(bytes, offset, entries) {
+  let cursor = offset;
+  for (const entry of entries) {
+    if (entry.longName) {
+      writeFatLongNameEntry(bytes, cursor, entry.longName);
+      cursor += 32;
+    }
+
+    writeFatDirectoryEntry(bytes, cursor, {
+      name: entry.shortName,
+      extension: entry.extension,
+      attribute: entry.kind === 'directory' ? 0x10 : 0x20,
+      startCluster: entry.cluster,
+      sizeBytes: entry.kind === 'file' ? fixtureEntryData(entry).length : 0
+    });
+    cursor += 32;
+  }
+}
+
+function fixtureEntryData(entry) {
+  if (typeof entry.dataHex === 'string') {
+    return Buffer.from(entry.dataHex, 'hex');
+  }
+  return Buffer.from(entry.dataText || '', 'utf8');
+}
+
+function getFixtureRootDirectoryOffset(disk) {
+  return (1 + 2 * disk.sectorsPerFat) * disk.bytesPerSector;
+}
+
+function getFixtureFirstDataLba(disk) {
+  const rootDirectorySectors = Math.ceil((disk.rootEntries * 32) / disk.bytesPerSector);
+  return 1 + 2 * disk.sectorsPerFat + rootDirectorySectors;
+}
+
+function getFixtureClusterOffset(disk, cluster) {
+  return (getFixtureFirstDataLba(disk) + cluster - 2) * disk.bytesPerSector;
+}
 
 function writeMbr(bytes, offset, entries) {
   bytes[offset + 510] = 0x55;

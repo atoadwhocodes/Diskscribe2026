@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [1.1.0-alpha.1] - 2026-05-14
 
 ### Added
 
@@ -10,7 +10,7 @@ All notable changes to this project are documented in this file.
 - Root and subdirectory browsing for FAT directory entries, including deleted-entry visibility
 - File extraction from FAT directory entries with fragmented cluster-chain support
 - Diagnostics bundle export with structured summary JSON and a text report
-- Core test suite for parser safety, FAT directory parsing, file extraction, and paged byte reads
+- Core test suite for parser safety, FAT directory parsing, file extraction, paged byte reads, and fixture-backed Alpha smoke coverage
 
 ### Changed
 

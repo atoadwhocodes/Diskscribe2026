@@ -1,7 +1,7 @@
 {
   "name": "diskscribe-2026-desktop",
   "productName": "DiskScribe2026 Desktop",
-  "version": "1.0.0",
+  "version": "1.1.0-alpha.1",
   "description": "Standalone desktop shell for DiskScribe2026.",
   "main": ".webpack/main",
   "private": true,
