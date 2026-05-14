@@ -1,6 +1,7 @@
 import * as iconv from 'iconv-lite';
 
 const SECTOR_SIZE = 512;
+const PC98_12M_HDM_SIZE_BYTES = 77 * 2 * 8 * 1024;
 const D88_HEADER_SIZE = 0x2b0;
 const NHD_SIGNATURE = 'T98HDDIMAGE.R0';
 
@@ -199,7 +200,13 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
       headerSummary.push(`Boot sector total sectors: ${bpb.totalSectors.toLocaleString()}`);
     }
   } else {
-    parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
+    sectorSize = inferRawFloppySectorSize(imageSizeBytes);
+    if (sectorSize === 1024) {
+      headerSummary.push('Inferred PC-98 1.2MB HDM geometry: 1,024 bytes/sector.');
+      parserNotes.push('No valid FAT boot BPB detected at LBA0; inferred sector size from HDM file size.');
+    } else {
+      parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
+    }
   }
 
   parserNotes.push('HDM disks are treated as floppy-style raw images with data offset 0.');
@@ -477,6 +484,13 @@ function classifyFatType(clusterCount: number, rootEntries: number): FileSystemI
     return 'FAT16';
   }
   return 'FAT';
+}
+
+function inferRawFloppySectorSize(imageSizeBytes: number): number {
+  if (imageSizeBytes === PC98_12M_HDM_SIZE_BYTES) {
+    return 1024;
+  }
+  return SECTOR_SIZE;
 }
 
 function isValidSectorSize(value: number): boolean {

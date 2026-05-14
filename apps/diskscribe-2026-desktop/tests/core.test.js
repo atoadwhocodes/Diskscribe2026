@@ -70,6 +70,17 @@ test('HDM parser reads a FAT boot sector BPB from raw floppy-style images', () =
   assert.match(parsed.headerSummary.join('\n'), /1024 bytes\/sector/);
 });
 
+test('HDM parser infers PC-98 1.2MB geometry when no BPB is present', () => {
+  const bytes = new Uint8Array(1261568);
+
+  const parsed = parseHDM(bytes, bytes.length);
+
+  assert.equal(parsed.parserKind, 'HDM');
+  assert.equal(parsed.sectorSize, 1024);
+  assert.equal(parsed.filesystems.length, 0);
+  assert.match(parsed.headerSummary.join('\n'), /PC-98 1\.2MB HDM/);
+});
+
 test('HDI parser reports FAT metadata from a partition boot sector in the preview window', () => {
   const bytes = new Uint8Array(0x1000 + 128 * SECTOR_SIZE);
   writeMbr(bytes, 0x1000, [{ typeCode: 0x06, startLba: 1, totalSectors: 96 }]);
