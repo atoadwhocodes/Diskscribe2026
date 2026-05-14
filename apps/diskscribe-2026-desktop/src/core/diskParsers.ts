@@ -1,6 +1,7 @@
 import * as iconv from 'iconv-lite';
 
 const SECTOR_SIZE = 512;
+const PC98_12M_HDM_SIZE_BYTES = 77 * 2 * 8 * 1024;
 const D88_HEADER_SIZE = 0x2b0;
 const NHD_SIGNATURE = 'T98HDDIMAGE.R0';
 
@@ -46,6 +47,26 @@ export interface ParsedDiskImage {
   headerSummary: string[];
   parserNotes: string[];
   partitions: PartitionEntry[];
+  filesystems: FileSystemInfo[];
+}
+
+export interface FileSystemInfo {
+  source: 'Boot Sector' | 'Partition Boot Sector';
+  offsetBytes: number;
+  type: 'FAT12' | 'FAT16' | 'FAT32' | 'FAT';
+  bytesPerSector: number;
+  sectorsPerCluster: number;
+  reservedSectors: number;
+  fatCount: number;
+  rootEntries: number;
+  totalSectors: number;
+  sectorsPerFat: number;
+  rootDirectorySectors: number;
+  firstFatLba: number;
+  firstRootDirectoryLba: number;
+  firstDataLba: number;
+  dataSectors: number;
+  clusterCount: number;
 }
 
 export function parseHDI(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
@@ -65,7 +86,8 @@ export function parseHDI(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
     dataOffsetBytes: detection.dataOffsetBytes,
     headerSummary,
     parserNotes: detection.notes,
-    partitions: detection.partitions
+    partitions: detection.partitions,
+    filesystems: detectFilesystems(imagePrefix, detection.dataOffsetBytes, detection.partitions)
   };
 }
 
@@ -105,7 +127,8 @@ export function parseNHD(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
     dataOffsetBytes,
     headerSummary,
     parserNotes,
-    partitions
+    partitions,
+    filesystems: detectFilesystems(imagePrefix, dataOffsetBytes, partitions)
   };
 }
 
@@ -154,7 +177,8 @@ export function parseD88(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
     dataOffsetBytes,
     headerSummary,
     parserNotes,
-    partitions
+    partitions,
+    filesystems: detectFilesystems(imagePrefix, dataOffsetBytes, partitions)
   };
 }
 
@@ -162,11 +186,13 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
   const headerSummary = [`File size: ${imageSizeBytes.toLocaleString()} bytes`];
   const parserNotes: string[] = [];
 
-  const bpb = parseBootSectorBpb(imagePrefix);
+  const bpb = parseBootSectorBpb(imagePrefix, 0);
   let sectorSize = SECTOR_SIZE;
+  const filesystems: FileSystemInfo[] = [];
 
   if (bpb) {
     sectorSize = bpb.bytesPerSector;
+    filesystems.push(bpb);
     headerSummary.push(
       `Boot sector BPB: ${bpb.bytesPerSector} bytes/sector, ${bpb.sectorsPerCluster} sectors/cluster`
     );
@@ -174,7 +200,13 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
       headerSummary.push(`Boot sector total sectors: ${bpb.totalSectors.toLocaleString()}`);
     }
   } else {
-    parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
+    sectorSize = inferRawFloppySectorSize(imageSizeBytes);
+    if (sectorSize === 1024) {
+      headerSummary.push('Inferred PC-98 1.2MB HDM geometry: 1,024 bytes/sector.');
+      parserNotes.push('No valid FAT boot BPB detected at LBA0; inferred sector size from HDM file size.');
+    } else {
+      parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
+    }
   }
 
   parserNotes.push('HDM disks are treated as floppy-style raw images with data offset 0.');
@@ -186,7 +218,8 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
     dataOffsetBytes: 0,
     headerSummary,
     parserNotes,
-    partitions: []
+    partitions: [],
+    filesystems
   };
 }
 
@@ -255,7 +288,8 @@ export function parseGenericByExtension(
     dataOffsetBytes: detection.dataOffsetBytes,
     headerSummary: [`File size: ${imageSizeBytes.toLocaleString()} bytes`],
     parserNotes: detection.notes,
-    partitions: detection.partitions
+    partitions: detection.partitions,
+    filesystems: detectFilesystems(imagePrefix, detection.dataOffsetBytes, detection.partitions)
   };
 }
 
@@ -351,25 +385,47 @@ function readAscii(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('ascii').replace(/\0/g, '');
 }
 
-interface BootSectorBpb {
-  bytesPerSector: number;
-  sectorsPerCluster: number;
-  totalSectors: number;
+function detectFilesystems(
+  imagePrefix: Uint8Array,
+  dataOffsetBytes: number,
+  partitions: PartitionEntry[]
+): FileSystemInfo[] {
+  const filesystems: FileSystemInfo[] = [];
+  const rootBpb = parseBootSectorBpb(imagePrefix, dataOffsetBytes, 'Boot Sector');
+  if (rootBpb) {
+    filesystems.push(rootBpb);
+  }
+
+  for (const partition of partitions) {
+    const bpb = parseBootSectorBpb(imagePrefix, partition.startOffsetBytes, 'Partition Boot Sector');
+    if (bpb) {
+      filesystems.push(bpb);
+    }
+  }
+
+  return filesystems;
 }
 
-function parseBootSectorBpb(bytes: Uint8Array): BootSectorBpb | undefined {
-  if (bytes.length < SECTOR_SIZE) {
+function parseBootSectorBpb(
+  bytes: Uint8Array,
+  offsetBytes: number,
+  source: FileSystemInfo['source'] = 'Boot Sector'
+): FileSystemInfo | undefined {
+  if (offsetBytes < 0 || offsetBytes + SECTOR_SIZE > bytes.length) {
     return undefined;
   }
 
-  const bytesPerSector = readUint16LE(bytes, 11);
-  const sectorsPerCluster = bytes[13] ?? 0;
-  const reservedSectors = readUint16LE(bytes, 14);
-  const fatCount = bytes[16] ?? 0;
-  const rootEntries = readUint16LE(bytes, 17);
-  const totalSectors16 = readUint16LE(bytes, 19);
-  const totalSectors32 = readUint32LE(bytes, 32);
+  const bytesPerSector = readUint16LE(bytes, offsetBytes + 11);
+  const sectorsPerCluster = bytes[offsetBytes + 13] ?? 0;
+  const reservedSectors = readUint16LE(bytes, offsetBytes + 14);
+  const fatCount = bytes[offsetBytes + 16] ?? 0;
+  const rootEntries = readUint16LE(bytes, offsetBytes + 17);
+  const totalSectors16 = readUint16LE(bytes, offsetBytes + 19);
+  const sectorsPerFat16 = readUint16LE(bytes, offsetBytes + 22);
+  const totalSectors32 = readUint32LE(bytes, offsetBytes + 32);
+  const sectorsPerFat32 = readUint32LE(bytes, offsetBytes + 36);
   const totalSectors = totalSectors16 > 0 ? totalSectors16 : totalSectors32;
+  const sectorsPerFat = sectorsPerFat16 > 0 ? sectorsPerFat16 : sectorsPerFat32;
 
   if (!isValidSectorSize(bytesPerSector)) {
     return undefined;
@@ -380,18 +436,61 @@ function parseBootSectorBpb(bytes: Uint8Array): BootSectorBpb | undefined {
   if (fatCount <= 0 || fatCount > 4) {
     return undefined;
   }
-  if (rootEntries === 0) {
+  if (rootEntries === 0 && sectorsPerFat32 <= 0) {
     return undefined;
   }
   if (totalSectors <= 0) {
     return undefined;
   }
+  if (sectorsPerFat <= 0) {
+    return undefined;
+  }
+
+  const rootDirectorySectors = Math.ceil((rootEntries * 32) / bytesPerSector);
+  const firstFatLba = reservedSectors;
+  const firstRootDirectoryLba = reservedSectors + fatCount * sectorsPerFat;
+  const firstDataLba = firstRootDirectoryLba + rootDirectorySectors;
+  const dataSectors = Math.max(0, totalSectors - firstDataLba);
+  const clusterCount = sectorsPerCluster > 0 ? Math.floor(dataSectors / sectorsPerCluster) : 0;
 
   return {
+    source,
+    offsetBytes,
+    type: classifyFatType(clusterCount, rootEntries),
     bytesPerSector,
     sectorsPerCluster,
-    totalSectors
+    reservedSectors,
+    fatCount,
+    rootEntries,
+    totalSectors,
+    sectorsPerFat,
+    rootDirectorySectors,
+    firstFatLba,
+    firstRootDirectoryLba,
+    firstDataLba,
+    dataSectors,
+    clusterCount
   };
+}
+
+function classifyFatType(clusterCount: number, rootEntries: number): FileSystemInfo['type'] {
+  if (rootEntries === 0) {
+    return 'FAT32';
+  }
+  if (clusterCount > 0 && clusterCount < 4085) {
+    return 'FAT12';
+  }
+  if (clusterCount >= 4085 && clusterCount < 65525) {
+    return 'FAT16';
+  }
+  return 'FAT';
+}
+
+function inferRawFloppySectorSize(imageSizeBytes: number): number {
+  if (imageSizeBytes === PC98_12M_HDM_SIZE_BYTES) {
+    return 1024;
+  }
+  return SECTOR_SIZE;
 }
 
 function isValidSectorSize(value: number): boolean {

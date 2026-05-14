@@ -1,0 +1,49 @@
+{
+  "name": "alpha-fat12-smoke",
+  "format": "HDM",
+  "disk": {
+    "bytesPerSector": 512,
+    "sectorsPerCluster": 1,
+    "totalSectors": 1280,
+    "rootEntries": 32,
+    "sectorsPerFat": 1
+  },
+  "rootDirectory": [
+    {
+      "kind": "file",
+      "path": "ALPHA.TXT",
+      "shortName": "ALPHA",
+      "extension": "TXT",
+      "cluster": 2,
+      "dataText": "DiskScribe Alpha fixture smoke test.\r\n"
+    },
+    {
+      "kind": "directory",
+      "path": "TOOLS",
+      "shortName": "TOOLS",
+      "extension": "",
+      "cluster": 3
+    },
+    {
+      "kind": "file",
+      "path": "Smoke.txt",
+      "shortName": "SMOKE~1",
+      "extension": "TXT",
+      "longName": "Smoke.txt",
+      "cluster": 5,
+      "dataText": "Long filename fixture entry.\n"
+    }
+  ],
+  "directories": {
+    "TOOLS": [
+      {
+        "kind": "file",
+        "path": "TOOLS/RUN.COM",
+        "shortName": "RUN",
+        "extension": "COM",
+        "cluster": 4,
+        "dataHex": "b8014ccd21"
+      }
+    ]
+  }
+}

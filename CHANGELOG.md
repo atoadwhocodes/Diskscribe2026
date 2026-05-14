@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.0-alpha.1] - 2026-05-14
+
+### Added
+
+- FAT12/FAT16 filesystem metadata detection for supported disk image previews
+- Root and subdirectory browsing for FAT directory entries, including deleted-entry visibility
+- File extraction from FAT directory entries with fragmented cluster-chain support
+- Diagnostics bundle export with structured summary JSON and a text report
+- Core test suite for parser safety, FAT directory parsing, file extraction, paged byte reads, and fixture-backed Alpha smoke coverage
+
+### Changed
+
+- Added root `npm test` and CI test execution for the desktop core suite
+- Updated desktop packaging to run TypeScript checks through the test command
+
 ## [1.0.0] - 2026-02-21
 
 ### Added

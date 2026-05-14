@@ -1,9 +1,12 @@
 {
   "name": "diskscribe2026",
-  "version": "1.0.0",
+  "version": "1.1.0-alpha.1",
   "private": true,
   "description": "Standalone desktop app for PC-98 disk images (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd) with partition/FAT inspection and Shift-JIS tools.",
   "license": "MIT",
+  "engines": {
+    "node": "22.x"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atoadwhocodes/Diskscribe2026.git"
@@ -16,10 +19,12 @@
     "desktop:install": "npm --prefix apps/diskscribe-2026-desktop ci",
     "desktop:start": "npm --prefix apps/diskscribe-2026-desktop run start",
     "desktop:lint": "npm --prefix apps/diskscribe-2026-desktop run lint",
+    "desktop:test": "npm --prefix apps/diskscribe-2026-desktop run test",
     "desktop:package": "npm --prefix apps/diskscribe-2026-desktop run package",
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
     "start": "npm run desktop:start",
     "lint": "npm run desktop:lint",
+    "test": "npm run desktop:test",
     "build": "npm run desktop:make",
     "package": "npm run desktop:make"
   }

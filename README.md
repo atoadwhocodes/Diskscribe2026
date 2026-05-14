@@ -11,7 +11,11 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Jump to offset and jump to LBA
 - Copy offset and copy LBA
 - Extract selected byte range to `.bin`
+- FAT12/FAT16 boot sector metadata inspection
+- FAT root/subdirectory listing with Shift-JIS short name decoding and long-name support
+- Extract files from supported FAT directory entries
 - Partition table inspection (MBR-style entries where present)
+- Diagnostics bundle export as JSON
 - Shift-JIS and legacy charset translation workspace
 - Character-frame byte role inspector
 - Batch queue runner for parsing multiple disk images
@@ -20,8 +24,9 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 ## Supported Formats
 
 - Disk images: `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`
-- Extract output: `.bin`
+- Extract output: `.bin` and original FAT filenames where available
 - Batch plans: `.json`
+- Diagnostics bundles: `.json`
 
 ## Install (Windows)
 
@@ -34,14 +39,15 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 1. Launch DiskScribe2026 Desktop.
 2. Press `Ctrl+O` to open a disk image.
 3. Use `Ctrl+Enter` to jump to a byte offset or LBA.
-4. Review partition and translation panels.
-5. Export selected bytes when needed.
+4. Review partition, filesystem, directory, and translation panels.
+5. Export selected bytes, extracted FAT files, or a diagnostics bundle when needed.
 
 ## Development
 
 ```bash
 npm run desktop:install
 npm run desktop:start
+npm test
 ```
 
 ## Build
@@ -57,8 +63,7 @@ Build output:
 ## Roadmap
 
 - Improve parser reliability on edge-case and partially corrupted images
-- Expand filesystem and partition introspection depth
-- Add first-class diagnostics bundle export from the app
+- Expand filesystem and partition introspection depth beyond FAT12/FAT16 root/subdirectory browsing
 - Harden installer upgrade/uninstall flow coverage in CI
 
 ## Release Flow
@@ -87,6 +92,8 @@ Example release:
 - `apps/diskscribe-2026-desktop/src/renderer.ts`: desktop controls and webview protocol shim
 - `apps/diskscribe-2026-desktop/src/core/diskParsers.ts`: disk format parser logic
 - `apps/diskscribe-2026-desktop/src/core/diskSummary.ts`: summary builder and metadata helpers
+- `apps/diskscribe-2026-desktop/src/core/fat.ts`: FAT directory and cluster chain helpers
+- `apps/diskscribe-2026-desktop/src/core/fatExtract.ts`: FAT file extraction helpers
 - `apps/diskscribe-2026-desktop/src/core/hex/pagedFileByteReader.ts`: paged/LRU file byte reader
 - `apps/diskscribe-2026-desktop/src/webview/editor.ts`: hex/translation UI logic
 - `apps/diskscribe-2026-desktop/src/webview/necCharsets.ts`: charset decode and classification utilities

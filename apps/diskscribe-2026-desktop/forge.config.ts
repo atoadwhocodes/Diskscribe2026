@@ -72,8 +72,7 @@ const config: ForgeConfig = {
         ],
       },
     }),
-    // Fuses are used to enable/disable various Electron functionality
-    // at package time, before code signing the application
+    // Fuses harden the packaged Electron runtime before distribution.
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,

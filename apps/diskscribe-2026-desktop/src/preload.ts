@@ -19,6 +19,12 @@ interface BatchPlanLoadResult {
   error?: string;
 }
 
+interface DiagnosticsExportResult {
+  saved: boolean;
+  filePath?: string;
+  error?: string;
+}
+
 interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
@@ -27,6 +33,7 @@ interface DesktopBridge {
   writeClipboard(text: string): Promise<void>;
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
+  exportDiagnostics(): Promise<DiagnosticsExportResult>;
   onHostMessage(handler: HostMessageHandler): () => void;
 }
 
@@ -51,6 +58,9 @@ const bridge: DesktopBridge = {
   },
   async loadBatchPlan(): Promise<BatchPlanLoadResult> {
     return ipcRenderer.invoke('desktop:loadBatchPlan');
+  },
+  async exportDiagnostics(): Promise<DiagnosticsExportResult> {
+    return ipcRenderer.invoke('desktop:exportDiagnostics');
   },
   onHostMessage(handler: HostMessageHandler): () => void {
     const wrapped = (_event: Electron.IpcRendererEvent, message: unknown) => {

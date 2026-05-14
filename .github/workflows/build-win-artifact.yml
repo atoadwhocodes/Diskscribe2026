@@ -30,6 +30,15 @@ jobs:
       - name: Install desktop dependencies
         run: npm --prefix apps/diskscribe-2026-desktop ci
 
+      - name: Audit desktop production dependencies
+        run: npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high
+
+      - name: Lint desktop app
+        run: npm --prefix apps/diskscribe-2026-desktop run lint
+
+      - name: Test desktop core
+        run: npm --prefix apps/diskscribe-2026-desktop run test
+
       - name: Validate tag matches app version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
@@ -71,7 +80,7 @@ jobs:
           }
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: DiskScribe2026-Windows-v${{ steps.app_version.outputs.value }}
           path: |

@@ -1,14 +1,14 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/apps/diskscribe-2026-desktop"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      npm-prod:
+      desktop-npm-prod:
         dependency-type: "production"
-      npm-dev:
+      desktop-npm-dev:
         dependency-type: "development"
 
   - package-ecosystem: "github-actions"

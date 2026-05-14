@@ -35,5 +35,13 @@ jobs:
       - name: Lint desktop app
         run: npm --prefix apps/diskscribe-2026-desktop run lint
 
+      - name: Test desktop core
+        run: npm --prefix apps/diskscribe-2026-desktop run test
+
       - name: Package desktop app
         run: npm --prefix apps/diskscribe-2026-desktop run package
+
+      - name: Verify package output
+        run: |
+          test -d apps/diskscribe-2026-desktop/out
+          find apps/diskscribe-2026-desktop/out -type f | grep -q .

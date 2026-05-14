@@ -22,4 +22,5 @@ out/
 build/
 apps/diskscribe-2026-desktop/out/
 apps/diskscribe-2026-desktop/.webpack/
+apps/diskscribe-2026-desktop/dist-tests/
 *.code-workspace
