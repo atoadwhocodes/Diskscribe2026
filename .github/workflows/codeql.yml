@@ -33,14 +33,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@9e907b5e64f6b83e7804b09294d44122997950d6
+        uses: github/codeql-action/init@9e0d7b8d25671d64c341c19c0152d693099fb5ba
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
         with:
           languages: javascript-typescript
           queries: security-extended
       - name: Analyze
-        uses: github/codeql-action/analyze@9e907b5e64f6b83e7804b09294d44122997950d6
+        uses: github/codeql-action/analyze@9e0d7b8d25671d64c341c19c0152d693099fb5ba
         env:
           CODEQL_ACTION_ANALYSIS_KEY: ".github/workflows/codeql.yml:analyze"
         with:
