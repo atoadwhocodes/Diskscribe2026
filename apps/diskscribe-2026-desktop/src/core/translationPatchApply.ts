@@ -72,16 +72,31 @@ export function enrichCleanPatchScriptForExport(rawScript: unknown): Translation
       const byteLength = entry.end - entry.start + 1;
       const encoded = encodePatchTextForPatch(entry.translatedText, entry.encoding);
       const fitsOriginalRange = encoded.bytes !== undefined && encoded.bytes.length <= byteLength;
+      const inheritedReason = stripRendererPlaceholderReasons(entry.reason);
+      const reason = [encoded.reason, fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.', inheritedReason]
+        .filter(Boolean)
+        .join(' ');
       return {
         ...entry,
         replacementBytes: encoded.bytes,
         byteLength,
         fitsOriginalRange,
-        patchable: encoded.bytes !== undefined && fitsOriginalRange,
-        reason: encoded.reason || (fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.')
+        patchable: encoded.bytes !== undefined && fitsOriginalRange && !inheritedReason,
+        reason: reason || undefined
       };
     })
   };
+}
+
+function stripRendererPlaceholderReasons(reason: string | undefined): string | undefined {
+  if (typeof reason !== 'string') {
+    return undefined;
+  }
+  const cleaned = reason
+    .replace(/Encoding .+? is export-only until byte encoding support is added\.\s*/g, '')
+    .replace(/Translation does not fit in the original byte range\.\s*/g, '')
+    .trim();
+  return cleaned || undefined;
 }
 
 export async function applyCleanPatchEntry(

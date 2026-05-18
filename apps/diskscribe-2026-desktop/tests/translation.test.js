@@ -183,6 +183,74 @@ test('clean patch export enriches CP932 replacement bytes without source bytes',
   assert.equal(serialized.includes('QUJDRA=='), false);
 });
 
+test('Sega CD patch export preserves required controls for patchable entries', () => {
+  const script = buildPatchScript('DiskScribe2026', 'alshark.iso', 'alshark.iso', [
+    {
+      id: 'segacd-ok',
+      sourcePath: 'alshark.iso',
+      mode: 'raw',
+      start: 0,
+      end: 15,
+      encoding: 'ascii',
+      sourceText: '$jHello@World%',
+      translatedText: '$jHi@All%',
+      sourceFilePath: 'START.BIN',
+      status: 'final',
+      notes: '',
+      updatedAt: ''
+    }
+  ]);
+
+  assert.equal(script.entries[0].patchable, true);
+  assert.equal(script.entries[0].reason, undefined);
+});
+
+test('Sega CD patch export blocks missing control tokens and prefixes', () => {
+  const script = buildPatchScript('DiskScribe2026', 'alshark.iso', 'alshark.iso', [
+    {
+      id: 'segacd-missing-controls',
+      sourcePath: 'alshark.iso',
+      mode: 'raw',
+      start: 0,
+      end: 15,
+      encoding: 'ascii',
+      sourceText: '$jHello@World%',
+      translatedText: 'Hello World',
+      sourceFilePath: 'START.BIN',
+      status: 'final',
+      notes: '',
+      updatedAt: ''
+    }
+  ]);
+
+  assert.equal(script.entries[0].patchable, false);
+  assert.match(script.entries[0].reason, /Missing required Sega CD control prefix \$j/);
+  assert.match(script.entries[0].reason, /Missing required Sega CD control token @/);
+  assert.match(script.entries[0].reason, /Missing required Sega CD control token %/);
+});
+
+test('Sega CD patch export blocks known packed no-go files', () => {
+  const script = buildPatchScript('DiskScribe2026', 'alshark.iso', 'alshark.iso', [
+    {
+      id: 'segacd-mess',
+      sourcePath: 'alshark.iso',
+      mode: 'raw',
+      start: 0,
+      end: 15,
+      encoding: 'ascii',
+      sourceText: 'HELLO',
+      translatedText: 'HI',
+      sourceFilePath: 'MESS.DAT',
+      status: 'final',
+      notes: '',
+      updatedAt: ''
+    }
+  ]);
+
+  assert.equal(script.entries[0].patchable, false);
+  assert.match(script.entries[0].reason, /MESS\.DAT is marked no-go/);
+});
+
 test('clean patch applier verifies fingerprint before writing', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
   const imagePath = path.join(dir, 'sample.iso');

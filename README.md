@@ -126,6 +126,15 @@ npm run desktop:make
 Build output:
 
 - `apps/diskscribe-2026-desktop/out/make/**`
+- Current Windows package smoke output includes `DiskScribe2026DesktopSetup.exe` and unpacked `DiskScribe2026Desktop.exe`.
+
+## Sega CD Reinsertion Guardrails
+
+- In-place text patches must fit the original byte range.
+- Known control prefixes such as `$j`, `$l`, `$f`, `$p`, `$d`, `_`, `!`, `&`, and `0` are preserved when present in source text.
+- Required inline control tokens `@`, `%`, and `#` must remain present when the source text uses them.
+- Known packed/no-go files such as `MESS.DAT` are blocked from direct clean patch export until a format-specific reinserter is implemented.
+- These rules are conservative and can be expanded per-game as the record format is confirmed.
 
 ## Roadmap
 

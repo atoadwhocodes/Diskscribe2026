@@ -3,6 +3,11 @@ export type TranslationSourceQuality = 'source-good' | 'source-suspect' | 'sourc
 export type TranslationConfidence = 'high' | 'medium' | 'low';
 export type TranslationPlaytestStatus = 'untested' | 'seen' | 'passed' | 'failed';
 
+interface SegaCdTextRuleResult {
+  ok: boolean;
+  reasons: string[];
+}
+
 export interface TranslationProjectDisk {
   path: string;
   name: string;
@@ -287,6 +292,14 @@ function toPatchEntry(entry: TranslationEntry): TranslationPatchEntry {
   const encoded = encodePatchText(entry.translatedText, entry.encoding);
   const fitsOriginalRange = encoded.bytes !== undefined && encoded.bytes.length <= byteLength;
   const sourceVerification = buildSourceVerification(entry.sourceBytesBase64);
+  const segaCdRules = validateSegaCdTextEntry(entry, encoded.bytes?.length ?? Number.POSITIVE_INFINITY);
+  const reason = [
+    encoded.reason,
+    fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.',
+    ...segaCdRules.reasons
+  ]
+    .filter(Boolean)
+    .join(' ');
   return {
     id: entry.id,
     sourcePath: toPublicSourceId(entry.sourcePath),
@@ -299,8 +312,8 @@ function toPatchEntry(entry: TranslationEntry): TranslationPatchEntry {
     byteLength,
     sourceVerification,
     fitsOriginalRange,
-    patchable: encoded.bytes !== undefined && fitsOriginalRange,
-    reason: encoded.reason || (fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.')
+    patchable: encoded.bytes !== undefined && fitsOriginalRange && segaCdRules.ok,
+    reason: reason || undefined
   };
 }
 
@@ -339,6 +352,64 @@ function hashFnv1a32(bytes: Uint8Array): string {
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash.toString(16).padStart(8, '0');
+}
+
+function validateSegaCdTextEntry(entry: TranslationEntry, replacementByteLength: number): SegaCdTextRuleResult {
+  if (!isSegaCdEntry(entry)) {
+    return { ok: true, reasons: [] };
+  }
+
+  const reasons: string[] = [];
+  const sourceFileName = getSourceFileName(entry);
+  if (sourceFileName && sourceFileName.toUpperCase() === 'MESS.DAT') {
+    reasons.push(`${sourceFileName} is marked no-go for direct text patching.`);
+  }
+
+  const byteLength = entry.end - entry.start + 1;
+  if (replacementByteLength > byteLength) {
+    reasons.push('Replacement bytes exceed the original Sega CD text slot.');
+  }
+
+  const sourcePrefix = getControlPrefix(entry.sourceText);
+  const translatedPrefix = getControlPrefix(entry.translatedText);
+  if (sourcePrefix && translatedPrefix !== sourcePrefix) {
+    reasons.push(`Missing required Sega CD control prefix ${sourcePrefix}.`);
+  }
+
+  for (const token of requiredControlTokens(entry.sourceText)) {
+    if (!entry.translatedText.includes(token)) {
+      reasons.push(`Missing required Sega CD control token ${token}.`);
+    }
+  }
+
+  return { ok: reasons.length === 0, reasons };
+}
+
+function isSegaCdEntry(entry: TranslationEntry): boolean {
+  const values = [entry.sourcePath, entry.category, entry.batch]
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.toLowerCase());
+  if (values.some((value) => value.includes('sega') || value.includes('mega-cd'))) {
+    return true;
+  }
+  const sourceFileName = getSourceFileName(entry).toUpperCase();
+  return Boolean(entry.sourceFilePath) && /^[A-Z0-9_]+\.(BIN|DAT|TXT|MSG)$/.test(sourceFileName);
+}
+
+function getSourceFileName(entry: TranslationEntry): string {
+  const value = entry.sourceFilePath || entry.sourcePath || '';
+  const normalized = value.replace(/\\/g, '/');
+  const parts = normalized.split('/').filter(Boolean);
+  return parts.length > 0 ? parts[parts.length - 1] : normalized;
+}
+
+function getControlPrefix(text: string): string {
+  const match = /^([$!&_0][A-Za-z0-9]?)/.exec(text.trim());
+  return match ? match[1] : '';
+}
+
+function requiredControlTokens(text: string): string[] {
+  return [...new Set(text.match(/[@%#]/g) || [])];
 }
 
 function toPublicSourceId(value: string): string {
