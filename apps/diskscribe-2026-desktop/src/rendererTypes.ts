@@ -77,6 +77,7 @@ export interface DesktopBridge {
   loadTranslationProject(): Promise<TranslationProjectLoadResult>;
   exportTranslationPatch(script: unknown): Promise<TranslationProjectSaveResult>;
   applyCleanTranslationPatch(): Promise<TranslationPatchApplyResult>;
+  validateCleanTranslationPatch(): Promise<TranslationPatchApplyResult>;
   discoverTranslationProject(filePaths: string[]): Promise<TranslationProjectDiscoveryResult>;
   patchTranslationProject(project: unknown): Promise<TranslationPatchApplyResult>;
   previewTranslationPatch(entry: unknown): Promise<TranslationPatchPreviewResult>;

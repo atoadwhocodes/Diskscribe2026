@@ -10,7 +10,7 @@ import {
 } from '../webview/translationProject';
 
 export interface CleanPatchEntryApplyResult {
-  status: 'applied' | 'skipped';
+  status: 'applied' | 'skipped' | 'validated';
   reason?: string;
   verified?: boolean;
 }
@@ -18,7 +18,10 @@ export interface CleanPatchEntryApplyResult {
 export interface CleanPatchApplyOptions {
   createdAt?: string;
   patchSourcePath?: string;
+  dryRun?: boolean;
 }
+
+const SUPPORTED_CLEAN_PATCH_VERSION = 1;
 
 export function normalizeCleanPatchScript(rawScript: unknown): TranslationPatchScript | undefined {
   if (!isRecord(rawScript) || rawScript.publicSafe !== true || !Array.isArray(rawScript.entries)) {
@@ -83,7 +86,8 @@ export function enrichCleanPatchScriptForExport(rawScript: unknown): Translation
 
 export async function applyCleanPatchEntry(
   outputPath: string,
-  entry: TranslationPatchEntry
+  entry: TranslationPatchEntry,
+  options: { dryRun?: boolean } = {}
 ): Promise<CleanPatchEntryApplyResult> {
   const byteLength = entry.end - entry.start + 1;
   if (byteLength <= 0) {
@@ -115,6 +119,10 @@ export async function applyCleanPatchEntry(
       }
     }
 
+    if (options.dryRun) {
+      return { status: 'validated', verified: true };
+    }
+
     const replacement = Buffer.alloc(byteLength, 0x20);
     Buffer.from(entry.replacementBytes).copy(replacement, 0, 0, entry.replacementBytes.length);
     await handle.write(replacement, 0, replacement.length, entry.start);
@@ -132,8 +140,6 @@ export async function applyCleanPatchScriptToImages(
   outputFolder: string,
   options: CleanPatchApplyOptions = {}
 ): Promise<TranslationPatchReport> {
-  await fs.mkdir(outputFolder, { recursive: true });
-
   const sourceFilesByName = new Map<string, string>();
   for (const sourcePath of sourcePaths) {
     sourceFilesByName.set(path.basename(sourcePath).toLowerCase(), sourcePath);
@@ -141,6 +147,26 @@ export async function applyCleanPatchScriptToImages(
 
   const sourceToOutput = new Map<string, string>();
   const reportEntries: TranslationPatchReportEntry[] = [];
+  const warnings = buildPatchCompatibilityWarnings(patchScript, sourcePaths);
+  const compatible = warnings.length === 0;
+  if (patchScript.patchVersion > SUPPORTED_CLEAN_PATCH_VERSION) {
+    for (const entry of patchScript.entries) {
+      reportEntries.push(
+        toCleanPatchReportEntry(
+          entry,
+          'skipped',
+          undefined,
+          `Unsupported clean patch version ${patchScript.patchVersion}.`
+        )
+      );
+    }
+    return finishCleanPatchReport(patchScript, sourcePaths, outputFolder, reportEntries, warnings, compatible, options);
+  }
+
+  if (!options.dryRun) {
+    await fs.mkdir(outputFolder, { recursive: true });
+  }
+
   for (const entry of patchScript.entries) {
     if (!entry.patchable) {
       reportEntries.push(
@@ -157,16 +183,32 @@ export async function applyCleanPatchScriptToImages(
 
     let outputPath = sourceToOutput.get(sourcePath);
     if (!outputPath) {
-      outputPath = await copySourceToUniqueOutput(sourcePath, outputFolder, sourceToOutput.size);
+      outputPath = options.dryRun
+        ? path.join(outputFolder, uniqueOutputFileName(path.basename(sourcePath), sourceToOutput.size))
+        : await copySourceToUniqueOutput(sourcePath, outputFolder, sourceToOutput.size);
       sourceToOutput.set(sourcePath, outputPath);
     }
 
-    const result = await applyCleanPatchEntry(outputPath, entry);
+    const patchPath = options.dryRun ? sourcePath : outputPath;
+    const result = await applyCleanPatchEntry(patchPath, entry, { dryRun: options.dryRun });
     reportEntries.push(toCleanPatchReportEntry(entry, result.status, outputPath, result.reason, result.verified));
   }
 
+  return finishCleanPatchReport(patchScript, sourcePaths, outputFolder, reportEntries, warnings, compatible, options);
+}
+
+async function finishCleanPatchReport(
+  patchScript: TranslationPatchScript,
+  sourcePaths: string[],
+  outputFolder: string,
+  reportEntries: TranslationPatchReportEntry[],
+  warnings: string[],
+  compatible: boolean,
+  options: CleanPatchApplyOptions
+): Promise<TranslationPatchReport> {
   const appliedCount = reportEntries.filter((entry) => entry.status === 'applied').length;
-  const skippedCount = reportEntries.length - appliedCount;
+  const validatedCount = reportEntries.filter((entry) => entry.status === 'validated').length;
+  const skippedCount = reportEntries.length - appliedCount - validatedCount;
   const verifiedCount = reportEntries.filter((entry) => entry.verified === true).length;
   const report: TranslationPatchReport = {
     appName: 'DiskScribe2026',
@@ -175,6 +217,9 @@ export async function applyCleanPatchScriptToImages(
     patchSourcePath: options.patchSourcePath,
     sourceFileCount: sourcePaths.length,
     patchableEntryCount: patchScript.entries.filter((entry) => entry.patchable).length,
+    mode: options.dryRun ? 'dry-run' : 'apply',
+    compatible,
+    warnings,
     outputFolder,
     createdAt: options.createdAt || new Date().toISOString(),
     appliedCount,
@@ -182,7 +227,10 @@ export async function applyCleanPatchScriptToImages(
     verifiedCount,
     entries: reportEntries
   };
-  await fs.writeFile(path.join(outputFolder, 'patch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+  if (!options.dryRun) {
+    await fs.mkdir(outputFolder, { recursive: true });
+    await fs.writeFile(path.join(outputFolder, 'patch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+  }
   return report;
 }
 
@@ -213,7 +261,7 @@ export function hashFnv1a32Buffer(bytes: Buffer): string {
 
 function toCleanPatchReportEntry(
   entry: TranslationPatchEntry,
-  status: 'applied' | 'skipped',
+  status: 'applied' | 'skipped' | 'validated',
   outputPath?: string,
   reason?: string,
   verified?: boolean
@@ -237,12 +285,19 @@ async function copySourceToUniqueOutput(sourcePath: string, outputFolder: string
 }
 
 function uniqueOutputPath(outputFolder: string, fileName: string, index: number): string {
-  const candidate = path.join(outputFolder, sanitizeFileName(fileName));
+  const candidate = path.join(outputFolder, uniqueOutputFileName(fileName, 0));
   if (!fileExists(candidate)) {
     return candidate;
   }
+  return path.join(outputFolder, uniqueOutputFileName(fileName, index + 1));
+}
+
+function uniqueOutputFileName(fileName: string, index: number): string {
+  if (index <= 0) {
+    return sanitizeFileName(fileName);
+  }
   const parsed = path.parse(fileName);
-  return path.join(outputFolder, `${sanitizeFileName(parsed.name)}-${index + 1}${parsed.ext}`);
+  return `${sanitizeFileName(parsed.name)}-${index}${parsed.ext}`;
 }
 
 function fileExists(filePath: string): boolean {
@@ -289,6 +344,32 @@ function normalizeCleanPatchEntry(rawEntry: unknown): TranslationPatchEntry | un
     patchable: rawEntry.patchable === true,
     reason: typeof rawEntry.reason === 'string' ? rawEntry.reason : undefined
   };
+}
+
+function buildPatchCompatibilityWarnings(patchScript: TranslationPatchScript, sourcePaths: string[]): string[] {
+  const warnings: string[] = [];
+  if (patchScript.patchVersion > SUPPORTED_CLEAN_PATCH_VERSION) {
+    warnings.push(
+      `Patch version ${patchScript.patchVersion} is newer than supported version ${SUPPORTED_CLEAN_PATCH_VERSION}.`
+    );
+  }
+
+  const selectedNames = new Set(sourcePaths.map((sourcePath) => path.basename(sourcePath).toLowerCase()));
+  const requiredNames = new Set(
+    patchScript.entries
+      .filter((entry) => entry.patchable)
+      .map((entry) => path.basename(entry.sourcePath).toLowerCase())
+      .filter(Boolean)
+  );
+  for (const requiredName of requiredNames) {
+    if (!selectedNames.has(requiredName)) {
+      warnings.push(`Missing selected source image for ${requiredName}.`);
+    }
+  }
+  if (sourcePaths.length < requiredNames.size) {
+    warnings.push(`Selected ${sourcePaths.length} source image(s), but patch references ${requiredNames.size}.`);
+  }
+  return warnings;
 }
 
 function normalizeSourceVerification(value: unknown): TranslationPatchEntry['sourceVerification'] {

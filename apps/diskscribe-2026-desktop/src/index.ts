@@ -233,7 +233,16 @@ ipcMain.handle('desktop:exportTranslationPatch', async (event, script: unknown) 
 ipcMain.handle('desktop:applyCleanTranslationPatch', async (event) => {
   const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
   try {
-    return await applyCleanTranslationPatch(ownerWindow);
+    return await applyCleanTranslationPatch(ownerWindow, false);
+  } catch (error: unknown) {
+    return { saved: false, error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:validateCleanTranslationPatch', async (event) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  try {
+    return await applyCleanTranslationPatch(ownerWindow, true);
   } catch (error: unknown) {
     return { saved: false, error: toErrorMessage(error) };
   }
@@ -1542,7 +1551,8 @@ async function patchTranslationProject(
 }
 
 async function applyCleanTranslationPatch(
-  ownerWindow: BrowserWindow | undefined
+  ownerWindow: BrowserWindow | undefined,
+  dryRun: boolean
 ): Promise<{ saved: boolean; outputFolder?: string; report?: TranslationPatchReport; error?: string }> {
   const patchResult = await dialog.showOpenDialog(ownerWindow, {
     title: 'Open Clean Translation Patch',
@@ -1574,17 +1584,21 @@ async function applyCleanTranslationPatch(
     return { saved: false };
   }
 
-  const outputResult = await dialog.showOpenDialog(ownerWindow, {
-    title: 'Choose Patched Output Folder',
-    properties: ['openDirectory', 'createDirectory']
-  });
-  if (outputResult.canceled || outputResult.filePaths.length === 0) {
-    return { saved: false };
+  let outputFolder = '';
+  if (!dryRun) {
+    const outputResult = await dialog.showOpenDialog(ownerWindow, {
+      title: 'Choose Patched Output Folder',
+      properties: ['openDirectory', 'createDirectory']
+    });
+    if (outputResult.canceled || outputResult.filePaths.length === 0) {
+      return { saved: false };
+    }
+    outputFolder = outputResult.filePaths[0];
   }
 
-  const outputFolder = outputResult.filePaths[0];
   const report = await applyCleanPatchScriptToImages(patchScript, sourceResult.filePaths, outputFolder, {
-    patchSourcePath: patchPath
+    patchSourcePath: patchPath,
+    dryRun
   });
   return { saved: true, outputFolder, report };
 }

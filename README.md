@@ -91,8 +91,9 @@ Note: roadmap systems are listed as targeted platforms and are not yet guarantee
 2. Mark finished entries as `reviewed` or `final`.
 3. Use `Clean Patch` to export a public-safe patch JSON. The clean patch omits original source text and original source byte blobs.
 4. Distribute the clean patch JSON, not a patched game image.
-5. Users choose `Apply Patch`, select the clean patch JSON, select their own matching source image or images, and choose an output folder.
-6. DiskScribe2026 writes patched copies plus `patch-report.json`. Entries with mismatched fingerprints, missing source images, invalid bytes, or overlong replacements are skipped and reported.
+5. Users may choose `Validate Patch` first to check the clean patch against their own source image or images without writing output.
+6. Users choose `Apply Patch`, select the clean patch JSON, select their own matching source image or images, and choose an output folder.
+7. DiskScribe2026 writes patched copies plus `patch-report.json`. Entries with mismatched fingerprints, missing source images, invalid bytes, overlong replacements, or unsupported future patch versions are skipped and reported.
 
 Command-line apply is also available for repeatable local testing:
 
@@ -101,6 +102,12 @@ npm run apply-clean-patch -- --patch patch.json --source disc.iso --out patched-
 ```
 
 Repeat `--source` for multi-disc patches.
+
+Validate without writing patched copies:
+
+```bash
+npm run apply-clean-patch -- --dry-run --patch patch.json --source disc.iso
+```
 
 ## Development
 

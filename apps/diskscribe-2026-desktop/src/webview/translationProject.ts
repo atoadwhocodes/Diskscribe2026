@@ -130,7 +130,7 @@ export interface TranslationPatchReportEntry {
   outputPath?: string;
   start: number;
   end: number;
-  status: 'applied' | 'skipped';
+  status: 'applied' | 'skipped' | 'validated';
   verified?: boolean;
   reason?: string;
 }
@@ -142,6 +142,9 @@ export interface TranslationPatchReport {
   patchSourcePath?: string;
   sourceFileCount?: number;
   patchableEntryCount?: number;
+  mode?: 'apply' | 'dry-run';
+  compatible?: boolean;
+  warnings?: string[];
   outputFolder: string;
   createdAt: string;
   appliedCount: number;

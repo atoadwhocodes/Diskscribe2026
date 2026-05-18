@@ -236,6 +236,12 @@ if (elements.exportTranslationPatchButton) {
   });
 }
 
+if (elements.validateCleanTranslationPatchButton) {
+  elements.validateCleanTranslationPatchButton.addEventListener('click', () => {
+    void validateCleanTranslationPatch();
+  });
+}
+
 if (elements.applyCleanTranslationPatchButton) {
   elements.applyCleanTranslationPatchButton.addEventListener('click', () => {
     void applyCleanTranslationPatch();
@@ -1753,6 +1759,21 @@ async function applyCleanTranslationPatch() {
       elements.status,
       `Applied clean patch: ${formatNumber(applied)} applied, ${formatNumber(verified)} verified, ${formatNumber(skipped)} skipped.`
     );
+  }
+}
+
+async function validateCleanTranslationPatch() {
+  const result = await window.diskScribeDesktop.validateCleanTranslationPatch();
+  if (result?.error) {
+    setText(elements.status, `Patch validation failed: ${result.error}`);
+    return;
+  }
+  if (result?.saved) {
+    const skipped = Number(result.report?.skippedCount) || 0;
+    const verified = Number(result.report?.verifiedCount) || 0;
+    const warningCount = Array.isArray(result.report?.warnings) ? result.report.warnings.length : 0;
+    const warningText = warningCount > 0 ? `, ${formatNumber(warningCount)} warning(s)` : '';
+    setText(elements.status, `Validated clean patch: ${formatNumber(verified)} verified, ${formatNumber(skipped)} skipped${warningText}.`);
   }
 }
 

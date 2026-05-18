@@ -403,3 +403,160 @@ test('clean patch CLI returns usage errors for missing arguments', async () => {
   assert.match(stderr, /Missing value for --patch/);
   assert.match(stderr, /Usage:/);
 });
+
+test('clean patch dry-run validates without writing output files', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-dry-run-'));
+  const sourcePath = path.join(dir, 'disc.iso');
+  const outputFolder = path.join(dir, 'out');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [
+        {
+          id: 'dry',
+          sourcePath: 'disc.iso',
+          mode: 'raw',
+          start: 0,
+          end: 4,
+          encoding: 'ascii',
+          translatedText: 'BYE',
+          replacementBytes: [0x42, 0x59, 0x45],
+          byteLength: 5,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 5,
+            hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+          },
+          fitsOriginalRange: true,
+          patchable: true
+        }
+      ]
+    },
+    [sourcePath],
+    outputFolder,
+    { dryRun: true, createdAt: '2026-05-18T00:00:00.000Z' }
+  );
+
+  assert.equal(report.mode, 'dry-run');
+  assert.equal(report.appliedCount, 0);
+  assert.equal(report.verifiedCount, 1);
+  assert.equal(report.skippedCount, 0);
+  assert.equal(report.entries[0].status, 'validated');
+  assert.equal(await fs.readFile(sourcePath, 'ascii'), 'HELLO!!!');
+  await assert.rejects(fs.access(outputFolder));
+});
+
+test('clean patch applier rejects unsupported future patch versions without copying sources', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-version-'));
+  const sourcePath = path.join(dir, 'disc.iso');
+  const outputFolder = path.join(dir, 'out');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 999,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [
+        {
+          id: 'future',
+          sourcePath: 'disc.iso',
+          mode: 'raw',
+          start: 0,
+          end: 4,
+          encoding: 'ascii',
+          translatedText: 'BYE',
+          replacementBytes: [0x42, 0x59, 0x45],
+          byteLength: 5,
+          fitsOriginalRange: true,
+          patchable: true
+        }
+      ]
+    },
+    [sourcePath],
+    outputFolder,
+    { createdAt: '2026-05-18T00:00:00.000Z' }
+  );
+
+  assert.equal(report.compatible, false);
+  assert.equal(report.appliedCount, 0);
+  assert.equal(report.skippedCount, 1);
+  assert.match(report.warnings[0], /newer than supported/);
+  assert.equal(await fs.readFile(sourcePath, 'ascii'), 'HELLO!!!');
+  await assert.rejects(fs.access(path.join(outputFolder, 'disc.iso')));
+  assert.equal(JSON.parse(await fs.readFile(path.join(outputFolder, 'patch-report.json'), 'utf8')).skippedCount, 1);
+});
+
+test('clean patch CLI dry-run validates without requiring an output folder', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-cli-dry-run-'));
+  const patchPath = path.join(dir, 'patch.json');
+  const sourcePath = path.join(dir, 'disc.iso');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+  await fs.writeFile(
+    patchPath,
+    JSON.stringify({
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [
+        {
+          id: 'cli-dry',
+          sourcePath: 'disc.iso',
+          mode: 'raw',
+          start: 0,
+          end: 4,
+          encoding: 'ascii',
+          translatedText: 'BYE',
+          replacementBytes: [0x42, 0x59, 0x45],
+          byteLength: 5,
+          fitsOriginalRange: true,
+          patchable: true
+        }
+      ]
+    }),
+    'utf8'
+  );
+
+  let stdout = '';
+  let stderr = '';
+  const exitCode = await runCleanPatchCli(
+    ['--dry-run', '--patch', patchPath, '--source', sourcePath],
+    {
+      stdout: { write: (text) => { stdout += text; } },
+      stderr: { write: (text) => { stderr += text; } }
+    }
+  );
+
+  assert.equal(exitCode, 0);
+  assert.equal(stderr, '');
+  assert.match(stdout, /Validated clean patch/);
+  assert.equal(await fs.readFile(sourcePath, 'ascii'), 'HELLO!!!');
+});

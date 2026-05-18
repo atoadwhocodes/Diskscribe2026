@@ -14,6 +14,7 @@ interface CleanPatchCliOptions {
   patchPath: string;
   sourcePaths: string[];
   outputFolder: string;
+  dryRun: boolean;
 }
 
 export async function runCleanPatchCli(argv: string[], streams: CleanPatchCliStreams = {}): Promise<number> {
@@ -41,16 +42,18 @@ export async function runCleanPatchCli(argv: string[], streams: CleanPatchCliStr
       patchScript,
       parsed.options.sourcePaths,
       parsed.options.outputFolder,
-      { patchSourcePath: parsed.options.patchPath }
+      { patchSourcePath: parsed.options.patchPath, dryRun: parsed.options.dryRun }
     );
+    const verb = parsed.options.dryRun ? 'Validated' : 'Applied';
     stdout.write(
       [
-        `Applied clean patch: ${report.appliedCount} applied, ${report.verifiedCount} verified, ${report.skippedCount} skipped.`,
+        `${verb} clean patch: ${report.appliedCount} applied, ${report.verifiedCount} verified, ${report.skippedCount} skipped.`,
+        report.warnings && report.warnings.length > 0 ? `Warnings: ${report.warnings.join('; ')}` : '',
         `Output folder: ${report.outputFolder}`,
-        `Report: ${path.join(report.outputFolder, 'patch-report.json')}`
-      ].join('\n') + '\n'
+        parsed.options.dryRun ? '' : `Report: ${path.join(report.outputFolder, 'patch-report.json')}`
+      ].filter(Boolean).join('\n') + '\n'
     );
-    return report.appliedCount > 0 ? 0 : 1;
+    return report.skippedCount === 0 && (!report.warnings || report.warnings.length === 0) ? 0 : 1;
   } catch (error: unknown) {
     stderr.write(`${toErrorMessage(error)}\n`);
     return 1;
@@ -66,6 +69,7 @@ export function formatCleanPatchHelp(): string {
     '  --patch, -p    Clean translation patch JSON exported by DiskScribe2026.',
     '  --source, -s   User-owned source image. Repeat for multi-disc patches.',
     '  --out, -o      Output folder for patched copies and patch-report.json.',
+    '  --dry-run      Validate the patch against source images without writing output.',
     '  --help, -h     Show this help.'
   ].join('\n');
 }
@@ -74,11 +78,16 @@ function parseCleanPatchArgs(argv: string[]): { help?: boolean; error?: string; 
   const sourcePaths: string[] = [];
   let patchPath = '';
   let outputFolder = '';
+  let dryRun = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--help' || arg === '-h') {
       return { help: true };
+    }
+    if (arg === '--dry-run') {
+      dryRun = true;
+      continue;
     }
     if (arg === '--patch' || arg === '-p') {
       const value = readNextValue(argv, index);
@@ -110,11 +119,11 @@ function parseCleanPatchArgs(argv: string[]): { help?: boolean; error?: string; 
   if (sourcePaths.length === 0) {
     return { error: 'Missing at least one --source <image>.' };
   }
-  if (!outputFolder) {
+  if (!outputFolder && !dryRun) {
     return { error: 'Missing --out <folder>.' };
   }
 
-  return { options: { patchPath, sourcePaths, outputFolder } };
+  return { options: { patchPath, sourcePaths, outputFolder, dryRun } };
 }
 
 function readNextValue(argv: string[], index: number): string {
