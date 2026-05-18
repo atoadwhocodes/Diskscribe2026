@@ -49,6 +49,7 @@ export const editorElements = {
   exportPresetButton: document.getElementById('exportPresetButton'),
   importTranslationProjectButton: document.getElementById('importTranslationProjectButton'),
   exportTranslationPatchButton: document.getElementById('exportTranslationPatchButton'),
+  applyCleanTranslationPatchButton: document.getElementById('applyCleanTranslationPatchButton'),
   patchTranslationProjectButton: document.getElementById('patchTranslationProjectButton'),
   translationDashboard: document.getElementById('translationDashboard'),
   translationSearch: document.getElementById('translationSearch'),

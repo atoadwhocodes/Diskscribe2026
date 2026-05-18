@@ -77,6 +77,7 @@ interface DesktopBridge {
   saveTranslationProject(project: unknown): Promise<TranslationProjectSaveResult>;
   loadTranslationProject(): Promise<TranslationProjectLoadResult>;
   exportTranslationPatch(script: unknown): Promise<TranslationProjectSaveResult>;
+  applyCleanTranslationPatch(): Promise<TranslationPatchApplyResult>;
   discoverTranslationProject(filePaths: string[]): Promise<TranslationProjectDiscoveryResult>;
   patchTranslationProject(project: unknown): Promise<TranslationPatchApplyResult>;
   previewTranslationPatch(entry: unknown): Promise<TranslationPatchPreviewResult>;
@@ -117,6 +118,9 @@ const bridge: DesktopBridge = {
   },
   async exportTranslationPatch(script: unknown): Promise<TranslationProjectSaveResult> {
     return ipcRenderer.invoke('desktop:exportTranslationPatch', script);
+  },
+  async applyCleanTranslationPatch(): Promise<TranslationPatchApplyResult> {
+    return ipcRenderer.invoke('desktop:applyCleanTranslationPatch');
   },
   async discoverTranslationProject(filePaths: string[]): Promise<TranslationProjectDiscoveryResult> {
     return ipcRenderer.invoke('desktop:discoverTranslationProject', filePaths);

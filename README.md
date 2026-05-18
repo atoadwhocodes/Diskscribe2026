@@ -17,6 +17,7 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Partition table inspection (MBR-style entries where present)
 - Diagnostics bundle export as JSON
 - Shift-JIS and legacy charset translation workspace
+- Clean translation patch export and local patch application
 - Character-frame byte role inspector
 - Batch queue runner for parsing multiple disk images
 - Save/load batch plans as JSON
@@ -32,6 +33,7 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Extract output: `.bin` and original FAT filenames where available
 - Batch plans: `.json`
 - Diagnostics bundles: `.json`
+- Clean translation patches: `.json`
 
 ## Supported Systems List
 
@@ -81,6 +83,7 @@ Note: roadmap systems are listed as targeted platforms and are not yet guarantee
 3. Use `Ctrl+Enter` to jump to a byte offset or LBA.
 4. Review partition, filesystem, directory, and translation panels.
 5. Export selected bytes, extracted FAT files, or a diagnostics bundle when needed.
+6. Use `Clean Patch` for public-safe translation patch export, then `Apply Patch` to patch a user's own matching source image into a separate output folder.
 
 ## Development
 

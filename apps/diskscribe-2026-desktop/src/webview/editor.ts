@@ -236,6 +236,12 @@ if (elements.exportTranslationPatchButton) {
   });
 }
 
+if (elements.applyCleanTranslationPatchButton) {
+  elements.applyCleanTranslationPatchButton.addEventListener('click', () => {
+    void applyCleanTranslationPatch();
+  });
+}
+
 if (elements.patchTranslationProjectButton) {
   elements.patchTranslationProjectButton.addEventListener('click', () => {
     void patchTranslationProject();
@@ -1708,8 +1714,7 @@ async function exportTranslationPatch() {
   if (result?.error) {
     setText(elements.status, `Unable to export clean patch script: ${result.error}`);
   } else if (result?.saved) {
-    const patchable = script.entries.filter((entry) => entry.patchable).length;
-    setText(elements.status, `Exported clean patch script with ${formatNumber(patchable)} patchable entries.`);
+    setText(elements.status, `Exported clean patch script with ${formatNumber(script.entries.length)} reviewed/final entries.`);
   }
 }
 
@@ -1731,6 +1736,19 @@ async function patchTranslationProject() {
     const applied = Number(result.report?.appliedCount) || 0;
     const skipped = Number(result.report?.skippedCount) || 0;
     setText(elements.status, `Patched disks: ${formatNumber(applied)} applied, ${formatNumber(skipped)} skipped.`);
+  }
+}
+
+async function applyCleanTranslationPatch() {
+  const result = await window.diskScribeDesktop.applyCleanTranslationPatch();
+  if (result?.error) {
+    setText(elements.status, `Clean patch failed: ${result.error}`);
+    return;
+  }
+  if (result?.saved) {
+    const applied = Number(result.report?.appliedCount) || 0;
+    const skipped = Number(result.report?.skippedCount) || 0;
+    setText(elements.status, `Applied clean patch: ${formatNumber(applied)} applied, ${formatNumber(skipped)} skipped.`);
   }
 }
 
