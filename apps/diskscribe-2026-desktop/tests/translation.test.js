@@ -1,4 +1,7 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const os = require('node:os');
+const path = require('node:path');
 const test = require('node:test');
 
 const {
@@ -12,6 +15,11 @@ const {
   mergeTranslationEntries,
   normalizeTranslationEntries
 } = require('../src/webview/translationProject');
+const {
+  applyCleanPatchEntry,
+  enrichCleanPatchScriptForExport,
+  hashFnv1a32Buffer
+} = require('../src/core/translationPatchApply');
 
 test('charset aliases normalize to PC-98 defaults', () => {
   assert.equal(normalizeCharsetId('shift_jis'), 'pc98-cp932');
@@ -142,4 +150,88 @@ test('patch script export omits original source text and bytes', () => {
   });
   assert.equal(serialized.includes('ORIGINAL LINE'), false);
   assert.equal(serialized.includes('T1JJR0lOQUwgTElORQ=='), false);
+});
+
+test('clean patch export enriches CP932 replacement bytes without source bytes', () => {
+  const script = buildPatchScript('DiskScribe2026', 'disc.iso', 'disc.iso', [
+    {
+      id: 'jp',
+      sourcePath: 'disc.iso',
+      mode: 'raw',
+      start: 0,
+      end: 3,
+      encoding: 'pc98-cp932',
+      sourceText: '原文',
+      translatedText: 'あ',
+      sourceBytesBase64: 'QUJDRA==',
+      status: 'final',
+      notes: '',
+      updatedAt: ''
+    }
+  ]);
+
+  const enriched = enrichCleanPatchScriptForExport(script);
+  const serialized = JSON.stringify(enriched);
+
+  assert.equal(enriched.entries[0].patchable, true);
+  assert.deepEqual(enriched.entries[0].replacementBytes, [0x82, 0xa0]);
+  assert.equal(serialized.includes('原文'), false);
+  assert.equal(serialized.includes('QUJDRA=='), false);
+});
+
+test('clean patch applier verifies fingerprint before writing', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
+  const imagePath = path.join(dir, 'sample.iso');
+  await fs.writeFile(imagePath, Buffer.from('ORIGINAL!!', 'ascii'));
+
+  const result = await applyCleanPatchEntry(imagePath, {
+    id: 'ok',
+    sourcePath: 'sample.iso',
+    mode: 'raw',
+    start: 0,
+    end: 7,
+    encoding: 'ascii',
+    translatedText: 'PATCH',
+    replacementBytes: [0x50, 0x41, 0x54, 0x43, 0x48],
+    byteLength: 8,
+    sourceVerification: {
+      algorithm: 'fnv1a32',
+      byteLength: 8,
+      hash: hashFnv1a32Buffer(Buffer.from('ORIGINAL', 'ascii'))
+    },
+    fitsOriginalRange: true,
+    patchable: true
+  });
+
+  assert.deepEqual(result, { status: 'applied', verified: true });
+  assert.equal((await fs.readFile(imagePath, 'ascii')).slice(0, 8), 'PATCH   ');
+});
+
+test('clean patch applier rejects fingerprint mismatch without writing', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
+  const imagePath = path.join(dir, 'sample.iso');
+  await fs.writeFile(imagePath, Buffer.from('DIFFERENT!', 'ascii'));
+
+  const result = await applyCleanPatchEntry(imagePath, {
+    id: 'mismatch',
+    sourcePath: 'sample.iso',
+    mode: 'raw',
+    start: 0,
+    end: 7,
+    encoding: 'ascii',
+    translatedText: 'PATCH',
+    replacementBytes: [0x50, 0x41, 0x54, 0x43, 0x48],
+    byteLength: 8,
+    sourceVerification: {
+      algorithm: 'fnv1a32',
+      byteLength: 8,
+      hash: hashFnv1a32Buffer(Buffer.from('ORIGINAL', 'ascii'))
+    },
+    fitsOriginalRange: true,
+    patchable: true
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.reason, 'Source fingerprint does not match expected image.');
+  assert.equal(await fs.readFile(imagePath, 'ascii'), 'DIFFERENT!');
 });
