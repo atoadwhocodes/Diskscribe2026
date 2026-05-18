@@ -11,7 +11,7 @@ import { buildFatClusterChain, getClusterOffsetBytes, getClusterSizeBytes } from
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
 import { extractSegaCdIsoFileBytes, extractStandaloneIsoFileBytes } from './core/segaCd';
 import {
-  applyCleanPatchEntry,
+  applyCleanPatchScriptToImages,
   encodePatchTextForPatch,
   enrichCleanPatchScriptForExport,
   normalizeCleanPatchScript
@@ -33,7 +33,6 @@ import {
   makeTranslationEntryId,
   normalizeTranslationEntries,
   type TranslationEntry,
-  type TranslationPatchEntry,
   type TranslationPatchReport,
   type TranslationPatchReportEntry,
   type TranslationProjectDisk,
@@ -1584,48 +1583,9 @@ async function applyCleanTranslationPatch(
   }
 
   const outputFolder = outputResult.filePaths[0];
-  await fs.mkdir(outputFolder, { recursive: true });
-
-  const sourceFilesByName = new Map<string, string>();
-  for (const sourcePath of sourceResult.filePaths) {
-    sourceFilesByName.set(path.basename(sourcePath).toLowerCase(), sourcePath);
-  }
-
-  const sourceToOutput = new Map<string, string>();
-  const reportEntries: TranslationPatchReportEntry[] = [];
-  for (const entry of patchableEntries) {
-    const sourcePath = sourceFilesByName.get(path.basename(entry.sourcePath).toLowerCase());
-    if (!sourcePath) {
-      reportEntries.push(toCleanPatchReportEntry(entry, 'skipped', undefined, 'Matching source image was not selected.'));
-      continue;
-    }
-
-    let outputPath = sourceToOutput.get(sourcePath);
-    if (!outputPath) {
-      outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath), sourceToOutput.size);
-      await fs.copyFile(sourcePath, outputPath);
-      sourceToOutput.set(sourcePath, outputPath);
-    }
-
-    const result = await applyCleanPatchEntry(outputPath, entry);
-    reportEntries.push(toCleanPatchReportEntry(entry, result.status, outputPath, result.reason, result.verified));
-  }
-
-  const appliedCount = reportEntries.filter((entry) => entry.status === 'applied').length;
-  const skippedCount = reportEntries.length - appliedCount;
-  const verifiedCount = reportEntries.filter((entry) => entry.verified === true).length;
-  const report: TranslationPatchReport = {
-    appName: 'DiskScribe2026',
-    patchVersion: patchScript.patchVersion,
-    sourceName: patchScript.sourceName,
-    outputFolder,
-    createdAt: new Date().toISOString(),
-    appliedCount,
-    skippedCount,
-    verifiedCount,
-    entries: reportEntries
-  };
-  await fs.writeFile(path.join(outputFolder, 'patch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+  const report = await applyCleanPatchScriptToImages(patchScript, sourceResult.filePaths, outputFolder, {
+    patchSourcePath: patchPath
+  });
   return { saved: true, outputFolder, report };
 }
 
@@ -2020,25 +1980,6 @@ function toPatchReportEntry(
     start: entry.start,
     end: entry.end,
     status,
-    reason
-  };
-}
-
-function toCleanPatchReportEntry(
-  entry: TranslationPatchEntry,
-  status: 'applied' | 'skipped',
-  outputPath?: string,
-  reason?: string,
-  verified?: boolean
-): TranslationPatchReportEntry {
-  return {
-    id: entry.id,
-    sourcePath: entry.sourcePath,
-    outputPath,
-    start: entry.start,
-    end: entry.end,
-    status,
-    verified,
     reason
   };
 }

@@ -17,6 +17,7 @@ const {
 } = require('../src/webview/translationProject');
 const {
   applyCleanPatchEntry,
+  applyCleanPatchScriptToImages,
   enrichCleanPatchScriptForExport,
   hashFnv1a32Buffer
 } = require('../src/core/translationPatchApply');
@@ -234,4 +235,93 @@ test('clean patch applier rejects fingerprint mismatch without writing', async (
   assert.equal(result.status, 'skipped');
   assert.equal(result.reason, 'Source fingerprint does not match expected image.');
   assert.equal(await fs.readFile(imagePath, 'ascii'), 'DIFFERENT!');
+});
+
+test('clean patch applier applies multi-file scripts and reports invalid entries', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
+  const sourceA = path.join(dir, 'disc-a.iso');
+  const sourceB = path.join(dir, 'disc-b.iso');
+  const outputFolder = path.join(dir, 'patched');
+  await fs.writeFile(sourceA, Buffer.from('AAAABBBB', 'ascii'));
+  await fs.writeFile(sourceB, Buffer.from('CCCCDDDD', 'ascii'));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'release',
+      sourceName: 'multi-disc',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [
+        {
+          id: 'a',
+          sourcePath: 'disc-a.iso',
+          mode: 'raw',
+          start: 0,
+          end: 3,
+          encoding: 'ascii',
+          translatedText: 'MENU',
+          replacementBytes: [0x4d, 0x45, 0x4e, 0x55],
+          byteLength: 4,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 4,
+            hash: hashFnv1a32Buffer(Buffer.from('AAAA', 'ascii'))
+          },
+          fitsOriginalRange: true,
+          patchable: true
+        },
+        {
+          id: 'b',
+          sourcePath: 'disc-b.iso',
+          mode: 'raw',
+          start: 4,
+          end: 7,
+          encoding: 'ascii',
+          translatedText: 'TEXT',
+          replacementBytes: [0x54, 0x45, 0x58, 0x54],
+          byteLength: 4,
+          fitsOriginalRange: true,
+          patchable: true
+        },
+        {
+          id: 'bad',
+          sourcePath: 'disc-b.iso',
+          mode: 'raw',
+          start: 0,
+          end: 1,
+          encoding: 'ascii',
+          translatedText: 'TOO LONG',
+          replacementBytes: undefined,
+          byteLength: 2,
+          fitsOriginalRange: false,
+          patchable: false,
+          reason: 'Translation does not fit in the original byte range.'
+        }
+      ]
+    },
+    [sourceA, sourceB],
+    outputFolder,
+    { createdAt: '2026-05-18T00:00:00.000Z', patchSourcePath: 'patch.json' }
+  );
+
+  assert.equal(report.appliedCount, 2);
+  assert.equal(report.skippedCount, 1);
+  assert.equal(report.verifiedCount, 2);
+  assert.equal(report.patchSourcePath, 'patch.json');
+  assert.equal(report.sourceFileCount, 2);
+  assert.equal(report.patchableEntryCount, 2);
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc-a.iso'), 'ascii'), 'MENUBBBB');
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc-b.iso'), 'ascii'), 'CCCCTEXT');
+  assert.equal(report.entries.find((entry) => entry.id === 'bad').reason, 'Translation does not fit in the original byte range.');
+  assert.deepEqual(
+    JSON.parse(await fs.readFile(path.join(outputFolder, 'patch-report.json'), 'utf8')),
+    JSON.parse(JSON.stringify(report))
+  );
 });

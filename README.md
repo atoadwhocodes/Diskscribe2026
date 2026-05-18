@@ -85,6 +85,15 @@ Note: roadmap systems are listed as targeted platforms and are not yet guarantee
 5. Export selected bytes, extracted FAT files, or a diagnostics bundle when needed.
 6. Use `Clean Patch` for public-safe translation patch export, then `Apply Patch` to patch a user's own matching source image into a separate output folder.
 
+## Translation Patch Workflow
+
+1. Keep private translation projects local to the working team. These project files may contain source context needed for review.
+2. Mark finished entries as `reviewed` or `final`.
+3. Use `Clean Patch` to export a public-safe patch JSON. The clean patch omits original source text and original source byte blobs.
+4. Distribute the clean patch JSON, not a patched game image.
+5. Users choose `Apply Patch`, select the clean patch JSON, select their own matching source image or images, and choose an output folder.
+6. DiskScribe2026 writes patched copies plus `patch-report.json`. Entries with mismatched fingerprints, missing source images, invalid bytes, or overlong replacements are skipped and reported.
+
 ## Development
 
 ```bash

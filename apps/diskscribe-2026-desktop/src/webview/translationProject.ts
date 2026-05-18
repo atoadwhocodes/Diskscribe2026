@@ -139,6 +139,9 @@ export interface TranslationPatchReport {
   appName: string;
   patchVersion: number;
   sourceName: string;
+  patchSourcePath?: string;
+  sourceFileCount?: number;
+  patchableEntryCount?: number;
   outputFolder: string;
   createdAt: string;
   appliedCount: number;

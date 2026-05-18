@@ -1748,7 +1748,11 @@ async function applyCleanTranslationPatch() {
   if (result?.saved) {
     const applied = Number(result.report?.appliedCount) || 0;
     const skipped = Number(result.report?.skippedCount) || 0;
-    setText(elements.status, `Applied clean patch: ${formatNumber(applied)} applied, ${formatNumber(skipped)} skipped.`);
+    const verified = Number(result.report?.verifiedCount) || 0;
+    setText(
+      elements.status,
+      `Applied clean patch: ${formatNumber(applied)} applied, ${formatNumber(verified)} verified, ${formatNumber(skipped)} skipped.`
+    );
   }
 }
 

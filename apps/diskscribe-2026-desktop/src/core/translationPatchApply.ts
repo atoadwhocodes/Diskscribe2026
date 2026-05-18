@@ -1,8 +1,11 @@
 import * as iconv from 'iconv-lite';
-import { promises as fs } from 'node:fs';
+import { existsSync, promises as fs } from 'node:fs';
+import * as path from 'node:path';
 import {
   encodePatchText,
   type TranslationPatchEntry,
+  type TranslationPatchReport,
+  type TranslationPatchReportEntry,
   type TranslationPatchScript
 } from '../webview/translationProject';
 
@@ -10,6 +13,11 @@ export interface CleanPatchEntryApplyResult {
   status: 'applied' | 'skipped';
   reason?: string;
   verified?: boolean;
+}
+
+export interface CleanPatchApplyOptions {
+  createdAt?: string;
+  patchSourcePath?: string;
 }
 
 export function normalizeCleanPatchScript(rawScript: unknown): TranslationPatchScript | undefined {
@@ -118,6 +126,66 @@ export async function applyCleanPatchEntry(
   }
 }
 
+export async function applyCleanPatchScriptToImages(
+  patchScript: TranslationPatchScript,
+  sourcePaths: string[],
+  outputFolder: string,
+  options: CleanPatchApplyOptions = {}
+): Promise<TranslationPatchReport> {
+  await fs.mkdir(outputFolder, { recursive: true });
+
+  const sourceFilesByName = new Map<string, string>();
+  for (const sourcePath of sourcePaths) {
+    sourceFilesByName.set(path.basename(sourcePath).toLowerCase(), sourcePath);
+  }
+
+  const sourceToOutput = new Map<string, string>();
+  const reportEntries: TranslationPatchReportEntry[] = [];
+  for (const entry of patchScript.entries) {
+    if (!entry.patchable) {
+      reportEntries.push(
+        toCleanPatchReportEntry(entry, 'skipped', undefined, entry.reason || 'Patch entry is not marked patchable.')
+      );
+      continue;
+    }
+
+    const sourcePath = sourceFilesByName.get(path.basename(entry.sourcePath).toLowerCase());
+    if (!sourcePath) {
+      reportEntries.push(toCleanPatchReportEntry(entry, 'skipped', undefined, 'Matching source image was not selected.'));
+      continue;
+    }
+
+    let outputPath = sourceToOutput.get(sourcePath);
+    if (!outputPath) {
+      outputPath = await copySourceToUniqueOutput(sourcePath, outputFolder, sourceToOutput.size);
+      sourceToOutput.set(sourcePath, outputPath);
+    }
+
+    const result = await applyCleanPatchEntry(outputPath, entry);
+    reportEntries.push(toCleanPatchReportEntry(entry, result.status, outputPath, result.reason, result.verified));
+  }
+
+  const appliedCount = reportEntries.filter((entry) => entry.status === 'applied').length;
+  const skippedCount = reportEntries.length - appliedCount;
+  const verifiedCount = reportEntries.filter((entry) => entry.verified === true).length;
+  const report: TranslationPatchReport = {
+    appName: 'DiskScribe2026',
+    patchVersion: patchScript.patchVersion,
+    sourceName: patchScript.sourceName,
+    patchSourcePath: options.patchSourcePath,
+    sourceFileCount: sourcePaths.length,
+    patchableEntryCount: patchScript.entries.filter((entry) => entry.patchable).length,
+    outputFolder,
+    createdAt: options.createdAt || new Date().toISOString(),
+    appliedCount,
+    skippedCount,
+    verifiedCount,
+    entries: reportEntries
+  };
+  await fs.writeFile(path.join(outputFolder, 'patch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+  return report;
+}
+
 export function encodePatchTextForPatch(text: string, encoding: string): { bytes?: number[]; reason?: string } {
   const normalized = encoding.toLowerCase();
   if (
@@ -141,6 +209,56 @@ export function hashFnv1a32Buffer(bytes: Buffer): string {
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash.toString(16).padStart(8, '0');
+}
+
+function toCleanPatchReportEntry(
+  entry: TranslationPatchEntry,
+  status: 'applied' | 'skipped',
+  outputPath?: string,
+  reason?: string,
+  verified?: boolean
+): TranslationPatchReportEntry {
+  return {
+    id: entry.id,
+    sourcePath: entry.sourcePath,
+    outputPath,
+    start: entry.start,
+    end: entry.end,
+    status,
+    verified,
+    reason
+  };
+}
+
+async function copySourceToUniqueOutput(sourcePath: string, outputFolder: string, index: number): Promise<string> {
+  const outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath), index);
+  await fs.copyFile(sourcePath, outputPath);
+  return outputPath;
+}
+
+function uniqueOutputPath(outputFolder: string, fileName: string, index: number): string {
+  const candidate = path.join(outputFolder, sanitizeFileName(fileName));
+  if (!fileExists(candidate)) {
+    return candidate;
+  }
+  const parsed = path.parse(fileName);
+  return path.join(outputFolder, `${sanitizeFileName(parsed.name)}-${index + 1}${parsed.ext}`);
+}
+
+function fileExists(filePath: string): boolean {
+  return existsSync(filePath);
+}
+
+function sanitizeFileName(fileName: string): string {
+  return (
+    Array.from(fileName)
+      .map((char) => {
+        const code = char.charCodeAt(0);
+        return code < 0x20 || '<>:"/\\|?*'.includes(char) ? '_' : char;
+      })
+      .join('')
+      .trim() || 'patched-image.bin'
+  );
 }
 
 function normalizeCleanPatchEntry(rawEntry: unknown): TranslationPatchEntry | undefined {
