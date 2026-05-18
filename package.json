@@ -22,6 +22,7 @@
     "desktop:test": "npm --prefix apps/diskscribe-2026-desktop run test",
     "desktop:package": "npm --prefix apps/diskscribe-2026-desktop run package",
     "desktop:make": "npm --prefix apps/diskscribe-2026-desktop run make",
+    "apply-clean-patch": "npm --prefix apps/diskscribe-2026-desktop run apply-clean-patch --",
     "start": "npm run desktop:start",
     "lint": "npm run desktop:lint",
     "test": "npm run desktop:test",

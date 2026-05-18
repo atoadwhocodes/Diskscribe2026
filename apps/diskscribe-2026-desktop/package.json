@@ -11,7 +11,8 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "test": "node scripts/run-tests-with-guard.js"
+    "test": "node scripts/run-tests-with-guard.js",
+    "apply-clean-patch": "npx tsc --project tsconfig.test.json && node dist-tests/src/core/cleanPatchCli.js"
   },
   "keywords": [],
   "author": {

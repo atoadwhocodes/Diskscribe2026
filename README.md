@@ -94,6 +94,14 @@ Note: roadmap systems are listed as targeted platforms and are not yet guarantee
 5. Users choose `Apply Patch`, select the clean patch JSON, select their own matching source image or images, and choose an output folder.
 6. DiskScribe2026 writes patched copies plus `patch-report.json`. Entries with mismatched fingerprints, missing source images, invalid bytes, or overlong replacements are skipped and reported.
 
+Command-line apply is also available for repeatable local testing:
+
+```bash
+npm run apply-clean-patch -- --patch patch.json --source disc.iso --out patched-output
+```
+
+Repeat `--source` for multi-disc patches.
+
 ## Development
 
 ```bash

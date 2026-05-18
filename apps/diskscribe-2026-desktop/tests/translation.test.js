@@ -21,6 +21,9 @@ const {
   enrichCleanPatchScriptForExport,
   hashFnv1a32Buffer
 } = require('../src/core/translationPatchApply');
+const {
+  runCleanPatchCli
+} = require('../src/core/cleanPatchCli');
 
 test('charset aliases normalize to PC-98 defaults', () => {
   assert.equal(normalizeCharsetId('shift_jis'), 'pc98-cp932');
@@ -324,4 +327,79 @@ test('clean patch applier applies multi-file scripts and reports invalid entries
     JSON.parse(await fs.readFile(path.join(outputFolder, 'patch-report.json'), 'utf8')),
     JSON.parse(JSON.stringify(report))
   );
+});
+
+test('clean patch CLI applies a patch and writes a report', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-cli-'));
+  const patchPath = path.join(dir, 'patch.json');
+  const sourcePath = path.join(dir, 'disc.iso');
+  const outputFolder = path.join(dir, 'out');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+  await fs.writeFile(
+    patchPath,
+    JSON.stringify({
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [
+        {
+          id: 'cli',
+          sourcePath: 'disc.iso',
+          mode: 'raw',
+          start: 0,
+          end: 4,
+          encoding: 'ascii',
+          translatedText: 'BYE',
+          replacementBytes: [0x42, 0x59, 0x45],
+          byteLength: 5,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 5,
+            hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+          },
+          fitsOriginalRange: true,
+          patchable: true
+        }
+      ]
+    }),
+    'utf8'
+  );
+
+  let stdout = '';
+  let stderr = '';
+  const exitCode = await runCleanPatchCli(
+    ['--patch', patchPath, '--source', sourcePath, '--out', outputFolder],
+    {
+      stdout: { write: (text) => { stdout += text; } },
+      stderr: { write: (text) => { stderr += text; } }
+    }
+  );
+
+  assert.equal(exitCode, 0);
+  assert.equal(stderr, '');
+  assert.match(stdout, /1 applied, 1 verified, 0 skipped/);
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc.iso'), 'ascii'), 'BYE  !!!');
+  assert.equal(JSON.parse(await fs.readFile(path.join(outputFolder, 'patch-report.json'), 'utf8')).appliedCount, 1);
+});
+
+test('clean patch CLI returns usage errors for missing arguments', async () => {
+  let stdout = '';
+  let stderr = '';
+  const exitCode = await runCleanPatchCli(['--patch'], {
+    stdout: { write: (text) => { stdout += text; } },
+    stderr: { write: (text) => { stderr += text; } }
+  });
+
+  assert.equal(exitCode, 2);
+  assert.equal(stdout, '');
+  assert.match(stderr, /Missing value for --patch/);
+  assert.match(stderr, /Usage:/);
 });
