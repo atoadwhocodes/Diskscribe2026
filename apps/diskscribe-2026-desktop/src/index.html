@@ -301,6 +301,25 @@
             <button id="deleteTranslationEntryButton" type="button">Delete Entry</button>
           </div>
           <pre id="patchPreview" class="patchPreview">(select an entry to preview patch bytes)</pre>
+          <div id="patchReportPanel" class="patchReportPanel" hidden>
+            <div id="patchReportSummary" class="patchReportSummary"></div>
+            <div id="patchReportWarnings" class="patchReportWarnings"></div>
+            <div class="tableWrap patchReportWrap">
+              <table class="summaryTable patchReportTable">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Source</th>
+                    <th>Range</th>
+                    <th>Detail</th>
+                  </tr>
+                </thead>
+                <tbody id="patchReportRows">
+                  <tr><td colspan="4">No patch report available.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
           <div class="tableWrap translationEntryWrap">
             <table class="summaryTable translationEntryTable">
               <thead>

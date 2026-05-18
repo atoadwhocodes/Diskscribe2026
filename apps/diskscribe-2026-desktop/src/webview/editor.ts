@@ -1741,6 +1741,7 @@ async function patchTranslationProject() {
   if (result?.saved) {
     const applied = Number(result.report?.appliedCount) || 0;
     const skipped = Number(result.report?.skippedCount) || 0;
+    renderPatchReport(result.report, 'Private Patch');
     setText(elements.status, `Patched disks: ${formatNumber(applied)} applied, ${formatNumber(skipped)} skipped.`);
   }
 }
@@ -1755,6 +1756,7 @@ async function applyCleanTranslationPatch() {
     const applied = Number(result.report?.appliedCount) || 0;
     const skipped = Number(result.report?.skippedCount) || 0;
     const verified = Number(result.report?.verifiedCount) || 0;
+    renderPatchReport(result.report, 'Clean Patch Apply');
     setText(
       elements.status,
       `Applied clean patch: ${formatNumber(applied)} applied, ${formatNumber(verified)} verified, ${formatNumber(skipped)} skipped.`
@@ -1773,8 +1775,80 @@ async function validateCleanTranslationPatch() {
     const verified = Number(result.report?.verifiedCount) || 0;
     const warningCount = Array.isArray(result.report?.warnings) ? result.report.warnings.length : 0;
     const warningText = warningCount > 0 ? `, ${formatNumber(warningCount)} warning(s)` : '';
+    renderPatchReport(result.report, 'Clean Patch Validation');
     setText(elements.status, `Validated clean patch: ${formatNumber(verified)} verified, ${formatNumber(skipped)} skipped${warningText}.`);
   }
+}
+
+function renderPatchReport(report, title) {
+  if (!elements.patchReportPanel || !elements.patchReportSummary || !elements.patchReportWarnings || !elements.patchReportRows) {
+    return;
+  }
+
+  elements.patchReportPanel.hidden = false;
+  const applied = Number(report?.appliedCount) || 0;
+  const skipped = Number(report?.skippedCount) || 0;
+  const verified = Number(report?.verifiedCount) || 0;
+  const mode = report?.mode === 'dry-run' ? 'dry-run' : report?.mode === 'apply' ? 'apply' : 'patch';
+  const sourceName = typeof report?.sourceName === 'string' && report.sourceName ? report.sourceName : 'translation-project';
+  const outputFolder = typeof report?.outputFolder === 'string' && report.outputFolder ? `, output ${report.outputFolder}` : '';
+  elements.patchReportSummary.textContent =
+    `${title}: ${sourceName}, mode ${mode}, applied ${formatNumber(applied)}, verified ${formatNumber(verified)}, skipped ${formatNumber(skipped)}${outputFolder}`;
+
+  const warnings = Array.isArray(report?.warnings) ? report.warnings.filter(Boolean) : [];
+  elements.patchReportWarnings.textContent = warnings.length > 0 ? `Warnings: ${warnings.join(' | ')}` : '';
+
+  elements.patchReportRows.innerHTML = '';
+  const entries = Array.isArray(report?.entries) ? report.entries : [];
+  const visibleEntries = entries.filter((entry) => entry?.status !== 'applied' || entries.length <= 12).slice(0, 24);
+  if (visibleEntries.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.textContent = 'No report entries.';
+    row.appendChild(cell);
+    elements.patchReportRows.appendChild(row);
+    return;
+  }
+
+  for (const entry of visibleEntries) {
+    const row = document.createElement('tr');
+    appendCell(row, String(entry.status || 'unknown'));
+    appendCell(row, compactPath(String(entry.sourcePath || '')));
+    appendCell(row, formatPatchRange(Number(entry.start) || 0, Number(entry.end) || 0));
+    appendCell(row, patchReportDetail(entry));
+    elements.patchReportRows.appendChild(row);
+  }
+}
+
+function patchReportDetail(entry) {
+  if (entry?.reason) {
+    return String(entry.reason);
+  }
+  if (entry?.verified === true) {
+    return entry?.outputPath ? `Verified -> ${compactPath(String(entry.outputPath))}` : 'Verified';
+  }
+  if (entry?.outputPath) {
+    return compactPath(String(entry.outputPath));
+  }
+  return '';
+}
+
+function compactPath(value) {
+  const text = String(value || '').replace(/\\/g, '/');
+  if (text.length <= 64) {
+    return text;
+  }
+  const parts = text.split('/').filter(Boolean);
+  if (parts.length >= 2) {
+    const compact = `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
+    return compact.length <= 64 ? compact : `...${compact.slice(-61)}`;
+  }
+  return `...${text.slice(-61)}`;
+}
+
+function formatPatchRange(start, end) {
+  return `0x${Math.max(0, start).toString(16).toUpperCase()}-0x${Math.max(0, end).toString(16).toUpperCase()}`;
 }
 
 function selectTranslationEntry(id) {

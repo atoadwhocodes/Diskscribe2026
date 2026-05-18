@@ -70,6 +70,10 @@ export const editorElements = {
   reviewSampleButton: document.getElementById('reviewSampleButton'),
   deleteTranslationEntryButton: document.getElementById('deleteTranslationEntryButton'),
   patchPreview: document.getElementById('patchPreview'),
+  patchReportPanel: document.getElementById('patchReportPanel'),
+  patchReportSummary: document.getElementById('patchReportSummary'),
+  patchReportWarnings: document.getElementById('patchReportWarnings'),
+  patchReportRows: document.getElementById('patchReportRows'),
   translationEntryRows: document.getElementById('translationEntryRows'),
   charsetLegend: document.getElementById('charsetLegend'),
   charFrameRows: document.getElementById('charFrameRows')
