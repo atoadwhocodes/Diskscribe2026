@@ -11,7 +11,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "test": "tsc --project tsconfig.test.json && node --test dist-tests/tests/*.test.js"
+    "test": "node scripts/run-tests-with-guard.js"
   },
   "keywords": [],
   "author": {

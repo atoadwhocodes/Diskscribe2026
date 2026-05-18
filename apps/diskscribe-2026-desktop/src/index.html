@@ -13,7 +13,7 @@
         <div class="brandMark" aria-hidden="true">DS</div>
         <div class="brandText">
           <h1 id="brandTitle">DiskScribe2026 Desktop</h1>
-          <p class="brandTagline">PC-98 Disk Workbench</p>
+          <p class="brandTagline">Legacy Disk Translation Workbench</p>
           <p id="brandVersion" class="brandVersion">Version --</p>
         </div>
       </div>
@@ -36,7 +36,7 @@
     </header>
 
     <div id="activePath" class="activePath">No disk loaded.</div>
-    <div id="dropHint" class="dropHint isHidden">Drop PC-98 disk images here to open or queue</div>
+    <div id="dropHint" class="dropHint isHidden">Drop legacy disk images here to open or queue</div>
 
     <main class="workspace">
       <aside class="leftRail">
@@ -208,7 +208,20 @@
             <button id="copyDecodedButton" type="button">Copy Decoded</button>
             <button id="copyDraftButton" type="button">Copy Draft</button>
             <button id="clearDraftButton" type="button">Clear Draft</button>
+            <button id="saveTranslationEntryButton" class="btnPrimary" type="button">Save Entry</button>
+            <button id="discoverStringsButton" type="button">Discover Strings</button>
+            <button id="discoverProjectButton" type="button">Discover Project</button>
+            <button id="runAutomationQaButton" type="button">Run QA</button>
+            <button id="exportTranslationProjectButton" type="button">Export Project</button>
+            <button id="exportFilteredTranslationProjectButton" type="button">Export Filtered</button>
+            <button id="exportTranslationReportButton" type="button">Export Report</button>
+            <button id="snapshotTranslationProjectButton" type="button">Snapshot</button>
+            <button id="exportPresetButton" type="button">Export Preset</button>
+            <button id="importTranslationProjectButton" type="button">Import Project</button>
+            <button id="exportTranslationPatchButton" type="button">Clean Patch</button>
+            <button id="patchTranslationProjectButton" type="button">Patch Disks</button>
           </div>
+          <div id="translationDashboard" class="translationDashboard">No translation project loaded.</div>
           <p id="translationMeta" class="translationMeta">Select bytes in hex view to decode text for translation.</p>
           <div class="translatorGrid">
             <div class="translatorColumn">
@@ -223,6 +236,86 @@
                 placeholder="Type translation notes or final text..."
               ></textarea>
             </div>
+          </div>
+          <div class="translationProjectBar">
+            <label for="translationSearch">Search Entries</label>
+            <input id="translationSearch" type="search" placeholder="Search source, draft, notes, or offset" />
+            <select id="translationStatusFilter">
+              <option value="">All Status</option>
+              <option value="raw">Raw</option>
+              <option value="draft">Draft</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="final">Final</option>
+              <option value="patched">Patched</option>
+              <option value="verified">Verified</option>
+            </select>
+            <select id="translationPriorityFilter">
+              <option value="">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="translationCategoryFilter">
+              <option value="">All Categories</option>
+            </select>
+            <select id="translationStatus">
+              <option value="raw">Raw</option>
+              <option value="draft">Draft</option>
+              <option value="reviewed">Reviewed</option>
+              <option value="final">Final</option>
+              <option value="patched">Patched</option>
+              <option value="verified">Verified</option>
+            </select>
+            <input id="translationBatch" type="text" placeholder="Batch" />
+            <input id="translationTranslator" type="text" placeholder="Translator" />
+            <input id="translationReviewer" type="text" placeholder="Reviewer" />
+            <select id="translationSourceQuality">
+              <option value="">Source QA</option>
+              <option value="source-good">Good</option>
+              <option value="source-suspect">Suspect</option>
+              <option value="source-garbage">Garbage</option>
+            </select>
+            <select id="translationConfidence">
+              <option value="">Confidence</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="translationPlaytestStatus">
+              <option value="untested">Untested</option>
+              <option value="seen">Seen</option>
+              <option value="passed">Passed</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select id="translationExportPreset">
+              <option value="human-csv">Human CSV</option>
+              <option value="llm-json">LLM JSON</option>
+              <option value="reviewer-json">Reviewer JSON</option>
+              <option value="glossary-json">Glossary JSON</option>
+            </select>
+            <button id="saveTranslationMetaButton" type="button">Save Meta</button>
+            <button id="patchPreviewButton" type="button">Preview Patch</button>
+            <button id="reviewSampleButton" type="button">Review Sample</button>
+            <button id="deleteTranslationEntryButton" type="button">Delete Entry</button>
+          </div>
+          <pre id="patchPreview" class="patchPreview">(select an entry to preview patch bytes)</pre>
+          <div class="tableWrap translationEntryWrap">
+            <table class="summaryTable translationEntryTable">
+              <thead>
+                <tr>
+                  <th>Range</th>
+                  <th>Encoding</th>
+                  <th>Priority</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th>Draft</th>
+                </tr>
+              </thead>
+              <tbody id="translationEntryRows">
+                <tr><td colspan="7">No translation entries saved.</td></tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -258,7 +351,7 @@
     </main>
 
     <footer id="statusBar" class="statusBar tone-info">
-      <div id="status" class="statusText">Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to start.</div>
+      <div id="status" class="statusText">Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .cue, or .iso image to start.</div>
       <div id="statusProgressWrap" class="statusProgressWrap isHidden">
         <progress id="statusProgress" value="0" max="100"></progress>
         <span id="statusProgressLabel"></span>

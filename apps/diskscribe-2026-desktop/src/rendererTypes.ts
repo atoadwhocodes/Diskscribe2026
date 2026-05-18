@@ -24,6 +24,46 @@ export interface DiagnosticsExportResult {
   error?: string;
 }
 
+export interface TranslationProjectSaveResult {
+  saved: boolean;
+  filePath?: string;
+  error?: string;
+}
+
+export interface TranslationProjectLoadResult {
+  filePath?: string;
+  project?: unknown;
+  error?: string;
+}
+
+export interface TranslationProjectDiscoveryResult {
+  project?: unknown;
+  error?: string;
+}
+
+export interface TranslationPatchApplyResult {
+  saved: boolean;
+  outputFolder?: string;
+  report?: unknown;
+  error?: string;
+}
+
+export interface TranslationPatchPreviewResult {
+  byteLength?: number;
+  encodedLength?: number;
+  fits?: boolean;
+  sourceHex?: string;
+  replacementHex?: string;
+  paddedHex?: string;
+  error?: string;
+}
+
+export interface TranslationAutomationResult {
+  project?: unknown;
+  report?: unknown;
+  error?: string;
+}
+
 export interface DesktopBridge {
   postMessage(message: unknown): Promise<void>;
   openDiskDialog(): Promise<string | undefined>;
@@ -33,6 +73,13 @@ export interface DesktopBridge {
   saveBatchPlan(entries: BatchPlanEntryPayload[]): Promise<BatchPlanSaveResult>;
   loadBatchPlan(): Promise<BatchPlanLoadResult>;
   exportDiagnostics(): Promise<DiagnosticsExportResult>;
+  saveTranslationProject(project: unknown): Promise<TranslationProjectSaveResult>;
+  loadTranslationProject(): Promise<TranslationProjectLoadResult>;
+  exportTranslationPatch(script: unknown): Promise<TranslationProjectSaveResult>;
+  discoverTranslationProject(filePaths: string[]): Promise<TranslationProjectDiscoveryResult>;
+  patchTranslationProject(project: unknown): Promise<TranslationPatchApplyResult>;
+  previewTranslationPatch(entry: unknown): Promise<TranslationPatchPreviewResult>;
+  analyzeTranslationProject(project: unknown): Promise<TranslationAutomationResult>;
   onHostMessage(handler: (message: unknown) => void): () => void;
 }
 

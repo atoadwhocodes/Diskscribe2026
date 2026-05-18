@@ -23,4 +23,10 @@ build/
 apps/diskscribe-2026-desktop/out/
 apps/diskscribe-2026-desktop/.webpack/
 apps/diskscribe-2026-desktop/dist-tests/
+PC-98-MATERIALS/**
+!PC-98-MATERIALS/
+!PC-98-MATERIALS/README.md
+SEGA-CD-MATERIALS/**
+!SEGA-CD-MATERIALS/
+!SEGA-CD-MATERIALS/README.md
 *.code-workspace

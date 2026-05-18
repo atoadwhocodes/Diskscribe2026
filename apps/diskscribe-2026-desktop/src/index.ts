@@ -1,11 +1,15 @@
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from 'electron';
+import * as iconv from 'iconv-lite';
 import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { APP_DESKTOP_NAME, APP_NAME, APP_VENDOR } from './appMeta';
 import type { DiskSummary } from './core/diskSummary';
 import { buildDiskSummaryFromPath, formatSummaryAsText, isSupportedDiskPath } from './core/diskSummary';
 import { extractFatFileBytes } from './core/fatExtract';
+import { buildFatClusterChain, getClusterOffsetBytes, getClusterSizeBytes } from './core/fat';
 import { PagedFileByteReader } from './core/hex/pagedFileByteReader';
+import { extractSegaCdIsoFileBytes, extractStandaloneIsoFileBytes } from './core/segaCd';
 import {
   APP_BATCH_PLAN_VERSION,
   DISK_IMAGE_FILTERS,
@@ -18,6 +22,17 @@ import type {
   HexMode,
   HexSelection
 } from './mainProcessTypes';
+import {
+  buildTranslationProject,
+  encodePatchText,
+  makeTranslationEntryId,
+  normalizeTranslationEntries,
+  type TranslationEntry,
+  type TranslationPatchReport,
+  type TranslationPatchReportEntry,
+  type TranslationProjectDisk,
+  type TranslationProjectManifest
+} from './webview/translationProject';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -88,7 +103,7 @@ function createWindow(): void {
 ipcMain.handle('desktop:openDiskDialog', async (event): Promise<string | undefined> => {
   const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
   const result = await dialog.showOpenDialog(ownerWindow, {
-    title: 'Open PC-98 Disk Image',
+    title: 'Open Disk Image',
     properties: ['openFile'],
     filters: DISK_IMAGE_FILTERS
   });
@@ -167,6 +182,84 @@ ipcMain.handle('desktop:loadBatchPlan', async (event) => {
     return { filePath, entries };
   } catch (error: unknown) {
     return { filePath, entries: [], error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:saveTranslationProject', async (event, project: unknown) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  return saveJsonFromRenderer(ownerWindow, {
+    title: 'Save Translation Project',
+    defaultPath: 'diskscribe2026-translation-project.json',
+    buttonLabel: 'Save',
+    payload: project
+  });
+});
+
+ipcMain.handle('desktop:loadTranslationProject', async (event) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  const loadResult = await dialog.showOpenDialog(ownerWindow, {
+    title: 'Load Translation Project',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (loadResult.canceled || loadResult.filePaths.length === 0) {
+    return {};
+  }
+
+  const filePath = loadResult.filePaths[0];
+  try {
+    const text = await fs.readFile(filePath, 'utf8');
+    return { filePath, project: JSON.parse(text) };
+  } catch (error: unknown) {
+    return { filePath, error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:exportTranslationPatch', async (event, script: unknown) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  return saveJsonFromRenderer(ownerWindow, {
+    title: 'Export Clean Translation Patch',
+    defaultPath: 'diskscribe2026-clean-translation-patch.json',
+    buttonLabel: 'Export',
+    payload: script
+  });
+});
+
+ipcMain.handle('desktop:discoverTranslationProject', async (_event, rawFilePaths: unknown) => {
+  try {
+    const filePaths = normalizeDiskFilePaths(rawFilePaths);
+    if (filePaths.length === 0) {
+      return { error: 'No supported disk images selected.' };
+    }
+    const project = await discoverTranslationProject(filePaths);
+    return { project };
+  } catch (error: unknown) {
+    return { error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:patchTranslationProject', async (event, rawProject: unknown) => {
+  const ownerWindow = BrowserWindow.fromWebContents(event.sender) ?? undefined;
+  try {
+    return await patchTranslationProject(rawProject, ownerWindow);
+  } catch (error: unknown) {
+    return { saved: false, error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:previewTranslationPatch', async (_event, rawEntry: unknown) => {
+  try {
+    return buildPatchPreview(rawEntry);
+  } catch (error: unknown) {
+    return { error: toErrorMessage(error) };
+  }
+});
+
+ipcMain.handle('desktop:analyzeTranslationProject', async (_event, rawProject: unknown) => {
+  try {
+    return analyzeTranslationProject(rawProject);
+  } catch (error: unknown) {
+    return { error: toErrorMessage(error) };
   }
 });
 
@@ -278,7 +371,7 @@ async function handleRendererReady(session: DesktopSession): Promise<void> {
   });
 
   if (!session.summary || !session.filePath) {
-    postStatus(session, 'Open a .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd disk image to begin.');
+    postStatus(session, 'Open a supported legacy image (.hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .cue, or .iso) to begin.');
     return;
   }
 
@@ -298,7 +391,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   }
 
   if (!isSupportedDiskPath(normalizedPath)) {
-    postError(session, 'Unsupported extension. Use .hdi, .nhd, .d88, .hdm, .hdd, .fdi, or .fdd.');
+    postError(session, 'Unsupported extension. Supported types: .hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .cue, .iso.');
     return;
   }
 
@@ -310,7 +403,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
     session.filePath = normalizedPath;
     session.summary = summary;
     session.mode = chooseValidMode(summary, HEX_SETTINGS.defaultMode);
-    session.reader = new PagedFileByteReader(normalizedPath, summary.sizeBytes, {
+    session.reader = new PagedFileByteReader(summary.readPath || normalizedPath, summary.sizeBytes, {
       pageBytes: HEX_SETTINGS.pageBytes,
       maxCachedPages: HEX_SETTINGS.maxCachedPages
     });
@@ -865,18 +958,10 @@ async function handleExtractFile(session: DesktopSession, rawEntry: unknown): Pr
     return;
   }
 
-  const filesystem = session.summary.filesystems.find(
-    (candidate) => candidate.offsetBytes === selected.filesystemOffsetBytes
-  );
-  if (!filesystem) {
-    postStatus(session, 'No filesystem metadata found for selected file.');
-    return;
-  }
-
   const defaultPath = path.join(path.dirname(session.filePath), sanitizeFileName(selected.name || 'extracted.bin'));
   const window = BrowserWindow.fromId(session.windowId) ?? undefined;
   const targetPath = await dialog.showSaveDialog(window, {
-    title: 'Extract FAT File',
+    title: selected.source === 'ISO9660' ? 'Extract ISO9660 File' : 'Extract FAT File',
     defaultPath,
     buttonLabel: 'Extract',
     filters: [
@@ -890,7 +975,10 @@ async function handleExtractFile(session: DesktopSession, rawEntry: unknown): Pr
 
   try {
     postStatus(session, `Extracting ${selected.path}...`, { busy: true });
-    const bytes = await extractFatFileBytes(session.filePath, filesystem, selected);
+    const bytes =
+      selected.source === 'ISO9660'
+        ? await extractIsoFileBytes(session.filePath, selected)
+        : await extractSelectedFatFileBytes(session, selected);
     await fs.writeFile(targetPath.filePath, bytes);
     postStatus(
       session,
@@ -900,6 +988,33 @@ async function handleExtractFile(session: DesktopSession, rawEntry: unknown): Pr
   } catch (error: unknown) {
     postError(session, `Failed to extract ${selected.path}: ${toErrorMessage(error)}`);
   }
+}
+
+async function extractIsoFileBytes(
+  sourcePath: string,
+  selected: DiskSummary['rootDirectoryEntries'][number]
+): Promise<Uint8Array> {
+  const extension = path.extname(sourcePath).toLowerCase();
+  if (extension === '.iso') {
+    return extractStandaloneIsoFileBytes(sourcePath, selected);
+  }
+  return extractSegaCdIsoFileBytes(sourcePath, selected);
+}
+
+async function extractSelectedFatFileBytes(
+  session: DesktopSession,
+  selected: DiskSummary['rootDirectoryEntries'][number]
+): Promise<Uint8Array> {
+  if (!session.summary || !session.filePath) {
+    throw new Error('No disk image is open.');
+  }
+  const filesystem = session.summary.filesystems.find(
+    (candidate) => candidate.offsetBytes === selected.filesystemOffsetBytes
+  );
+  if (!filesystem) {
+    throw new Error('No filesystem metadata found for selected file.');
+  }
+  return extractFatFileBytes(session.filePath, filesystem, selected);
 }
 
 async function exportDiagnosticsBundle(
@@ -942,6 +1057,474 @@ async function exportDiagnosticsBundle(
     postError(session, `Failed to export diagnostics: ${message}`);
     return { saved: false, filePath: saveResult.filePath, error: message };
   }
+}
+
+async function saveJsonFromRenderer(
+  ownerWindow: BrowserWindow | undefined,
+  options: {
+    title: string;
+    defaultPath: string;
+    buttonLabel: string;
+    payload: unknown;
+  }
+): Promise<{ saved: boolean; filePath?: string; error?: string }> {
+  const saveResult = await dialog.showSaveDialog(ownerWindow, {
+    title: options.title,
+    defaultPath: options.defaultPath,
+    buttonLabel: options.buttonLabel,
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (saveResult.canceled || !saveResult.filePath) {
+    return { saved: false };
+  }
+
+  try {
+    await fs.writeFile(saveResult.filePath, JSON.stringify(options.payload, null, 2), 'utf8');
+    return { saved: true, filePath: saveResult.filePath };
+  } catch (error: unknown) {
+    return { saved: false, filePath: saveResult.filePath, error: toErrorMessage(error) };
+  }
+}
+
+async function discoverTranslationProject(filePaths: string[]): Promise<unknown> {
+  const disks: TranslationProjectDisk[] = [];
+  const entries: TranslationEntry[] = [];
+  const seenText = new Set<string>();
+  let duplicateCount = 0;
+  const discoveredAt = new Date().toISOString();
+  const sourceFolder = commonParentFolder(filePaths);
+
+  for (const filePath of filePaths) {
+    const stat = await fs.stat(filePath);
+    const summary = await buildDiskSummaryFromPath(filePath);
+    disks.push({
+      path: filePath,
+      name: path.basename(filePath),
+      sizeBytes: stat.size,
+      format: summary.format,
+      sectorSize: summary.sectorSize,
+      geometry: summary.geometry,
+      rawAnalysis: summary.rawAnalysis
+        ? {
+            analyzedBytes: summary.rawAnalysis.analyzedBytes,
+            totalSectors: summary.rawAnalysis.totalSectors,
+            asciiRunCount: summary.rawAnalysis.asciiRunCount,
+            shiftJisRunCount: summary.rawAnalysis.shiftJisRunCount,
+            textLikeSectorCount: summary.rawAnalysis.textLikeSectorCount,
+            densestTextSectors: summary.rawAnalysis.densestTextSectors
+          }
+        : undefined
+    });
+
+    const bytes = await fs.readFile(filePath);
+    const candidates = await discoverStringCandidates(bytes, filePath, summary, discoveredAt);
+    for (const entry of candidates) {
+      const dedupeKey = `${entry.encoding}::${entry.sourceText}`;
+      if (seenText.has(dedupeKey)) {
+        duplicateCount += 1;
+        continue;
+      }
+      seenText.add(dedupeKey);
+      entries.push(entry);
+    }
+  }
+
+  const manifest: TranslationProjectManifest = {
+    sourceFolder,
+    disks,
+    discoveredAt,
+    discovery: {
+      minLength: 4,
+      candidateCount: entries.length,
+      duplicateCount
+    }
+  };
+
+  return buildTranslationProject('DiskScribe2026', sourceFolder, path.basename(sourceFolder), entries, discoveredAt, manifest);
+}
+
+async function discoverStringCandidates(
+  bytes: Uint8Array,
+  filePath: string,
+  summary: DiskSummary,
+  discoveredAt: string
+): Promise<TranslationEntry[]> {
+  const entries: TranslationEntry[] = [];
+  const fatEntries = await discoverFatFileCandidates(filePath, summary, discoveredAt);
+  entries.push(...fatEntries);
+  if (fatEntries.length === 0) {
+    entries.push(...discoverAsciiCandidates(bytes, filePath, discoveredAt, summary));
+    entries.push(...discoverShiftJisCandidates(bytes, filePath, discoveredAt, summary));
+  }
+  return assignBankIds(entries);
+}
+
+function discoverAsciiCandidates(
+  bytes: Uint8Array,
+  filePath: string,
+  discoveredAt: string,
+  summary?: DiskSummary
+): TranslationEntry[] {
+  const entries: TranslationEntry[] = [];
+  let runStart = -1;
+  let hasHalfWidthKana = false;
+
+  for (let index = 0; index <= bytes.length; index += 1) {
+    const byte = index < bytes.length ? bytes[index] : 0;
+    const printable = isStringCandidateByte(byte);
+    if (printable && runStart < 0) {
+      runStart = index;
+      hasHalfWidthKana = false;
+    }
+    if (printable && byte >= 0xa1 && byte <= 0xdf) {
+      hasHalfWidthKana = true;
+    }
+    if ((!printable || index === bytes.length) && runStart >= 0) {
+      const runEnd = index - 1;
+      const length = runEnd - runStart + 1;
+      if (length >= 4) {
+        const runBytes = bytes.subarray(runStart, runEnd + 1);
+        const sourceText = decodeCandidateRun(runBytes);
+        if (sourceText.trim().length >= 4) {
+          const scored = scoreCandidate(sourceText, path.basename(filePath), hasHalfWidthKana ? 'pc98-cp932' : 'ascii');
+          if (scored.score < 18) {
+            runStart = -1;
+            hasHalfWidthKana = false;
+            continue;
+          }
+          entries.push({
+            id: makeTranslationEntryId('raw', runStart, runEnd, filePath),
+            sourcePath: filePath,
+            mode: 'raw',
+            start: runStart,
+            end: runEnd,
+            encoding: hasHalfWidthKana ? 'pc98-cp932' : 'ascii',
+            sourceText,
+            translatedText: '',
+            status: 'raw',
+            notes: `Discovered project-wide; ${describeRawRange(runStart, runEnd, summary)}; ${scored.reason}`,
+            category: scored.category,
+            priority: scored.priority,
+            score: scored.score,
+            batch: scored.category,
+            sourceBytesBase64: Buffer.from(runBytes).toString('base64'),
+            sourceFilePath: describeRawRange(runStart, runEnd, summary),
+            updatedAt: discoveredAt
+          });
+        }
+      }
+      runStart = -1;
+      hasHalfWidthKana = false;
+    }
+  }
+
+  return entries;
+}
+
+async function discoverFatFileCandidates(
+  filePath: string,
+  summary: DiskSummary,
+  discoveredAt: string
+): Promise<TranslationEntry[]> {
+  const entries: TranslationEntry[] = [];
+  const files = summary.rootDirectoryEntries.filter(
+    (entry) => !entry.isDirectory && !entry.isDeleted && entry.sizeBytes > 0 && entry.startCluster >= 2
+  );
+  for (const file of files) {
+    const filesystem = summary.filesystems.find((candidate) => candidate.offsetBytes === file.filesystemOffsetBytes);
+    if (!filesystem) {
+      continue;
+    }
+    try {
+      const fileBytes = await extractFatFileBytes(filePath, filesystem, file);
+      const segments = await getFatFileDiskSegments(filePath, filesystem, file);
+      const context = `${path.basename(filePath)}:${file.path}`;
+      const candidates = [
+        ...discoverAsciiCandidatesInBuffer(fileBytes, filePath, discoveredAt, context),
+        ...discoverShiftJisCandidatesInBuffer(fileBytes, filePath, discoveredAt, context)
+      ];
+      for (const candidate of candidates) {
+        const diskRange = mapFileRangeToDiskRange(segments, candidate.start, candidate.end);
+        if (!diskRange) {
+          continue;
+        }
+        candidate.id = makeTranslationEntryId('raw', diskRange.start, diskRange.end, filePath);
+        candidate.start = diskRange.start;
+        candidate.end = diskRange.end;
+        candidate.sourceFilePath = file.path;
+        candidate.notes = `${candidate.notes} Source file: ${file.path}.`;
+        entries.push(candidate);
+      }
+    } catch {
+      continue;
+    }
+  }
+  return entries;
+}
+
+function discoverAsciiCandidatesInBuffer(
+  bytes: Uint8Array,
+  filePath: string,
+  discoveredAt: string,
+  contextName: string
+): TranslationEntry[] {
+  return discoverAsciiCandidates(bytes, filePath, discoveredAt).map((entry) => {
+    const scored = scoreCandidate(entry.sourceText, contextName, entry.encoding);
+    return {
+      ...entry,
+      category: scored.category,
+      priority: scored.priority,
+      score: scored.score,
+      batch: scored.category,
+      notes: `Discovered from FAT file; ${scored.reason}`
+    };
+  });
+}
+
+function discoverShiftJisCandidates(
+  bytes: Uint8Array,
+  filePath: string,
+  discoveredAt: string,
+  summary?: DiskSummary
+): TranslationEntry[] {
+  const entries: TranslationEntry[] = [];
+  let index = 0;
+  while (index < bytes.length) {
+    const start = index;
+    const tokens: number[] = [];
+    let japaneseUnits = 0;
+    while (index < bytes.length) {
+      const byte = bytes[index];
+      if (isAsciiPrintable(byte) || isHalfWidthKana(byte)) {
+        tokens.push(byte);
+        japaneseUnits += isHalfWidthKana(byte) ? 1 : 0;
+        index += 1;
+        continue;
+      }
+      if (isShiftJisLead(byte) && index + 1 < bytes.length && isShiftJisTrail(bytes[index + 1])) {
+        tokens.push(byte, bytes[index + 1]);
+        japaneseUnits += 1;
+        index += 2;
+        continue;
+      }
+      break;
+    }
+
+    const end = index - 1;
+    if (tokens.length >= 6 && japaneseUnits >= 2) {
+      const sourceText = iconv.decode(Buffer.from(tokens), 'shift_jis').replace(/\0/g, '').trim();
+      const scored = scoreCandidate(sourceText, path.basename(filePath), 'pc98-cp932');
+      if (sourceText.length >= 3 && scored.score >= 28) {
+        entries.push({
+          id: makeTranslationEntryId('raw', start, end, filePath),
+          sourcePath: filePath,
+          mode: 'raw',
+          start,
+          end,
+          encoding: 'pc98-cp932',
+          sourceText,
+          translatedText: '',
+          status: 'raw',
+          notes: `Discovered project-wide by Shift-JIS scanner; ${describeRawRange(start, end, summary)}; ${scored.reason}`,
+          category: scored.category,
+          priority: scored.priority,
+          score: scored.score,
+          batch: scored.category,
+          sourceBytesBase64: Buffer.from(tokens).toString('base64'),
+          sourceFilePath: describeRawRange(start, end, summary),
+          updatedAt: discoveredAt
+        });
+      }
+    }
+
+    index = Math.max(index + 1, start + 1);
+  }
+  return entries;
+}
+
+function discoverShiftJisCandidatesInBuffer(
+  bytes: Uint8Array,
+  filePath: string,
+  discoveredAt: string,
+  contextName: string
+): TranslationEntry[] {
+  return discoverShiftJisCandidates(bytes, filePath, discoveredAt).map((entry) => {
+    const scored = scoreCandidate(entry.sourceText, contextName, entry.encoding);
+    return {
+      ...entry,
+      category: scored.category,
+      priority: scored.priority,
+      score: scored.score,
+      batch: scored.category,
+      notes: `Discovered from FAT file by Shift-JIS scanner; ${scored.reason}`
+    };
+  });
+}
+
+function assignBankIds(entries: TranslationEntry[]): TranslationEntry[] {
+  const sorted = [...entries].sort((left, right) => {
+    const sourceCompare = left.sourcePath.localeCompare(right.sourcePath);
+    return sourceCompare !== 0 ? sourceCompare : left.start - right.start;
+  });
+  const counters = new Map<string, number>();
+  let previous: TranslationEntry | undefined;
+  let currentBank = '';
+
+  for (const entry of sorted) {
+    const category = entry.category || 'leftovers';
+    const sameBank =
+      previous &&
+      previous.sourcePath === entry.sourcePath &&
+      previous.category === entry.category &&
+      entry.start - previous.end <= 512;
+    if (!sameBank) {
+      const key = `${entry.sourcePath}::${category}`;
+      const next = (counters.get(key) || 0) + 1;
+      counters.set(key, next);
+      currentBank = `${category}-${next.toString().padStart(4, '0')}`;
+    }
+    entry.bankId = currentBank;
+    if (!entry.batch) {
+      entry.batch = currentBank;
+    }
+    previous = entry;
+  }
+  return sorted;
+}
+
+function describeRawRange(start: number, end: number, summary?: DiskSummary): string {
+  if (!summary || !summary.sectorSize) {
+    return `raw offset 0x${start.toString(16)}-0x${end.toString(16)}`;
+  }
+
+  const startSector = Math.floor(start / summary.sectorSize);
+  const endSector = Math.floor(end / summary.sectorSize);
+  const sectorLabel =
+    startSector === endSector
+      ? `raw sector ${startSector.toLocaleString()}`
+      : `raw sectors ${startSector.toLocaleString()}-${endSector.toLocaleString()}`;
+  const chs = formatChs(startSector, summary.geometry);
+  return `${sectorLabel}${chs ? ` (${chs})` : ''}, offset 0x${start.toString(16)}-0x${end.toString(16)}`;
+}
+
+function formatChs(
+  sector: number,
+  geometry?: DiskSummary['geometry']
+): string {
+  if (!geometry || geometry.heads <= 0 || geometry.sectorsPerTrack <= 0 || sector < 0) {
+    return '';
+  }
+  const sectorsPerCylinder = geometry.heads * geometry.sectorsPerTrack;
+  const cylinder = Math.floor(sector / sectorsPerCylinder);
+  const withinCylinder = sector % sectorsPerCylinder;
+  const head = Math.floor(withinCylinder / geometry.sectorsPerTrack);
+  const sectorNumber = (withinCylinder % geometry.sectorsPerTrack) + 1;
+  return `C/H/S ${cylinder}/${head}/${sectorNumber}`;
+}
+
+async function patchTranslationProject(
+  rawProject: unknown,
+  ownerWindow: BrowserWindow | undefined
+): Promise<{ saved: boolean; outputFolder?: string; report?: TranslationPatchReport; error?: string }> {
+  if (!isRecord(rawProject)) {
+    return { saved: false, error: 'No translation project loaded.' };
+  }
+
+  const entries = normalizeTranslationEntries(rawProject.entries);
+  const patchableStatuses = new Set(['reviewed', 'final']);
+  const sourceEntries = entries.filter((entry) => patchableStatuses.has(entry.status));
+  if (sourceEntries.length === 0) {
+    return { saved: false, error: 'No reviewed or final translation entries are ready to patch.' };
+  }
+
+  const outputResult = await dialog.showOpenDialog(ownerWindow, {
+    title: 'Choose Patch Output Folder',
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (outputResult.canceled || outputResult.filePaths.length === 0) {
+    return { saved: false };
+  }
+
+  const outputFolder = outputResult.filePaths[0];
+  await fs.mkdir(outputFolder, { recursive: true });
+
+  const sourceToOutput = new Map<string, string>();
+  const reportEntries: TranslationPatchReportEntry[] = [];
+  for (const sourcePath of uniqueSourcePaths(sourceEntries)) {
+    if (!existsSync(sourcePath)) {
+      continue;
+    }
+    const outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath), sourceToOutput.size);
+    await fs.copyFile(sourcePath, outputPath);
+    sourceToOutput.set(sourcePath, outputPath);
+  }
+
+  for (const entry of sourceEntries) {
+    const outputPath = sourceToOutput.get(sourcePathFromEntry(entry));
+    if (!outputPath) {
+      reportEntries.push(toPatchReportEntry(entry, 'skipped', undefined, 'Source disk image was not found.'));
+      continue;
+    }
+
+    const encoded = encodePatchTextForPatch(entry.translatedText, entry.encoding);
+    const byteLength = entry.end - entry.start + 1;
+    if (!encoded.bytes) {
+      reportEntries.push(toPatchReportEntry(entry, 'skipped', outputPath, encoded.reason || 'Unsupported encoding.'));
+      continue;
+    }
+    if (encoded.bytes.length > byteLength) {
+      reportEntries.push(toPatchReportEntry(entry, 'skipped', outputPath, 'Translation does not fit in original range.'));
+      continue;
+    }
+
+    const handle = await fs.open(outputPath, 'r+');
+    try {
+      const current = Buffer.alloc(byteLength);
+      await handle.read(current, 0, byteLength, entry.start);
+      if (entry.sourceBytesBase64) {
+        const expected = Buffer.from(entry.sourceBytesBase64, 'base64');
+        if (expected.length <= byteLength && !bufferStartsWith(current, expected)) {
+          reportEntries.push(toPatchReportEntry(entry, 'skipped', outputPath, 'Source bytes no longer match entry text.'));
+          continue;
+        }
+      } else if (entry.encoding === 'ascii') {
+        const expected = encodePatchTextForPatch(entry.sourceText, entry.encoding).bytes;
+        if (expected && expected.length <= byteLength && !bufferStartsWith(current, Buffer.from(expected))) {
+          reportEntries.push(toPatchReportEntry(entry, 'skipped', outputPath, 'Source text no longer matches entry text.'));
+          continue;
+        }
+      }
+
+      const replacement = Buffer.alloc(byteLength, 0x20);
+      Buffer.from(encoded.bytes).copy(replacement, 0, 0, encoded.bytes.length);
+      await handle.write(replacement, 0, replacement.length, entry.start);
+      const verifyBuffer = Buffer.alloc(byteLength);
+      await handle.read(verifyBuffer, 0, byteLength, entry.start);
+      reportEntries.push({
+        ...toPatchReportEntry(entry, 'applied', outputPath),
+        verified: verifyBuffer.equals(replacement)
+      });
+    } finally {
+      await handle.close();
+    }
+  }
+
+  const appliedCount = reportEntries.filter((entry) => entry.status === 'applied').length;
+  const skippedCount = reportEntries.length - appliedCount;
+  const verifiedCount = reportEntries.filter((entry) => entry.verified === true).length;
+  const report: TranslationPatchReport = {
+    appName: 'DiskScribe2026',
+    patchVersion: 1,
+    sourceName: typeof rawProject.sourceName === 'string' ? rawProject.sourceName : 'translation-project',
+    outputFolder,
+    createdAt: new Date().toISOString(),
+    appliedCount,
+    skippedCount,
+    verifiedCount,
+    entries: reportEntries
+  };
+  await fs.writeFile(path.join(outputFolder, 'patch-report.json'), JSON.stringify(report, null, 2), 'utf8');
+  return { saved: true, outputFolder, report };
 }
 
 function postRendererMessage(session: DesktopSession, message: unknown): void {
@@ -1085,6 +1668,27 @@ function normalizeBatchQueueItems(rawItems: unknown): BatchQueueItemPayload[] {
   return normalized;
 }
 
+function normalizeDiskFilePaths(rawItems: unknown): string[] {
+  if (!Array.isArray(rawItems)) {
+    return [];
+  }
+
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (const item of rawItems) {
+    if (typeof item !== 'string') {
+      continue;
+    }
+    const resolved = path.resolve(item);
+    const key = resolved.toLowerCase();
+    if (!seen.has(key) && existsSync(resolved) && isSupportedDiskPath(resolved)) {
+      seen.add(key);
+      normalized.push(resolved);
+    }
+  }
+  return normalized.sort((a, b) => a.localeCompare(b));
+}
+
 async function collectSupportedDisksFromFolder(folderPath: string): Promise<string[]> {
   const normalized = path.resolve(folderPath);
   if (!existsSync(normalized)) {
@@ -1101,6 +1705,426 @@ async function collectSupportedDisksFromFolder(folderPath: string): Promise<stri
   return filePaths;
 }
 
+function isStringCandidateByte(byte: number): boolean {
+  return (byte >= 0x20 && byte <= 0x7e) || (byte >= 0xa1 && byte <= 0xdf);
+}
+
+function isAsciiPrintable(byte: number): boolean {
+  return byte >= 0x20 && byte <= 0x7e;
+}
+
+function isHalfWidthKana(byte: number): boolean {
+  return byte >= 0xa1 && byte <= 0xdf;
+}
+
+function isShiftJisLead(byte: number): boolean {
+  return (byte >= 0x81 && byte <= 0x9f) || (byte >= 0xe0 && byte <= 0xfc);
+}
+
+function isShiftJisTrail(byte: number): boolean {
+  return (byte >= 0x40 && byte <= 0x7e) || (byte >= 0x80 && byte <= 0xfc);
+}
+
+function decodeCandidateRun(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte) => {
+    if (byte >= 0x20 && byte <= 0x7e) {
+      return String.fromCharCode(byte);
+    }
+    if (byte >= 0xa1 && byte <= 0xdf) {
+      return `\\x${byte.toString(16).toUpperCase().padStart(2, '0')}`;
+    }
+    return '';
+  }).join('');
+}
+
+function scoreCandidate(
+  sourceText: string,
+  diskName: string,
+  encoding: string
+): { score: number; priority: 'high' | 'medium' | 'low'; category: string; reason: string } {
+  const text = sourceText.trim();
+  const lowerDisk = diskName.toLowerCase();
+  let score = 0;
+  let category = 'leftovers';
+
+  const japaneseChars = Array.from(text).filter((char) => /[\u3040-\u30ff\u3400-\u9fff]/u.test(char)).length;
+  const asciiLetters = Array.from(text).filter((char) => /[A-Za-z]/.test(char)).length;
+  const controls = Array.from(text).filter((char) => char.charCodeAt(0) < 0x20).length;
+  const symbolRatio = text.length > 0 ? Array.from(text).filter((char) => /[^\w\s\u3040-\u30ff\u3400-\u9fff]/u.test(char)).length / text.length : 1;
+
+  if (japaneseChars > 0) {
+    score += 40 + Math.min(30, japaneseChars * 3);
+    category = 'main-dialogue';
+  }
+  if (encoding === 'pc98-cp932') {
+    score += 8;
+  }
+  if (asciiLetters >= 3) {
+    score += 12;
+  }
+  if (text.length >= 4 && text.length <= 48) {
+    score += 12;
+  } else if (text.length > 96) {
+    score -= 18;
+  }
+  if (controls > 0) {
+    score -= 30;
+  }
+  if (symbolRatio > 0.45) {
+    score -= 25;
+  }
+
+  if (/system|data/.test(lowerDisk) && /^[A-Z0-9_ .:/+-]+$/.test(text)) {
+    score += 20;
+    category = 'menus-items-battle';
+  } else if (/opening/.test(lowerDisk)) {
+    score += 10;
+    category = 'opening-system';
+  } else if (/ending|visual/.test(lowerDisk)) {
+    score += 8;
+    category = 'ending-visual';
+  }
+
+  const priority = score >= 55 ? 'high' : score >= 32 ? 'medium' : 'low';
+  return {
+    score,
+    priority,
+    category,
+    reason: `${priority} priority ${category} candidate, score ${score}`
+  };
+}
+
+function commonParentFolder(filePaths: string[]): string {
+  if (filePaths.length === 0) {
+    return process.cwd();
+  }
+  const directories = filePaths.map((filePath) => path.dirname(filePath));
+  let common = directories[0];
+  for (const directory of directories.slice(1)) {
+    while (common && !directory.toLowerCase().startsWith(common.toLowerCase())) {
+      const parent = path.dirname(common);
+      if (parent === common) {
+        return common;
+      }
+      common = parent;
+    }
+  }
+  return common;
+}
+
+function uniqueSourcePaths(entries: TranslationEntry[]): string[] {
+  const paths = new Map<string, string>();
+  for (const entry of entries) {
+    const sourcePath = sourcePathFromEntry(entry);
+    if (sourcePath) {
+      paths.set(sourcePath.toLowerCase(), sourcePath);
+    }
+  }
+  return [...paths.values()].sort((a, b) => a.localeCompare(b));
+}
+
+async function getFatFileDiskSegments(
+  filePath: string,
+  filesystem: DiskSummary['filesystems'][number],
+  file: DiskSummary['rootDirectoryEntries'][number]
+): Promise<Array<{ fileStart: number; fileEnd: number; diskStart: number; diskEnd: number }>> {
+  const fatOffset = filesystem.offsetBytes + filesystem.firstFatLba * filesystem.bytesPerSector;
+  const fatLength = filesystem.sectorsPerFat * filesystem.bytesPerSector;
+  const fatBytes = await readFileRange(filePath, fatOffset, fatLength);
+  const clusterSize = getClusterSizeBytes(filesystem);
+  const maxClusters = Math.ceil(file.sizeBytes / clusterSize);
+  const chain = buildFatClusterChain(fatBytes, filesystem, file.startCluster, maxClusters);
+  const segments: Array<{ fileStart: number; fileEnd: number; diskStart: number; diskEnd: number }> = [];
+  let fileStart = 0;
+  for (const cluster of chain) {
+    if (fileStart >= file.sizeBytes) {
+      break;
+    }
+    const length = Math.min(clusterSize, file.sizeBytes - fileStart);
+    const diskStart = getClusterOffsetBytes(filesystem, cluster);
+    segments.push({
+      fileStart,
+      fileEnd: fileStart + length - 1,
+      diskStart,
+      diskEnd: diskStart + length - 1
+    });
+    fileStart += length;
+  }
+  return segments;
+}
+
+function mapFileRangeToDiskRange(
+  segments: Array<{ fileStart: number; fileEnd: number; diskStart: number; diskEnd: number }>,
+  start: number,
+  end: number
+): { start: number; end: number } | undefined {
+  const segment = segments.find((candidate) => start >= candidate.fileStart && end <= candidate.fileEnd);
+  if (!segment) {
+    return undefined;
+  }
+  const relativeStart = start - segment.fileStart;
+  const relativeEnd = end - segment.fileStart;
+  return {
+    start: segment.diskStart + relativeStart,
+    end: segment.diskStart + relativeEnd
+  };
+}
+
+async function readFileRange(filePath: string, offset: number, length: number): Promise<Uint8Array> {
+  if (length <= 0) {
+    return new Uint8Array();
+  }
+  const handle = await fs.open(filePath, 'r');
+  try {
+    const buffer = Buffer.alloc(length);
+    const { bytesRead } = await handle.read(buffer, 0, length, offset);
+    return new Uint8Array(buffer.subarray(0, bytesRead));
+  } finally {
+    await handle.close();
+  }
+}
+
+function sourcePathFromEntry(entry: TranslationEntry): string {
+  const raw = entry.sourcePath || '';
+  if (raw.startsWith('file:')) {
+    try {
+      return path.resolve(fileURLToPath(raw));
+    } catch {
+      return '';
+    }
+  }
+  return raw ? path.resolve(raw) : '';
+}
+
+function uniqueOutputPath(outputFolder: string, fileName: string, index: number): string {
+  const candidate = path.join(outputFolder, sanitizeFileName(fileName));
+  if (!existsSync(candidate)) {
+    return candidate;
+  }
+  const parsed = path.parse(fileName);
+  return path.join(outputFolder, `${sanitizeFileName(parsed.name)}-${index + 1}${parsed.ext}`);
+}
+
+function toPatchReportEntry(
+  entry: TranslationEntry,
+  status: 'applied' | 'skipped',
+  outputPath?: string,
+  reason?: string
+): TranslationPatchReportEntry {
+  return {
+    id: entry.id,
+    sourcePath: entry.sourcePath,
+    outputPath,
+    start: entry.start,
+    end: entry.end,
+    status,
+    reason
+  };
+}
+
+function bufferStartsWith(buffer: Buffer, expected: Buffer): boolean {
+  if (expected.length > buffer.length) {
+    return false;
+  }
+  for (let index = 0; index < expected.length; index += 1) {
+    if (buffer[index] !== expected[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function encodePatchTextForPatch(text: string, encoding: string): { bytes?: number[]; reason?: string } {
+  const normalized = encoding.toLowerCase();
+  if (
+    normalized === 'pc98-cp932' ||
+    normalized === 'pc98-shift-jis' ||
+    normalized === 'pc88-shift-jis' ||
+    normalized === 'shift-jis' ||
+    normalized === 'shift_jis' ||
+    normalized === 'cp932' ||
+    normalized === 'windows-31j'
+  ) {
+    return { bytes: Array.from(iconv.encode(text, 'shift_jis')) };
+  }
+  return encodePatchText(text, encoding);
+}
+
+function buildPatchPreview(rawEntry: unknown): {
+  byteLength?: number;
+  encodedLength?: number;
+  fits?: boolean;
+  sourceHex?: string;
+  replacementHex?: string;
+  paddedHex?: string;
+  error?: string;
+} {
+  const [entry] = normalizeTranslationEntries([rawEntry]);
+  if (!entry) {
+    return { error: 'No translation entry selected.' };
+  }
+  const byteLength = entry.end - entry.start + 1;
+  const encoded = encodePatchTextForPatch(entry.translatedText, entry.encoding);
+  if (!encoded.bytes) {
+    return { byteLength, error: encoded.reason || 'Unable to encode translation.' };
+  }
+  const replacement = Buffer.from(encoded.bytes);
+  const padded = Buffer.alloc(byteLength, 0x20);
+  replacement.copy(padded, 0, 0, Math.min(replacement.length, padded.length));
+  const source = entry.sourceBytesBase64 ? Buffer.from(entry.sourceBytesBase64, 'base64') : Buffer.alloc(0);
+  return {
+    byteLength,
+    encodedLength: replacement.length,
+    fits: replacement.length <= byteLength,
+    sourceHex: formatHexPreview(source, 64),
+    replacementHex: formatHexPreview(replacement, 64),
+    paddedHex: formatHexPreview(padded, 64)
+  };
+}
+
+function analyzeTranslationProject(rawProject: unknown): { project?: unknown; report?: unknown; error?: string } {
+  if (!isRecord(rawProject)) {
+    return { error: 'No translation project loaded.' };
+  }
+  const entries = normalizeTranslationEntries(rawProject.entries);
+  const glossaryConflicts = buildGlossaryConflictSet(entries);
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+  let human = 0;
+  let tooLong = 0;
+  let patchable = 0;
+
+  const analyzed = entries.map((entry) => {
+    const byteLength = entry.end - entry.start + 1;
+    const encoded = entry.translatedText ? encodePatchTextForPatch(entry.translatedText, entry.encoding) : {};
+    const encodedLength = encoded.bytes?.length ?? 0;
+    const fits = encoded.bytes ? encodedLength <= byteLength : false;
+    const sourceQuality = entry.sourceQuality || inferSourceQuality(entry);
+    const glossaryKey = entry.glossaryKey || inferGlossaryKey(entry.sourceText);
+    const needsHumanReview =
+      sourceQuality === 'source-suspect' ||
+      glossaryConflicts.has(entry.sourceText.trim()) ||
+      !fits && Boolean(entry.translatedText) ||
+      Number(entry.score || 0) < 32 ||
+      /[\uFFFD]/u.test(entry.sourceText);
+    const confidence = inferConfidence(entry, sourceQuality, fits, glossaryConflicts.has(entry.sourceText.trim()));
+    if (confidence === 'high') high += 1;
+    if (confidence === 'medium') medium += 1;
+    if (confidence === 'low') low += 1;
+    if (needsHumanReview) human += 1;
+    if (entry.translatedText && !fits) tooLong += 1;
+    if (entry.translatedText && fits && ['reviewed', 'final'].includes(entry.status)) patchable += 1;
+    return {
+      ...entry,
+      sourceQuality,
+      glossaryKey,
+      confidence,
+      needsHumanReview: needsHumanReview || undefined,
+      playtestStatus: entry.playtestStatus || 'untested',
+      notes: appendUniqueNote(
+        entry.notes,
+        `QA: ${confidence} confidence, ${encodedLength}/${byteLength} bytes${fits ? '' : ', too long'}`
+      )
+    };
+  });
+
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    typeof rawProject.sourcePath === 'string' ? rawProject.sourcePath : '',
+    typeof rawProject.sourceName === 'string' ? rawProject.sourceName : 'translation-project',
+    analyzed,
+    new Date().toISOString(),
+    isTranslationProjectManifest(rawProject.manifest) ? rawProject.manifest : undefined
+  );
+  return {
+    project,
+    report: {
+      reportType: 'automation-qa-report',
+      createdAt: new Date().toISOString(),
+      totals: {
+        entries: analyzed.length,
+        highConfidence: high,
+        mediumConfidence: medium,
+        lowConfidence: low,
+        needsHumanReview: human,
+        tooLong,
+        patchable
+      },
+      glossaryConflicts: [...glossaryConflicts]
+    }
+  };
+}
+
+function inferSourceQuality(entry: TranslationEntry): 'source-good' | 'source-suspect' | 'source-garbage' {
+  const score = Number(entry.score || 0);
+  if (score < 18 || entry.priority === 'low') {
+    return 'source-suspect';
+  }
+  if (
+    Array.from(entry.sourceText).every((char) => {
+      const code = char.charCodeAt(0);
+      return code < 0x20 || code === 0x7f;
+    }) ||
+    entry.sourceText.trim().length === 0
+  ) {
+    return 'source-garbage';
+  }
+  return 'source-good';
+}
+
+function inferConfidence(
+  entry: TranslationEntry,
+  sourceQuality: string,
+  fits: boolean,
+  glossaryConflict: boolean
+): 'high' | 'medium' | 'low' {
+  if (sourceQuality === 'source-garbage' || glossaryConflict) {
+    return 'low';
+  }
+  if (entry.status === 'final' && fits && sourceQuality === 'source-good') {
+    return 'high';
+  }
+  if ((entry.status === 'reviewed' || entry.translatedText) && fits && sourceQuality !== 'source-suspect') {
+    return 'medium';
+  }
+  return 'low';
+}
+
+function inferGlossaryKey(sourceText: string): string | undefined {
+  const trimmed = sourceText.trim();
+  if (trimmed.length > 0 && trimmed.length <= 32) {
+    return trimmed;
+  }
+  return undefined;
+}
+
+function buildGlossaryConflictSet(entries: TranslationEntry[]): Set<string> {
+  const bySource = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    const source = entry.sourceText.trim();
+    const translated = entry.translatedText.trim();
+    if (!source || !translated || source.length > 64) {
+      continue;
+    }
+    const values = bySource.get(source) ?? new Set<string>();
+    values.add(translated);
+    bySource.set(source, values);
+  }
+  return new Set([...bySource.entries()].filter(([, values]) => values.size > 1).map(([source]) => source));
+}
+
+function appendUniqueNote(notes: string, note: string): string {
+  if (notes.includes(note)) {
+    return notes;
+  }
+  return notes ? `${notes} ${note}` : note;
+}
+
+function formatHexPreview(bytes: Buffer, limit: number): string {
+  return Array.from(bytes.subarray(0, limit), (byte) => byte.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+}
+
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -1110,6 +2134,19 @@ function toErrorMessage(error: unknown): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isTranslationProjectManifest(value: unknown): value is TranslationProjectManifest {
+  if (!isRecord(value) || !Array.isArray(value.disks) || !isRecord(value.discovery)) {
+    return false;
+  }
+  return (
+    typeof value.sourceFolder === 'string' &&
+    typeof value.discoveredAt === 'string' &&
+    typeof value.discovery.minLength === 'number' &&
+    typeof value.discovery.candidateCount === 'number' &&
+    typeof value.discovery.duplicateCount === 'number'
+  );
 }
 
 function sanitizeFileName(value: string): string {

@@ -7,5 +7,5 @@
     "rootDir": ".",
     "sourceMap": false
   },
-  "include": ["src/core/**/*", "tests/**/*"]
+  "include": ["src/core/**/*", "src/webview/necCharsets.ts", "src/webview/translationProject.ts", "tests/**/*"]
 }

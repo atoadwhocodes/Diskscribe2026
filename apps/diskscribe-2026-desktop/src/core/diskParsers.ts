@@ -2,6 +2,12 @@ import * as iconv from 'iconv-lite';
 
 const SECTOR_SIZE = 512;
 const PC98_12M_HDM_SIZE_BYTES = 77 * 2 * 8 * 1024;
+const PC98_12M_HDM_GEOMETRY = {
+  cylinders: 77,
+  heads: 2,
+  sectorsPerTrack: 8,
+  bytesPerSector: 1024
+};
 const D88_HEADER_SIZE = 0x2b0;
 const NHD_SIGNATURE = 'T98HDDIMAGE.R0';
 
@@ -203,7 +209,12 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
     sectorSize = inferRawFloppySectorSize(imageSizeBytes);
     if (sectorSize === 1024) {
       headerSummary.push('Inferred PC-98 1.2MB HDM geometry: 1,024 bytes/sector.');
+      headerSummary.push(
+        `Raw layout: ${PC98_12M_HDM_GEOMETRY.cylinders} cylinders, ${PC98_12M_HDM_GEOMETRY.heads} heads, ` +
+          `${PC98_12M_HDM_GEOMETRY.sectorsPerTrack} sectors/track.`
+      );
       parserNotes.push('No valid FAT boot BPB detected at LBA0; inferred sector size from HDM file size.');
+      parserNotes.push('Using raw sector mapping for non-BPB PC-98 HDM analysis.');
     } else {
       parserNotes.push('No valid FAT boot BPB detected at LBA0; defaulted sector size to 512 bytes.');
     }

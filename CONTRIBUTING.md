@@ -21,6 +21,7 @@ npm run desktop:make
 ## Pull Requests
 
 - Keep changes focused and scoped.
+- Follow `DEVELOPMENT_RULES.md`.
 - Update docs/changelog for behavior changes.
-- Ensure CI passes (`desktop lint`, `desktop package`).
+- Ensure CI passes (`npm test`, `desktop lint`, `desktop package`).
 - Follow the standards in `CODE_OF_CONDUCT.md`.

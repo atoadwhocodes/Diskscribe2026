@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file.
 - FAT12/FAT16 filesystem metadata detection for supported disk image previews
 - Root and subdirectory browsing for FAT directory entries, including deleted-entry visibility
 - File extraction from FAT directory entries with fragmented cluster-chain support
+- Sega CD `.cue` and standalone `.iso` parsing for ISO9660 file listing and file extraction
 - Diagnostics bundle export with structured summary JSON and a text report
 - Core test suite for parser safety, FAT directory parsing, file extraction, paged byte reads, and fixture-backed Alpha smoke coverage
 

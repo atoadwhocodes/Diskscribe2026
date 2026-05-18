@@ -377,6 +377,80 @@ h3 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+.translationProjectBar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.translationDashboard {
+  background: color-mix(in srgb, rgba(245, 237, 221, 0.88), white 12%);
+  border: 1px solid color-mix(in srgb, var(--app-panel-border), transparent 20%);
+  border-radius: 8px;
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+.translationProjectBar label {
+  color: var(--app-ink-soft);
+  font-family: var(--app-font-head);
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.translationProjectBar input {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid color-mix(in srgb, var(--app-panel-border), transparent 18%);
+  border-radius: 8px;
+  color: var(--app-ink);
+  min-height: 28px;
+  min-width: 220px;
+  padding: 4px 8px;
+}
+
+#translationBatch,
+#translationTranslator,
+#translationReviewer {
+  min-width: 120px;
+}
+
+.translationEntryWrap {
+  margin-top: 8px;
+  max-height: 220px;
+}
+
+.patchPreview {
+  margin-top: 8px;
+  max-height: 110px;
+  min-height: 72px;
+}
+
+.translationEntryTable th:nth-child(1) {
+  width: 150px;
+}
+
+.translationEntryTable th:nth-child(2),
+.translationEntryTable th:nth-child(3),
+.translationEntryTable th:nth-child(4),
+.translationEntryTable th:nth-child(5) {
+  width: 110px;
+}
+
+.translationEntryTable tbody tr {
+  cursor: pointer;
+}
+
+.translationEntryTable tbody tr.is-selected {
+  background: color-mix(in srgb, rgba(16, 124, 108, 0.22), transparent 20%);
+}
+
 pre {
   background: color-mix(in srgb, rgba(245, 237, 221, 0.88), white 12%);
   border: 1px solid color-mix(in srgb, var(--app-panel-border), transparent 20%);

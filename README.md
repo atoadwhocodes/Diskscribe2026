@@ -2,7 +2,7 @@
 
 Status: alpha / work in progress.
 
-DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy PC-98 disk images.
+DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy disk images, with current support focused on PC-98 and Sega CD workflows.
 
 ## Included Features
 
@@ -20,13 +20,53 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Character-frame byte role inspector
 - Batch queue runner for parsing multiple disk images
 - Save/load batch plans as JSON
+- Sega CD `.cue` support with MODE1/2352 Track 01 ISO9660 file listing
+- Standalone `.iso` ISO9660 file listing
+- Extract files from Sega CD and standalone ISO9660 data tracks
 
 ## Supported Formats
 
 - Disk images: `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`
+- Sega CD images: `.cue` with MODE1/2352 data track and companion `.bin` files
+- ISO9660 images: `.iso`
 - Extract output: `.bin` and original FAT filenames where available
 - Batch plans: `.json`
 - Diagnostics bundles: `.json`
+
+## Supported Systems List
+
+Current parsing and extraction support:
+
+- NEC PC-98 (FAT-oriented disk workflows via `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`)
+- Sega CD / Mega-CD (ISO9660 data track workflows via `.cue` + `.bin`, and standalone `.iso`)
+
+Roadmap systems (planned support list):
+
+- [JP] NEC PC-88
+- [JP] Sharp X68000
+- [JP] Fujitsu FM TOWNS
+- [JP] Fujitsu FM-7 / FM-77AV
+- [JP] MSX / MSX2 / MSX2+
+- [JP] Sharp MZ series
+- [JP] Sharp X1
+- [JP] PC Engine CD / TurboGrafx-CD
+- [JP] Sega Saturn CD images
+- [JP] PC-6001 / PC-6601 disk ecosystem
+- [EU/UK] Commodore Amiga
+- [EU/UK] Atari ST
+- [EU/UK] ZX Spectrum (+3 disk ecosystem)
+- [EU/UK] Amstrad CPC
+- [EU/UK] BBC Micro
+- [EU/UK] Acorn Electron
+- [EU/UK] Acorn Archimedes
+- [EU/UK] Commodore 64/128 disk ecosystem
+- [EU/UK] Sinclair QL
+- [EU/UK] SAM Coupe
+- [EU/UK] Oric Atmos disk ecosystem
+- [EU/UK] Dragon 32/64 disk ecosystem
+- [EU/UK] MS-DOS PC compatibles (European archival disk images)
+
+Note: roadmap systems are listed as targeted platforms and are not yet guaranteed as fully supported parsers in the current release.
 
 ## Install (Windows)
 
@@ -84,6 +124,8 @@ Example release:
 - Security reporting: `SECURITY.md`
 - Contributing guide: `CONTRIBUTING.md`
 - Community expectations: `CODE_OF_CONDUCT.md`
+- Legal and distribution policy: `LEGAL.md`
+- Development rules for contributors and coding tools: `DEVELOPMENT_RULES.md`
 
 ## Project Layout
 

@@ -10,7 +10,7 @@ import type {
   VsCodeApi
 } from './rendererTypes';
 
-const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd)$/i;
+const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd|cue|iso)$/i;
 const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
 
 declare global {
@@ -274,7 +274,7 @@ function extractDroppedPaths(event: DragEvent): string[] {
 async function handleDroppedPaths(filePaths: string[]): Promise<void> {
   const supported = filePaths.filter(isSupportedDiskPath);
   if (supported.length === 0) {
-    setStatus('Dropped files contained no supported PC-98 disk images.', 'warning');
+    setStatus('Dropped files contained no supported disk images.', 'warning');
     return;
   }
 

@@ -18,6 +18,13 @@ import {
   ROW_HEIGHT
 } from './editorConstants';
 import { editorElements as elements } from './editorElements';
+import {
+  buildPatchScript,
+  buildTranslationProject,
+  makeTranslationEntryId,
+  mergeTranslationEntries,
+  normalizeTranslationEntries
+} from './translationProject';
 
 const vscode = acquireVsCodeApi();
 
@@ -37,8 +44,20 @@ const state = {
   currentDirectory: typeof persisted.currentDirectory === 'string' ? persisted.currentDirectory : '',
   selectedRootEntryPath: typeof persisted.selectedRootEntryPath === 'string' ? persisted.selectedRootEntryPath : '',
   showDeletedEntries: persisted.showDeletedEntries === true,
+  sourcePath: typeof persisted.sourcePath === 'string' ? persisted.sourcePath : '',
+  sourceName: typeof persisted.sourceName === 'string' ? persisted.sourceName : '',
   translationEncoding: normalizeCharsetId(persisted.translationEncoding),
   translationDraft: typeof persisted.translationDraft === 'string' ? persisted.translationDraft : '',
+  translationEntries: normalizeTranslationEntries(persisted.translationEntries),
+  translationManifest: persisted.translationManifest,
+  selectedTranslationEntryId:
+    typeof persisted.selectedTranslationEntryId === 'string' ? persisted.selectedTranslationEntryId : '',
+  translationSearch: typeof persisted.translationSearch === 'string' ? persisted.translationSearch : '',
+  translationStatusFilter: typeof persisted.translationStatusFilter === 'string' ? persisted.translationStatusFilter : '',
+  translationPriorityFilter:
+    typeof persisted.translationPriorityFilter === 'string' ? persisted.translationPriorityFilter : '',
+  translationCategoryFilter:
+    typeof persisted.translationCategoryFilter === 'string' ? persisted.translationCategoryFilter : '',
   selectionStart: Number.isInteger(persisted.selectionStart) ? persisted.selectionStart : 0,
   selectionEnd: Number.isInteger(persisted.selectionEnd) ? persisted.selectionEnd : 0,
   cursorOffset: Number.isInteger(persisted.cursorOffset) ? persisted.cursorOffset : 0,
@@ -148,6 +167,155 @@ if (elements.copyDraftButton) {
 if (elements.clearDraftButton) {
   elements.clearDraftButton.addEventListener('click', () => {
     clearDraft();
+  });
+}
+
+if (elements.saveTranslationEntryButton) {
+  elements.saveTranslationEntryButton.addEventListener('click', () => {
+    saveCurrentTranslationEntry();
+  });
+}
+
+if (elements.discoverStringsButton) {
+  elements.discoverStringsButton.addEventListener('click', () => {
+    discoverStringsFromSelection();
+  });
+}
+
+if (elements.discoverProjectButton) {
+  elements.discoverProjectButton.addEventListener('click', () => {
+    void discoverTranslationProject();
+  });
+}
+
+if (elements.runAutomationQaButton) {
+  elements.runAutomationQaButton.addEventListener('click', () => {
+    void runAutomationQa();
+  });
+}
+
+if (elements.exportTranslationProjectButton) {
+  elements.exportTranslationProjectButton.addEventListener('click', () => {
+    void exportTranslationProject();
+  });
+}
+
+if (elements.exportFilteredTranslationProjectButton) {
+  elements.exportFilteredTranslationProjectButton.addEventListener('click', () => {
+    void exportFilteredTranslationProject();
+  });
+}
+
+if (elements.exportTranslationReportButton) {
+  elements.exportTranslationReportButton.addEventListener('click', () => {
+    void exportTranslationReport();
+  });
+}
+
+if (elements.snapshotTranslationProjectButton) {
+  elements.snapshotTranslationProjectButton.addEventListener('click', () => {
+    void snapshotTranslationProject();
+  });
+}
+
+if (elements.exportPresetButton) {
+  elements.exportPresetButton.addEventListener('click', () => {
+    void exportPresetTranslationProject();
+  });
+}
+
+if (elements.importTranslationProjectButton) {
+  elements.importTranslationProjectButton.addEventListener('click', () => {
+    void importTranslationProject();
+  });
+}
+
+if (elements.exportTranslationPatchButton) {
+  elements.exportTranslationPatchButton.addEventListener('click', () => {
+    void exportTranslationPatch();
+  });
+}
+
+if (elements.patchTranslationProjectButton) {
+  elements.patchTranslationProjectButton.addEventListener('click', () => {
+    void patchTranslationProject();
+  });
+}
+
+if (elements.translationSearch) {
+  elements.translationSearch.value = state.translationSearch;
+  elements.translationSearch.addEventListener('input', () => {
+    state.translationSearch = elements.translationSearch.value || '';
+    persistState();
+    renderTranslationEntries();
+  });
+}
+
+if (elements.translationStatusFilter) {
+  elements.translationStatusFilter.value = state.translationStatusFilter;
+  elements.translationStatusFilter.addEventListener('change', () => {
+    state.translationStatusFilter = elements.translationStatusFilter.value || '';
+    persistState();
+    renderTranslationEntries();
+  });
+}
+
+if (elements.translationPriorityFilter) {
+  elements.translationPriorityFilter.value = state.translationPriorityFilter;
+  elements.translationPriorityFilter.addEventListener('change', () => {
+    state.translationPriorityFilter = elements.translationPriorityFilter.value || '';
+    persistState();
+    renderTranslationEntries();
+  });
+}
+
+if (elements.translationCategoryFilter) {
+  elements.translationCategoryFilter.value = state.translationCategoryFilter;
+  elements.translationCategoryFilter.addEventListener('change', () => {
+    state.translationCategoryFilter = elements.translationCategoryFilter.value || '';
+    persistState();
+    renderTranslationEntries();
+  });
+}
+
+if (elements.translationStatus) {
+  elements.translationStatus.addEventListener('change', () => {
+    updateSelectedTranslationStatus();
+  });
+}
+
+if (elements.saveTranslationMetaButton) {
+  elements.saveTranslationMetaButton.addEventListener('click', () => {
+    saveSelectedTranslationMeta();
+  });
+}
+
+if (elements.patchPreviewButton) {
+  elements.patchPreviewButton.addEventListener('click', () => {
+    void previewSelectedPatch();
+  });
+}
+
+if (elements.reviewSampleButton) {
+  elements.reviewSampleButton.addEventListener('click', () => {
+    selectReviewSample();
+  });
+}
+
+if (elements.deleteTranslationEntryButton) {
+  elements.deleteTranslationEntryButton.addEventListener('click', () => {
+    deleteSelectedTranslationEntry();
+  });
+}
+
+if (elements.translationEntryRows) {
+  elements.translationEntryRows.addEventListener('click', (event) => {
+    const row = event.target instanceof Element ? event.target.closest('[data-translation-id]') : null;
+    if (!row) {
+      return;
+    }
+    const id = row.getAttribute('data-translation-id') || '';
+    selectTranslationEntry(id);
   });
 }
 
@@ -347,6 +515,8 @@ function renderSummary(summary) {
   state.dataOffset = Number(summary.dataOffsetBytes) || 0;
   state.sectorSize = Number(summary.sectorSize) || 512;
   state.geometry = summary.geometry;
+  state.sourcePath = typeof summary.uri === 'string' ? summary.uri : '';
+  state.sourceName = typeof summary.fileName === 'string' ? summary.fileName : '';
   state.currentDirectory = '';
   state.selectedRootEntryPath = '';
 
@@ -368,8 +538,8 @@ function renderSummary(summary) {
     setText(elements.geometry, 'Unknown');
   }
 
-  renderFilesystemSummary(summary.filesystems || []);
-  renderFilesystemDetails(summary.filesystems || []);
+  renderFilesystemSummary(summary.filesystems || [], summary.rawAnalysis, summary.segaCd, summary.format);
+  renderFilesystemDetails(summary.filesystems || [], summary.rawAnalysis, summary.segaCd, summary.format);
   renderPartitions(summary.partitions || []);
   renderRootDirectory(summary.rootDirectoryEntries || []);
   setText(elements.shiftJisPreview, summary.shiftJisPreview || '(no preview)');
@@ -393,6 +563,7 @@ function renderSummary(summary) {
   persistState();
   renderHexViewport(true);
   refreshTranslationPanels();
+  renderTranslationEntries();
 }
 
 function handleHexInit(message) {
@@ -548,12 +719,26 @@ function renderPartitions(partitions) {
   }
 }
 
-function renderFilesystemSummary(filesystems) {
+function renderFilesystemSummary(filesystems, rawAnalysis, segaCd, format) {
   if (!elements.filesystem) {
     return;
   }
 
   if (!Array.isArray(filesystems) || filesystems.length === 0) {
+    if (segaCd) {
+      setText(
+        elements.filesystem,
+        `${format === 'ISO9660' ? 'ISO9660 image' : 'Sega CD ISO9660'} (${formatNumber(segaCd.isoFileCount)} files)`
+      );
+      return;
+    }
+    if (rawAnalysis) {
+      setText(
+        elements.filesystem,
+        `Raw HDM map (${formatNumber(rawAnalysis.textLikeSectorCount)} text-like sectors)`
+      );
+      return;
+    }
     setText(elements.filesystem, 'None detected');
     return;
   }
@@ -567,14 +752,43 @@ function renderFilesystemSummary(filesystems) {
   );
 }
 
-function renderFilesystemDetails(filesystems) {
+function renderFilesystemDetails(filesystems, rawAnalysis, segaCd, format) {
   if (!elements.filesystemDetails) {
     return;
   }
 
   elements.filesystemDetails.innerHTML = '';
   if (!Array.isArray(filesystems) || filesystems.length === 0) {
-    appendDefinition(elements.filesystemDetails, 'Status', 'No filesystem metadata loaded.');
+    if (segaCd) {
+      appendDefinition(elements.filesystemDetails, 'Status', format === 'ISO9660' ? 'ISO9660 image' : 'Sega CD ISO9660');
+      appendDefinition(elements.filesystemDetails, 'Volume', segaCd.volumeId || '(unnamed)');
+      appendDefinition(elements.filesystemDetails, 'System', segaCd.systemId || '(unknown)');
+      if (format === 'ISO9660') {
+        appendDefinition(elements.filesystemDetails, 'Image', segaCd.dataTrackFileName || '(unknown)');
+      } else {
+        appendDefinition(elements.filesystemDetails, 'Tracks', `${formatNumber(segaCd.trackCount)} total`);
+        appendDefinition(elements.filesystemDetails, 'Audio Tracks', formatNumber(segaCd.audioTrackCount));
+        appendDefinition(elements.filesystemDetails, 'Data Track', segaCd.dataTrackFileName || '(unknown)');
+      }
+      appendDefinition(elements.filesystemDetails, 'ISO Files', formatNumber(segaCd.isoFileCount));
+      return;
+    }
+    if (!rawAnalysis) {
+      appendDefinition(elements.filesystemDetails, 'Status', 'No filesystem metadata loaded.');
+      return;
+    }
+    appendDefinition(elements.filesystemDetails, 'Status', 'Raw HDM sector map');
+    appendDefinition(elements.filesystemDetails, 'Analyzed', `${formatNumber(rawAnalysis.analyzedBytes)} bytes`);
+    appendDefinition(elements.filesystemDetails, 'Raw Sectors', formatNumber(rawAnalysis.totalSectors));
+    appendDefinition(elements.filesystemDetails, 'Text Sectors', formatNumber(rawAnalysis.textLikeSectorCount));
+    appendDefinition(elements.filesystemDetails, 'SJIS Runs', formatNumber(rawAnalysis.shiftJisRunCount));
+    appendDefinition(elements.filesystemDetails, 'ASCII Runs', formatNumber(rawAnalysis.asciiRunCount));
+    const densest = Array.isArray(rawAnalysis.densestTextSectors)
+      ? rawAnalysis.densestTextSectors.slice(0, 4).map(formatRawSectorLabel).join(', ')
+      : '';
+    if (densest) {
+      appendDefinition(elements.filesystemDetails, 'Densest', densest);
+    }
     return;
   }
 
@@ -587,6 +801,18 @@ function renderFilesystemDetails(filesystems) {
   appendDefinition(elements.filesystemDetails, 'Root LBA', formatNumber(filesystem.firstRootDirectoryLba));
   appendDefinition(elements.filesystemDetails, 'Data LBA', formatNumber(filesystem.firstDataLba));
   appendDefinition(elements.filesystemDetails, 'Clusters', formatNumber(filesystem.clusterCount));
+}
+
+function formatRawSectorLabel(sector) {
+  const index = formatNumber(sector.sector);
+  if (
+    sector.cylinder !== undefined &&
+    sector.head !== undefined &&
+    sector.sectorNumber !== undefined
+  ) {
+    return `#${index} C/H/S ${sector.cylinder}/${sector.head}/${sector.sectorNumber}`;
+  }
+  return `#${index}`;
 }
 
 function renderRootDirectory(entries) {
@@ -627,7 +853,7 @@ function renderRootDirectory(entries) {
 
     appendCell(row, `${entry.isDirectory ? '[' : ''}${entry.name || '(unnamed)'}${entry.isDirectory ? ']' : ''}`);
     appendCell(row, Array.isArray(entry.attributes) && entry.attributes.length > 0 ? entry.attributes.join(',') : 'FILE');
-    appendCell(row, formatNumber(entry.startCluster));
+    appendCell(row, entry.source === 'ISO9660' ? `LBA ${formatNumber(entry.extentLba ?? entry.startCluster)}` : formatNumber(entry.startCluster));
     appendCell(row, `${formatNumber(entry.sizeBytes)} bytes`);
     elements.rootDirectoryRows.appendChild(row);
   }
@@ -1194,6 +1420,744 @@ function syncCharsetLegend() {
   setText(elements.charsetLegend, getCharsetLegend(state.translationEncoding));
 }
 
+function saveCurrentTranslationEntry() {
+  const viewLength = getViewLength(state.mode);
+  if (viewLength <= 0) {
+    setText(elements.status, 'Open a disk image before saving translation entries.');
+    return;
+  }
+
+  const start = clampOffset(state.selectionStart, state.mode);
+  const end = clampOffset(state.selectionEnd, state.mode);
+  const range = normalizeRange(start, end);
+  const selection = collectSelectionBytes(range.start, range.end, MAX_TRANSLATION_BYTES);
+  if (!selection || selection.missing) {
+    setText(elements.status, 'Selected bytes are still loading.');
+    ensureBytesForOffsetRange(range.start, range.end);
+    return;
+  }
+
+  const id = makeTranslationEntryId(state.mode, range.start, range.end, state.sourcePath);
+  const existing = state.translationEntries.find((entry) => entry.id === id);
+  const now = new Date().toISOString();
+  const scored = scoreEntryLocally(
+    decodeSelectionBytes(selection.bytes, state.translationEncoding),
+    state.sourceName,
+    state.translationEncoding
+  );
+  const entry = {
+    id,
+    sourcePath: state.sourcePath,
+    mode: state.mode,
+    start: range.start,
+    end: range.end,
+    encoding: state.translationEncoding,
+    sourceText: scored.sourceText,
+    translatedText: (elements.translationDraft ? elements.translationDraft.value : state.translationDraft) || '',
+    status: elements.translationStatus?.value || existing?.status || 'draft',
+    notes: existing?.notes || '',
+    category: existing?.category || scored.category,
+    priority: existing?.priority || scored.priority,
+    score: existing?.score ?? scored.score,
+    batch: existing?.batch || scored.category,
+    translator: existing?.translator || '',
+    reviewer: existing?.reviewer || '',
+    sourceBytesBase64: bytesToBase64(selection.bytes),
+    updatedAt: now
+  };
+
+  state.translationEntries = mergeTranslationEntries(
+    state.translationEntries.filter((candidate) => candidate.id !== id),
+    [entry]
+  );
+  state.selectedTranslationEntryId = id;
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, `Saved translation entry ${formatRangeLabel(entry)}.`);
+}
+
+function discoverStringsFromSelection() {
+  const range = normalizeRange(
+    clampOffset(state.selectionStart, state.mode),
+    clampOffset(state.selectionEnd, state.mode)
+  );
+  const selection = collectSelectionBytes(range.start, range.end, MAX_TRANSLATION_BYTES);
+  if (!selection || selection.missing) {
+    setText(elements.status, 'Selected bytes are still loading.');
+    ensureBytesForOffsetRange(range.start, range.end);
+    return;
+  }
+
+  const discovered = [];
+  let runStart = -1;
+  for (let i = 0; i <= selection.bytes.length; i += 1) {
+    const byte = i < selection.bytes.length ? selection.bytes[i] : 0;
+    const printable = isStringCandidateByte(byte);
+    if (printable && runStart < 0) {
+      runStart = i;
+    }
+    if ((!printable || i === selection.bytes.length) && runStart >= 0) {
+      const runEnd = i - 1;
+      if (runEnd - runStart + 1 >= 4) {
+        const start = range.start + runStart;
+        const end = range.start + runEnd;
+        const bytes = selection.bytes.slice(runStart, runEnd + 1);
+        const sourceText = decodeSelectionBytes(bytes, state.translationEncoding);
+        const scored = scoreEntryLocally(sourceText, state.sourceName, state.translationEncoding);
+        discovered.push({
+          id: makeTranslationEntryId(state.mode, start, end, state.sourcePath),
+          sourcePath: state.sourcePath,
+          mode: state.mode,
+          start,
+          end,
+          encoding: state.translationEncoding,
+          sourceText,
+          translatedText: '',
+          status: 'draft',
+          notes: `Discovered from selected byte range; ${scored.reason}`,
+          category: scored.category,
+          priority: scored.priority,
+          score: scored.score,
+          batch: scored.category,
+          sourceBytesBase64: bytesToBase64(bytes),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      runStart = -1;
+    }
+  }
+
+  if (discovered.length === 0) {
+    setText(elements.status, 'No string candidates found in the selected range.');
+    return;
+  }
+
+  state.translationEntries = mergeTranslationEntries(state.translationEntries, discovered);
+  state.selectedTranslationEntryId = discovered[0].id;
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, `Discovered ${formatNumber(discovered.length)} string candidate(s).`);
+}
+
+async function exportTranslationProject() {
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    state.sourcePath,
+    state.sourceName,
+    state.translationEntries,
+    new Date().toISOString(),
+    state.translationManifest
+  );
+  const result = await window.diskScribeDesktop.saveTranslationProject(project);
+  if (result?.error) {
+    setText(elements.status, `Unable to export translation project: ${result.error}`);
+  } else if (result?.saved) {
+    setText(elements.status, 'Exported translation project.');
+  }
+}
+
+async function exportFilteredTranslationProject() {
+  const entries = getFilteredTranslationEntries();
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    state.sourcePath,
+    `${state.sourceName || 'translation-project'} filtered`,
+    entries,
+    new Date().toISOString(),
+    state.translationManifest
+  );
+  const result = await window.diskScribeDesktop.saveTranslationProject(project);
+  if (result?.error) {
+    setText(elements.status, `Unable to export filtered project: ${result.error}`);
+  } else if (result?.saved) {
+    setText(elements.status, `Exported ${formatNumber(entries.length)} filtered translation entries.`);
+  }
+}
+
+async function exportTranslationReport() {
+  const report = buildTranslationReport();
+  const result = await window.diskScribeDesktop.saveTranslationProject(report);
+  if (result?.error) {
+    setText(elements.status, `Unable to export report: ${result.error}`);
+  } else if (result?.saved) {
+    setText(elements.status, 'Exported translation discovery report.');
+  }
+}
+
+async function snapshotTranslationProject() {
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    state.sourcePath,
+    `${state.sourceName || 'translation-project'} snapshot ${new Date().toISOString()}`,
+    state.translationEntries,
+    new Date().toISOString(),
+    state.translationManifest
+  );
+  const result = await window.diskScribeDesktop.saveTranslationProject(project);
+  if (result?.error) {
+    setText(elements.status, `Unable to save snapshot: ${result.error}`);
+  } else if (result?.saved) {
+    setText(elements.status, 'Saved translation project snapshot.');
+  }
+}
+
+async function exportPresetTranslationProject() {
+  const preset = elements.translationExportPreset?.value || 'human-csv';
+  const entries = getFilteredTranslationEntries().filter((entry) => entry.sourceQuality !== 'source-garbage');
+  const payload = buildPresetExport(preset, entries);
+  const result = await window.diskScribeDesktop.saveTranslationProject(payload);
+  if (result?.error) {
+    setText(elements.status, `Unable to export preset: ${result.error}`);
+  } else if (result?.saved) {
+    setText(elements.status, `Exported ${preset} preset with ${formatNumber(entries.length)} entries.`);
+  }
+}
+
+async function discoverTranslationProject() {
+  setText(elements.status, 'Choose a folder of disk images to discover translation candidates.');
+  const filePaths = await window.diskScribeDesktop.openDiskFolderDialog();
+  if (!Array.isArray(filePaths) || filePaths.length === 0) {
+    setText(elements.status, 'No disk images selected for project discovery.');
+    return;
+  }
+
+  setText(elements.status, `Discovering strings across ${formatNumber(filePaths.length)} disk image(s)...`);
+  const result = await window.diskScribeDesktop.discoverTranslationProject(filePaths);
+  if (result?.error) {
+    setText(elements.status, `Project discovery failed: ${result.error}`);
+    return;
+  }
+  if (!result?.project) {
+    return;
+  }
+
+  const entries = normalizeTranslationEntries(result.project.entries);
+  state.translationEntries = mergeTranslationEntries(state.translationEntries, entries);
+  state.translationManifest = result.project.manifest;
+  state.sourcePath = typeof result.project.sourcePath === 'string' ? result.project.sourcePath : state.sourcePath;
+  state.sourceName = typeof result.project.sourceName === 'string' ? result.project.sourceName : state.sourceName;
+  state.selectedTranslationEntryId = entries[0]?.id || state.selectedTranslationEntryId;
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, `Discovered ${formatNumber(entries.length)} raw translation candidate(s).`);
+}
+
+async function runAutomationQa() {
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    state.sourcePath,
+    state.sourceName,
+    state.translationEntries,
+    new Date().toISOString(),
+    state.translationManifest
+  );
+  const result = await window.diskScribeDesktop.analyzeTranslationProject(project);
+  if (result?.error) {
+    setText(elements.status, `Automation QA failed: ${result.error}`);
+    return;
+  }
+  if (!result?.project) {
+    return;
+  }
+  state.translationEntries = normalizeTranslationEntries(result.project.entries);
+  persistState();
+  renderTranslationEntries();
+  const totals = result.report?.totals || {};
+  setText(
+    elements.status,
+    `QA complete: ${formatNumber(totals.highConfidence || 0)} high, ${formatNumber(
+      totals.mediumConfidence || 0
+    )} medium, ${formatNumber(totals.needsHumanReview || 0)} human-review.`
+  );
+}
+
+async function importTranslationProject() {
+  const result = await window.diskScribeDesktop.loadTranslationProject();
+  if (result?.error) {
+    setText(elements.status, `Unable to import translation project: ${result.error}`);
+    return;
+  }
+  if (!result?.project) {
+    return;
+  }
+
+  const imported = normalizeTranslationEntries(result.project.entries);
+  state.translationEntries = mergeTranslationEntries(state.translationEntries, imported);
+  state.translationManifest = result.project.manifest || state.translationManifest;
+  state.sourcePath = typeof result.project.sourcePath === 'string' ? result.project.sourcePath : state.sourcePath;
+  state.sourceName = typeof result.project.sourceName === 'string' ? result.project.sourceName : state.sourceName;
+  state.selectedTranslationEntryId = imported[0]?.id || state.selectedTranslationEntryId;
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, `Imported ${formatNumber(imported.length)} translation entries.`);
+}
+
+async function exportTranslationPatch() {
+  const releaseEntries = state.translationEntries.filter((entry) => entry.status === 'reviewed' || entry.status === 'final');
+  if (releaseEntries.length === 0) {
+    setText(elements.status, 'No reviewed or final entries are ready for a clean patch export.');
+    return;
+  }
+  const script = buildPatchScript(
+    'DiskScribe2026',
+    state.sourcePath,
+    state.sourceName,
+    releaseEntries
+  );
+  const result = await window.diskScribeDesktop.exportTranslationPatch(script);
+  if (result?.error) {
+    setText(elements.status, `Unable to export clean patch script: ${result.error}`);
+  } else if (result?.saved) {
+    const patchable = script.entries.filter((entry) => entry.patchable).length;
+    setText(elements.status, `Exported clean patch script with ${formatNumber(patchable)} patchable entries.`);
+  }
+}
+
+async function patchTranslationProject() {
+  const project = buildTranslationProject(
+    'DiskScribe2026',
+    state.sourcePath,
+    state.sourceName,
+    state.translationEntries,
+    new Date().toISOString(),
+    state.translationManifest
+  );
+  const result = await window.diskScribeDesktop.patchTranslationProject(project);
+  if (result?.error) {
+    setText(elements.status, `Patch failed: ${result.error}`);
+    return;
+  }
+  if (result?.saved) {
+    const applied = Number(result.report?.appliedCount) || 0;
+    const skipped = Number(result.report?.skippedCount) || 0;
+    setText(elements.status, `Patched disks: ${formatNumber(applied)} applied, ${formatNumber(skipped)} skipped.`);
+  }
+}
+
+function selectTranslationEntry(id) {
+  const entry = state.translationEntries.find((candidate) => candidate.id === id);
+  if (!entry) {
+    return;
+  }
+
+  state.selectedTranslationEntryId = id;
+  state.mode = chooseMode(entry.mode);
+  state.selectionStart = clampOffset(entry.start, state.mode);
+  state.selectionEnd = clampOffset(entry.end, state.mode);
+  state.cursorOffset = state.selectionStart;
+  state.anchorOffset = state.selectionStart;
+  state.translationEncoding = normalizeCharsetId(entry.encoding);
+  state.translationDraft = entry.translatedText || '';
+  if (elements.translationDraft) {
+    elements.translationDraft.value = state.translationDraft;
+  }
+  if (elements.translationStatus) {
+    elements.translationStatus.value = entry.status || 'draft';
+  }
+  if (elements.translationBatch) {
+    elements.translationBatch.value = entry.batch || '';
+  }
+  if (elements.translationTranslator) {
+    elements.translationTranslator.value = entry.translator || '';
+  }
+  if (elements.translationReviewer) {
+    elements.translationReviewer.value = entry.reviewer || '';
+  }
+  if (elements.translationSourceQuality) {
+    elements.translationSourceQuality.value = entry.sourceQuality || '';
+  }
+  if (elements.translationConfidence) {
+    elements.translationConfidence.value = entry.confidence || '';
+  }
+  if (elements.translationPlaytestStatus) {
+    elements.translationPlaytestStatus.value = entry.playtestStatus || 'untested';
+  }
+  persistState();
+  post({
+    type: 'hex.select',
+    mode: state.mode,
+    start: state.selectionStart,
+    end: state.selectionEnd
+  });
+  renderTranslationEntries();
+  renderHexViewport(false);
+  scrollToOffset(state.selectionStart, true);
+  refreshTranslationPanels();
+}
+
+function updateSelectedTranslationStatus() {
+  const entry = state.translationEntries.find((candidate) => candidate.id === state.selectedTranslationEntryId);
+  if (!entry || !elements.translationStatus) {
+    return;
+  }
+  entry.status = elements.translationStatus.value || 'draft';
+  entry.updatedAt = new Date().toISOString();
+  persistState();
+  renderTranslationEntries();
+}
+
+function saveSelectedTranslationMeta() {
+  const entry = state.translationEntries.find((candidate) => candidate.id === state.selectedTranslationEntryId);
+  if (!entry) {
+    return;
+  }
+
+  entry.batch = elements.translationBatch?.value || undefined;
+  entry.translator = elements.translationTranslator?.value || undefined;
+  entry.reviewer = elements.translationReviewer?.value || undefined;
+  entry.sourceQuality = elements.translationSourceQuality?.value || undefined;
+  entry.confidence = elements.translationConfidence?.value || undefined;
+  entry.playtestStatus = elements.translationPlaytestStatus?.value || 'untested';
+  entry.updatedAt = new Date().toISOString();
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, 'Saved translation entry metadata.');
+}
+
+async function previewSelectedPatch() {
+  const entry = state.translationEntries.find((candidate) => candidate.id === state.selectedTranslationEntryId);
+  if (!entry) {
+    setText(elements.patchPreview, '(select an entry to preview patch bytes)');
+    return;
+  }
+  const result = await window.diskScribeDesktop.previewTranslationPatch(entry);
+  if (result?.error) {
+    setText(elements.patchPreview, `Patch preview unavailable: ${result.error}`);
+    return;
+  }
+  setText(
+    elements.patchPreview,
+    [
+      `Length: ${result.encodedLength}/${result.byteLength} byte(s), ${result.fits ? 'fits' : 'too long'}`,
+      `Source: ${result.sourceHex || '(not captured)'}`,
+      `Replacement: ${result.replacementHex || '(empty)'}`,
+      `Padded: ${result.paddedHex || '(empty)'}`
+    ].join('\n')
+  );
+}
+
+function selectReviewSample() {
+  const entries = getFilteredTranslationEntries();
+  if (entries.length === 0) {
+    setText(elements.status, 'No filtered entries available for review sampling.');
+    return;
+  }
+  const entry = entries[Math.floor(Math.random() * entries.length)];
+  entry.reviewSample = true;
+  entry.updatedAt = new Date().toISOString();
+  persistState();
+  selectTranslationEntry(entry.id);
+  setText(elements.status, `Selected review sample from ${entry.category || 'uncategorized'} (${entry.priority || 'low'}).`);
+}
+
+function deleteSelectedTranslationEntry() {
+  const id = state.selectedTranslationEntryId;
+  if (!id) {
+    return;
+  }
+  state.translationEntries = state.translationEntries.filter((entry) => entry.id !== id);
+  state.selectedTranslationEntryId = '';
+  persistState();
+  renderTranslationEntries();
+  setText(elements.status, 'Deleted translation entry.');
+}
+
+function renderTranslationEntries() {
+  if (!elements.translationEntryRows) {
+    return;
+  }
+
+  elements.translationEntryRows.innerHTML = '';
+  syncCategoryFilterOptions();
+  renderTranslationDashboard();
+  const filtered = getFilteredTranslationEntries();
+
+  if (filtered.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 7;
+    cell.textContent = state.translationEntries.length === 0 ? 'No translation entries saved.' : 'No matching entries.';
+    row.appendChild(cell);
+    elements.translationEntryRows.appendChild(row);
+    return;
+  }
+
+  for (const entry of filtered) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-translation-id', entry.id);
+    row.className = entry.id === state.selectedTranslationEntryId ? 'is-selected' : '';
+    appendCell(row, formatRangeLabel(entry));
+    appendCell(row, entry.encoding);
+    appendCell(row, `${entry.priority || 'low'} ${Math.round(Number(entry.score) || 0)}`);
+    appendCell(row, entry.category || '-');
+    appendCell(row, entry.status);
+    appendCell(row, compactText(entry.sourceText));
+    appendCell(row, compactText(entry.translatedText));
+    elements.translationEntryRows.appendChild(row);
+  }
+}
+
+function getFilteredTranslationEntries() {
+  const query = (state.translationSearch || '').trim().toLowerCase();
+  return state.translationEntries.filter((entry) => {
+    if (state.translationStatusFilter && entry.status !== state.translationStatusFilter) {
+      return false;
+    }
+    if (state.translationPriorityFilter && entry.priority !== state.translationPriorityFilter) {
+      return false;
+    }
+    if (state.translationCategoryFilter && entry.category !== state.translationCategoryFilter) {
+      return false;
+    }
+    if (!query) {
+      return true;
+    }
+    return [
+      formatRangeLabel(entry),
+      entry.encoding,
+      entry.status,
+      entry.priority,
+      entry.category,
+      entry.batch,
+      entry.translator,
+      entry.reviewer,
+      entry.sourceQuality,
+      entry.confidence,
+      entry.needsHumanReview ? 'human-review' : '',
+      entry.playtestStatus,
+      entry.bankId,
+      entry.sourceText,
+      entry.translatedText,
+      entry.notes
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(query);
+  });
+}
+
+function buildTranslationReport() {
+  return {
+    appName: 'DiskScribe2026',
+    reportType: 'translation-discovery-report',
+    createdAt: new Date().toISOString(),
+    sourcePath: state.sourcePath,
+    sourceName: state.sourceName,
+    totals: {
+      entries: state.translationEntries.length,
+      translated: state.translationEntries.filter((entry) => entry.translatedText && entry.translatedText.trim()).length,
+      patchReady: state.translationEntries.filter((entry) => ['reviewed', 'final'].includes(entry.status)).length
+    },
+    byDisk: summarizeEntries((entry) => entry.sourcePath || '(unknown)'),
+    byFile: summarizeEntries((entry) => entry.sourceFilePath || '(raw disk)'),
+    byCategory: summarizeEntries((entry) => entry.category || '(none)'),
+    byPriority: summarizeEntries((entry) => entry.priority || '(none)'),
+    byBank: summarizeEntries((entry) => entry.bankId || '(none)'),
+    glossaryIssues: findGlossaryIssues(state.translationEntries)
+  };
+}
+
+function summarizeEntries(keyFn) {
+  const rows = {};
+  for (const entry of state.translationEntries) {
+    const key = keyFn(entry);
+    if (!rows[key]) {
+      rows[key] = { total: 0, raw: 0, draft: 0, reviewed: 0, final: 0, translated: 0 };
+    }
+    rows[key].total += 1;
+    rows[key][entry.status] = (rows[key][entry.status] || 0) + 1;
+    if (entry.translatedText && entry.translatedText.trim()) {
+      rows[key].translated += 1;
+    }
+  }
+  return rows;
+}
+
+function buildPresetExport(preset, entries) {
+  const base = {
+    appName: 'DiskScribe2026',
+    preset,
+    exportedAt: new Date().toISOString(),
+    sourceName: state.sourceName,
+    filters: {
+      status: state.translationStatusFilter,
+      priority: state.translationPriorityFilter,
+      category: state.translationCategoryFilter,
+      search: state.translationSearch
+    }
+  };
+  if (preset === 'glossary-json') {
+    return { ...base, glossaryIssues: findGlossaryIssues(entries) };
+  }
+  return {
+    ...base,
+    entries: entries.map((entry) => ({
+      id: entry.id,
+      sourcePath: entry.sourcePath,
+      sourceFilePath: entry.sourceFilePath,
+      range: formatRangeLabel(entry),
+      encoding: entry.encoding,
+      category: entry.category,
+      priority: entry.priority,
+      score: entry.score,
+      status: entry.status,
+      sourceQuality: entry.sourceQuality,
+      confidence: entry.confidence,
+      machineDraft: entry.machineDraft,
+      backTranslation: entry.backTranslation,
+      reviewerNotes: entry.reviewerNotes,
+      needsHumanReview: entry.needsHumanReview,
+      playtestStatus: entry.playtestStatus,
+      playtestNotes: entry.playtestNotes,
+      bankId: entry.bankId,
+      batch: entry.batch,
+      translator: preset === 'llm-json' ? 'draft' : entry.translator,
+      reviewer: preset === 'reviewer-json' ? 'review' : entry.reviewer,
+      sourceText: entry.sourceText,
+      translatedText: entry.translatedText,
+      notes: entry.notes
+    }))
+  };
+}
+
+function findGlossaryIssues(entries) {
+  const bySource = {};
+  for (const entry of entries) {
+    const source = String(entry.sourceText || '').trim();
+    const translated = String(entry.translatedText || '').trim();
+    if (!source || !translated || source.length > 64) {
+      continue;
+    }
+    if (!bySource[source]) {
+      bySource[source] = new Set();
+    }
+    bySource[source].add(translated);
+  }
+  return Object.entries(bySource)
+    .filter(([, values]) => values.size > 1)
+    .map(([source, values]) => ({ sourceText: source, translations: [...values] }));
+}
+
+function renderTranslationDashboard() {
+  if (!elements.translationDashboard) {
+    return;
+  }
+
+  const total = state.translationEntries.length;
+  if (total === 0) {
+    elements.translationDashboard.textContent = 'No translation project loaded.';
+    return;
+  }
+
+  const filtered = getFilteredTranslationEntries().length;
+  const byStatus = countBy(state.translationEntries, 'status');
+  const byPriority = countBy(state.translationEntries, 'priority');
+  const bySourceQuality = countBy(state.translationEntries, 'sourceQuality');
+  const byConfidence = countBy(state.translationEntries, 'confidence');
+  const patchable = state.translationEntries.filter((entry) => ['reviewed', 'final'].includes(entry.status)).length;
+  const translated = state.translationEntries.filter((entry) => entry.translatedText && entry.translatedText.trim()).length;
+  const samples = state.translationEntries.filter((entry) => entry.reviewSample).length;
+  const human = state.translationEntries.filter((entry) => entry.needsHumanReview).length;
+  elements.translationDashboard.textContent =
+    `Entries ${formatNumber(total)} (${formatNumber(filtered)} shown) | ` +
+    `raw ${formatNumber(byStatus.raw || 0)}, draft ${formatNumber(byStatus.draft || 0)}, ` +
+    `reviewed ${formatNumber(byStatus.reviewed || 0)}, final ${formatNumber(byStatus.final || 0)} | ` +
+    `high ${formatNumber(byPriority.high || 0)}, medium ${formatNumber(byPriority.medium || 0)}, low ${formatNumber(byPriority.low || 0)} | ` +
+    `confidence high ${formatNumber(byConfidence.high || 0)}, low ${formatNumber(byConfidence.low || 0)} | ` +
+    `source good ${formatNumber(bySourceQuality['source-good'] || 0)}, garbage ${formatNumber(bySourceQuality['source-garbage'] || 0)} | ` +
+    `translated ${formatNumber(translated)}, patch-ready ${formatNumber(patchable)}, samples ${formatNumber(samples)}, human ${formatNumber(human)}`;
+}
+
+function syncCategoryFilterOptions() {
+  if (!elements.translationCategoryFilter) {
+    return;
+  }
+
+  const current = state.translationCategoryFilter;
+  const categories = [...new Set(state.translationEntries.map((entry) => entry.category).filter(Boolean))].sort();
+  const existing = Array.from(elements.translationCategoryFilter.options, (option) => option.value).join('|');
+  const next = [''].concat(categories).join('|');
+  if (existing === next) {
+    return;
+  }
+
+  elements.translationCategoryFilter.innerHTML = '';
+  const all = document.createElement('option');
+  all.value = '';
+  all.textContent = 'All Categories';
+  elements.translationCategoryFilter.appendChild(all);
+  for (const category of categories) {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    elements.translationCategoryFilter.appendChild(option);
+  }
+  elements.translationCategoryFilter.value = categories.includes(current) ? current : '';
+  state.translationCategoryFilter = elements.translationCategoryFilter.value;
+}
+
+function countBy(entries, field) {
+  const counts = {};
+  for (const entry of entries) {
+    const key = entry[field] || 'none';
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return counts;
+}
+
+function isStringCandidateByte(byte) {
+  return (byte >= 0x20 && byte <= 0x7e) || (byte >= 0xa1 && byte <= 0xdf);
+}
+
+function scoreEntryLocally(sourceText, sourceName, encoding) {
+  const text = String(sourceText || '').trim();
+  let score = 0;
+  let category = 'leftovers';
+  const lowerName = String(sourceName || '').toLowerCase();
+  const japaneseChars = Array.from(text).filter((char) => /[\u3040-\u30ff\u3400-\u9fff]/u.test(char)).length;
+  const asciiLetters = Array.from(text).filter((char) => /[A-Za-z]/.test(char)).length;
+  if (japaneseChars > 0) {
+    score += 45 + Math.min(25, japaneseChars * 3);
+    category = 'main-dialogue';
+  }
+  if (encoding === 'pc98-cp932') {
+    score += 8;
+  }
+  if (asciiLetters >= 3) {
+    score += 12;
+  }
+  if (text.length >= 4 && text.length <= 48) {
+    score += 12;
+  }
+  if (/system|data/.test(lowerName) && /^[A-Z0-9_ .:/+-]+$/.test(text)) {
+    score += 20;
+    category = 'menus-items-battle';
+  } else if (/opening/.test(lowerName)) {
+    category = 'opening-system';
+  } else if (/ending|visual/.test(lowerName)) {
+    category = 'ending-visual';
+  }
+  const priority = score >= 55 ? 'high' : score >= 32 ? 'medium' : 'low';
+  return {
+    sourceText,
+    score,
+    priority,
+    category,
+    reason: `${priority} priority ${category} candidate, score ${score}`
+  };
+}
+
+function formatRangeLabel(entry) {
+  return `${entry.mode} 0x${entry.start.toString(16).toUpperCase()}-0x${entry.end
+    .toString(16)
+    .toUpperCase()}`;
+}
+
+function compactText(value) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text.length > 80 ? `${text.slice(0, 77)}...` : text;
+}
+
 async function copyDecodedToClipboard() {
   const text = elements.decodedSelection ? elements.decodedSelection.textContent || '' : '';
   if (!text || text.startsWith('(loading')) {
@@ -1447,6 +2411,14 @@ function decodeBase64(base64) {
   }
 }
 
+function bytesToBase64(bytes) {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
 function setText(element, text) {
   if (element) {
     element.textContent = text;
@@ -1486,8 +2458,17 @@ function persistState() {
   vscode.setState({
     defaultMode: state.defaultMode,
     mode: state.mode,
+    sourcePath: state.sourcePath,
+    sourceName: state.sourceName,
     translationEncoding: state.translationEncoding,
     translationDraft: state.translationDraft,
+    translationEntries: state.translationEntries,
+    translationManifest: state.translationManifest,
+    selectedTranslationEntryId: state.selectedTranslationEntryId,
+    translationSearch: state.translationSearch,
+    translationStatusFilter: state.translationStatusFilter,
+    translationPriorityFilter: state.translationPriorityFilter,
+    translationCategoryFilter: state.translationCategoryFilter,
     selectionStart: state.selectionStart,
     selectionEnd: state.selectionEnd,
     cursorOffset: state.cursorOffset,
@@ -1497,5 +2478,7 @@ function persistState() {
     showDeletedEntries: state.showDeletedEntries
   });
 }
+
+renderTranslationEntries();
 
 export {};

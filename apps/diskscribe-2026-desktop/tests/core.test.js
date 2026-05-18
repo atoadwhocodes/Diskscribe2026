@@ -11,9 +11,17 @@ const {
   parseNHD
 } = require('../src/core/diskParsers');
 const {
+  extractSegaCdIsoFileBytes,
+  extractStandaloneIsoFileBytes,
+  parseSegaCdCue,
+  parseStandaloneIso
+} = require('../src/core/segaCd');
+const {
+  analyzeRawDiskBytes,
   buildDiskSummaryFromPath,
   formatSummaryAsText,
-  isSupportedDiskPath
+  isSupportedDiskPath,
+  sectorToChs
 } = require('../src/core/diskSummary');
 const { buildFatClusterChain } = require('../src/core/fat');
 const { extractFatFileBytes } = require('../src/core/fatExtract');
@@ -24,6 +32,8 @@ const SECTOR_SIZE = 512;
 test('supported disk path detection is extension based and case insensitive', () => {
   assert.equal(isSupportedDiskPath('game.HDM'), true);
   assert.equal(isSupportedDiskPath('archive.nhd'), true);
+  assert.equal(isSupportedDiskPath('alshark.CUE'), true);
+  assert.equal(isSupportedDiskPath('data.ISO'), true);
   assert.equal(isSupportedDiskPath('notes.txt'), false);
   assert.equal(isSupportedDiskPath('disk.hdm.bak'), false);
 });
@@ -79,6 +89,66 @@ test('HDM parser infers PC-98 1.2MB geometry when no BPB is present', () => {
   assert.equal(parsed.sectorSize, 1024);
   assert.equal(parsed.filesystems.length, 0);
   assert.match(parsed.headerSummary.join('\n'), /PC-98 1\.2MB HDM/);
+  assert.match(parsed.headerSummary.join('\n'), /77 cylinders, 2 heads, 8 sectors\/track/);
+  assert.match(parsed.parserNotes.join('\n'), /raw sector mapping/);
+});
+
+test('raw HDM analysis maps text-like sectors without FAT metadata', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-raw-hdm-'));
+  const diskPath = path.join(dir, 'raw.hdm');
+  try {
+    const bytes = new Uint8Array(1261568);
+    Buffer.from('MAIN MENU START', 'ascii').copy(Buffer.from(bytes.buffer), 1024 * 10);
+    Buffer.from([0x83, 0x41, 0x83, 0x8b, 0x83, 0x56, 0x83, 0x83]).copy(Buffer.from(bytes.buffer), 1024 * 20);
+    await writeFile(diskPath, bytes);
+
+    const summary = await buildDiskSummaryFromPath(diskPath);
+    const reportText = formatSummaryAsText(summary);
+
+    assert.ok(summary.rawAnalysis);
+    assert.equal(summary.rawAnalysis.sectorSize, 1024);
+    assert.equal(summary.rawAnalysis.totalSectors, 1232);
+    assert.equal(summary.rawAnalysis.asciiRunCount >= 1, true);
+    assert.equal(summary.rawAnalysis.shiftJisRunCount >= 1, true);
+    assert.equal(summary.rawAnalysis.densestTextSectors.some((sector) => sector.sector === 10), true);
+    assert.equal(summary.rawAnalysis.densestTextSectors.some((sector) => sector.cylinder !== undefined), true);
+    assert.match(reportText, /Raw Text Map:/);
+    assert.match(reportText, /Shift-JIS-like runs:/);
+    assert.match(reportText, /C\/H\/S/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('raw byte analysis counts sector-local text runs', () => {
+  const bytes = new Uint8Array(2048);
+  Buffer.from('SYSTEM', 'ascii').copy(Buffer.from(bytes.buffer), 4);
+  Buffer.from([0x82, 0xa0, 0x82, 0xa2, 0x82, 0xa4]).copy(Buffer.from(bytes.buffer), 1024);
+
+  const analysis = analyzeRawDiskBytes(bytes, 1024);
+
+  assert.equal(analysis.totalSectors, 2);
+  assert.equal(analysis.asciiRunCount, 1);
+  assert.equal(analysis.shiftJisRunCount, 1);
+  assert.equal(analysis.textLikeSectorCount, 2);
+});
+
+test('raw sector mapping reports PC-98 CHS coordinates', () => {
+  assert.deepEqual(sectorToChs(0, { cylinders: 77, heads: 2, sectorsPerTrack: 8 }), {
+    cylinder: 0,
+    head: 0,
+    sectorNumber: 1
+  });
+  assert.deepEqual(sectorToChs(15, { cylinders: 77, heads: 2, sectorsPerTrack: 8 }), {
+    cylinder: 0,
+    head: 1,
+    sectorNumber: 8
+  });
+  assert.deepEqual(sectorToChs(16, { cylinders: 77, heads: 2, sectorsPerTrack: 8 }), {
+    cylinder: 1,
+    head: 0,
+    sectorNumber: 1
+  });
 });
 
 test('HDI parser reports FAT metadata from a partition boot sector in the preview window', () => {
@@ -132,6 +202,79 @@ test('D88 parser defaults safely when the track table is empty', () => {
 
   assert.equal(parsed.dataOffsetBytes, 0x2b0);
   assert.match(parsed.parserNotes.join('\n'), /Track table offset is empty/);
+});
+
+test('Sega CD cue parser reads MODE1 ISO9660 file table and extracts files', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-segacd-'));
+  const cuePath = path.join(dir, 'sample.cue');
+  const trackPath = path.join(dir, 'sample-track01.bin');
+  try {
+    await writeFile(trackPath, createSegaCdMode1Track());
+    await writeFile(
+      cuePath,
+      [
+        'FILE "sample-track01.bin" BINARY',
+        '  TRACK 01 MODE1/2352',
+        '    INDEX 01 00:00:00',
+        'FILE "sample-track02.bin" BINARY',
+        '  TRACK 02 AUDIO',
+        '    INDEX 01 00:00:00'
+      ].join('\n')
+    );
+    await writeFile(path.join(dir, 'sample-track02.bin'), Buffer.alloc(2352));
+
+    const image = await parseSegaCdCue(cuePath);
+    const summary = await buildDiskSummaryFromPath(cuePath);
+    const reportText = formatSummaryAsText(summary);
+    const file = summary.rootDirectoryEntries.find((entry) => entry.path === 'HELLO.TXT');
+    assert.ok(file);
+
+    assert.equal(image.iso.volumeId, 'TESTDISC');
+    assert.equal(image.tracks.length, 2);
+    assert.equal(image.iso.files.some((entry) => entry.path === 'HELLO.TXT'), true);
+    assert.equal(summary.format, 'Sega CD');
+    assert.equal(summary.readPath, trackPath);
+    assert.equal(summary.segaCd.volumeId, 'TESTDISC');
+    assert.equal(file.source, 'ISO9660');
+    assert.equal(file.extentLba, 21);
+    assert.match(reportText, /Sega CD Image Report/);
+    assert.match(reportText, /ISO files: 1/);
+
+    const extracted = await extractSegaCdIsoFileBytes(cuePath, file);
+    assert.deepEqual(Buffer.from(extracted), Buffer.from('HELLO SEGA CD', 'ascii'));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('standalone ISO parser reads ISO9660 file table and extracts files', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'diskscribe-iso-'));
+  const isoPath = path.join(dir, 'sample.iso');
+  try {
+    await writeFile(isoPath, createPlainIsoImage());
+
+    const image = await parseStandaloneIso(isoPath);
+    const summary = await buildDiskSummaryFromPath(isoPath);
+    const reportText = formatSummaryAsText(summary);
+    const file = summary.rootDirectoryEntries.find((entry) => entry.path === 'HELLO.TXT');
+    assert.ok(file);
+
+    assert.equal(image.iso.volumeId, 'TESTDISC');
+    assert.equal(image.iso.files.some((entry) => entry.path === 'HELLO.TXT'), true);
+    assert.equal(summary.format, 'ISO9660');
+    assert.equal(summary.readPath, isoPath);
+    assert.equal(summary.segaCd.volumeId, 'TESTDISC');
+    assert.equal(summary.sectorSize, 2048);
+    assert.equal(file.source, 'ISO9660');
+    assert.equal(file.offsetBytes, 21 * 2048);
+    assert.match(reportText, /ISO9660 Image Report/);
+    assert.match(reportText, /ISO files: 1/);
+
+    const extracted = await extractStandaloneIsoFileBytes(isoPath, file);
+    assert.deepEqual(Buffer.from(extracted), Buffer.from('HELLO SEGA CD', 'ascii'));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test('disk summary builds geometry and notes for a temporary HDM image', async () => {
@@ -509,6 +652,117 @@ function writeFatLongNameEntry(bytes, offset, text) {
   });
 }
 
+function createSegaCdMode1Track() {
+  const rawSectorSize = 2352;
+  const userOffset = 16;
+  const userSize = 2048;
+  const track = Buffer.alloc(24 * rawSectorSize);
+  const fileBytes = Buffer.from('HELLO SEGA CD', 'ascii');
+
+  const pvd = Buffer.alloc(userSize);
+  pvd[0] = 1;
+  writeAscii(pvd, 1, 'CD001');
+  pvd[6] = 1;
+  writeAscii(pvd, 8, 'MEGA_CD'.padEnd(32, ' '));
+  writeAscii(pvd, 40, 'TESTDISC'.padEnd(32, ' '));
+  writeUint32LE(pvd, 80, 24);
+  writeIsoDirectoryRecord(pvd, 156, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([0])
+  });
+  pvd.copy(track, 16 * rawSectorSize + userOffset);
+
+  const root = Buffer.alloc(userSize);
+  let cursor = 0;
+  cursor += writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([0])
+  });
+  cursor += writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([1])
+  });
+  writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 21,
+    sizeBytes: fileBytes.length,
+    flags: 0x00,
+    rawName: Buffer.from('HELLO.TXT;1', 'ascii')
+  });
+  root.copy(track, 20 * rawSectorSize + userOffset);
+  fileBytes.copy(track, 21 * rawSectorSize + userOffset);
+  return track;
+}
+
+function createPlainIsoImage() {
+  const userSize = 2048;
+  const iso = Buffer.alloc(24 * userSize);
+  const fileBytes = Buffer.from('HELLO SEGA CD', 'ascii');
+
+  const pvd = Buffer.alloc(userSize);
+  pvd[0] = 1;
+  writeAscii(pvd, 1, 'CD001');
+  pvd[6] = 1;
+  writeAscii(pvd, 8, 'MEGA_CD'.padEnd(32, ' '));
+  writeAscii(pvd, 40, 'TESTDISC'.padEnd(32, ' '));
+  writeUint32LE(pvd, 80, 24);
+  writeIsoDirectoryRecord(pvd, 156, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([0])
+  });
+  pvd.copy(iso, 16 * userSize);
+
+  const root = Buffer.alloc(userSize);
+  let cursor = 0;
+  cursor += writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([0])
+  });
+  cursor += writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 20,
+    sizeBytes: userSize,
+    flags: 0x02,
+    rawName: Buffer.from([1])
+  });
+  writeIsoDirectoryRecord(root, cursor, {
+    extentLba: 21,
+    sizeBytes: fileBytes.length,
+    flags: 0x00,
+    rawName: Buffer.from('HELLO.TXT;1', 'ascii')
+  });
+  root.copy(iso, 20 * userSize);
+  fileBytes.copy(iso, 21 * userSize);
+  return iso;
+}
+
+function writeIsoDirectoryRecord(bytes, offset, record) {
+  const nameLength = record.rawName.length;
+  const length = 33 + nameLength + (nameLength % 2 === 0 ? 1 : 0);
+  bytes[offset] = length;
+  bytes[offset + 1] = 0;
+  writeUint32LE(bytes, offset + 2, record.extentLba);
+  writeUint32BE(bytes, offset + 6, record.extentLba);
+  writeUint32LE(bytes, offset + 10, record.sizeBytes);
+  writeUint32BE(bytes, offset + 14, record.sizeBytes);
+  bytes[offset + 25] = record.flags;
+  bytes[offset + 26] = 0;
+  bytes[offset + 27] = 0;
+  writeUint16LE(bytes, offset + 28, 1);
+  writeUint16BE(bytes, offset + 30, 1);
+  bytes[offset + 32] = nameLength;
+  record.rawName.copy(Buffer.from(bytes.buffer), offset + 33);
+  return length;
+}
+
 function writeAscii(bytes, offset, text) {
   Buffer.from(text, 'ascii').copy(Buffer.from(bytes.buffer), offset);
 }
@@ -523,4 +777,16 @@ function writeUint32LE(bytes, offset, value) {
   bytes[offset + 1] = (value >>> 8) & 0xff;
   bytes[offset + 2] = (value >>> 16) & 0xff;
   bytes[offset + 3] = (value >>> 24) & 0xff;
+}
+
+function writeUint16BE(bytes, offset, value) {
+  bytes[offset] = (value >>> 8) & 0xff;
+  bytes[offset + 1] = value & 0xff;
+}
+
+function writeUint32BE(bytes, offset, value) {
+  bytes[offset] = (value >>> 24) & 0xff;
+  bytes[offset + 1] = (value >>> 16) & 0xff;
+  bytes[offset + 2] = (value >>> 8) & 0xff;
+  bytes[offset + 3] = value & 0xff;
 }
