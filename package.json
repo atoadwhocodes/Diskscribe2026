@@ -1,6 +1,6 @@
 {
   "name": "diskscribe2026",
-  "version": "1.1.0-alpha.1",
+  "version": "1.1.0-alpha.2",
   "private": true,
   "description": "Standalone desktop app for PC-98 disk images, Sega CD cue sheets, and ISO9660 images with filesystem inspection and Shift-JIS translation tools.",
   "license": "MIT",

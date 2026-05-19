@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.0-alpha.2] - 2026-05-18
+
+### Added
+
+- Clean translation patch export, validation, local apply, and CLI apply workflows.
+- Dry-run clean patch validation that checks source fingerprints without writing patched output.
+- Patch report panel in the desktop UI with warnings, skipped reasons, verified counts, and output paths.
+- Sega CD / Mega-CD conservative text reinsertion guardrails for control prefixes, inline control tokens, byte fit, and blocked packed files such as `MESS.DAT`.
+- Alpha smoke-test and alpha readiness checklists.
+- Local release checksum generation guidance aligned with the GitHub Windows artifact workflow.
+
+### Changed
+
+- Improved Translator Workspace controls by grouping actions into readable rows with larger button hit areas.
+- Hardened clean patch exports so public patch JSON omits original source text and source byte blobs while preserving validation hashes.
+- Updated dependency overrides and lockfile entries to resolve current moderate advisories.
+
+### Fixed
+
+- Prevented a stuck drag/drop state from disabling all workspace clicks.
+- Removed stale renderer-side CP932 export placeholder reasons after main-process byte encoding succeeds.
+
 ## [1.1.0-alpha.1] - 2026-05-14
 
 ### Added
