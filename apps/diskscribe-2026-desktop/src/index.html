@@ -180,48 +180,58 @@
         <section class="panel panelTranslator">
           <h2>Translator Workspace</h2>
           <div class="translatorControls">
-            <label for="translationEncoding">Character Set</label>
-            <select id="translationEncoding">
-              <optgroup label="NEC PC-98">
-                <option value="pc98-cp932">PC-98 CP932 (Windows-31J)</option>
-                <option value="pc98-shift-jis">PC-98 Shift-JIS (strict)</option>
-              </optgroup>
-              <optgroup label="NEC PC-88">
-                <option value="pc88-shift-jis">PC-88 Shift-JIS (N88)</option>
-                <option value="pc88-jis7">PC-88 JIS 7-bit (ESC)</option>
-                <option value="pc88-ank">PC-88 ANK + Kana + Graphics</option>
-              </optgroup>
-              <optgroup label="Japanese Standards">
-                <option value="jis-x-0201-roman">JIS X 0201 Roman</option>
-                <option value="jis-x-0201-kana">JIS X 0201 Kana</option>
-                <option value="euc-jp">EUC-JP</option>
-                <option value="iso-2022-jp">ISO-2022-JP</option>
-              </optgroup>
-              <optgroup label="Unicode / Generic">
-                <option value="utf-8">UTF-8</option>
-                <option value="utf-16le">UTF-16 LE</option>
-                <option value="utf-16be">UTF-16 BE</option>
-                <option value="ascii">ASCII</option>
-                <option value="latin1">Latin-1</option>
-              </optgroup>
-            </select>
-            <button id="copyDecodedButton" type="button">Copy Decoded</button>
-            <button id="copyDraftButton" type="button">Copy Draft</button>
-            <button id="clearDraftButton" type="button">Clear Draft</button>
-            <button id="saveTranslationEntryButton" class="btnPrimary" type="button">Save Entry</button>
-            <button id="discoverStringsButton" type="button">Discover Strings</button>
-            <button id="discoverProjectButton" type="button">Discover Project</button>
-            <button id="runAutomationQaButton" type="button">Run QA</button>
-            <button id="exportTranslationProjectButton" type="button">Export Project</button>
-            <button id="exportFilteredTranslationProjectButton" type="button">Export Filtered</button>
-            <button id="exportTranslationReportButton" type="button">Export Report</button>
-            <button id="snapshotTranslationProjectButton" type="button">Snapshot</button>
-            <button id="exportPresetButton" type="button">Export Preset</button>
-            <button id="importTranslationProjectButton" type="button">Import Project</button>
-            <button id="exportTranslationPatchButton" type="button">Clean Patch</button>
-            <button id="validateCleanTranslationPatchButton" type="button">Validate Patch</button>
-            <button id="applyCleanTranslationPatchButton" type="button">Apply Patch</button>
-            <button id="patchTranslationProjectButton" type="button">Patch Disks</button>
+            <div class="translatorControlGroup translatorEncodingGroup">
+              <label for="translationEncoding">Character Set</label>
+              <select id="translationEncoding">
+                <optgroup label="NEC PC-98">
+                  <option value="pc98-cp932">PC-98 CP932 (Windows-31J)</option>
+                  <option value="pc98-shift-jis">PC-98 Shift-JIS (strict)</option>
+                </optgroup>
+                <optgroup label="NEC PC-88">
+                  <option value="pc88-shift-jis">PC-88 Shift-JIS (N88)</option>
+                  <option value="pc88-jis7">PC-88 JIS 7-bit (ESC)</option>
+                  <option value="pc88-ank">PC-88 ANK + Kana + Graphics</option>
+                </optgroup>
+                <optgroup label="Japanese Standards">
+                  <option value="jis-x-0201-roman">JIS X 0201 Roman</option>
+                  <option value="jis-x-0201-kana">JIS X 0201 Kana</option>
+                  <option value="euc-jp">EUC-JP</option>
+                  <option value="iso-2022-jp">ISO-2022-JP</option>
+                </optgroup>
+                <optgroup label="Unicode / Generic">
+                  <option value="utf-8">UTF-8</option>
+                  <option value="utf-16le">UTF-16 LE</option>
+                  <option value="utf-16be">UTF-16 BE</option>
+                  <option value="ascii">ASCII</option>
+                  <option value="latin1">Latin-1</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="translatorControlGroup">
+              <button id="copyDecodedButton" type="button">Copy Decoded</button>
+              <button id="copyDraftButton" type="button">Copy Draft</button>
+              <button id="clearDraftButton" type="button">Clear Draft</button>
+              <button id="saveTranslationEntryButton" class="btnPrimary" type="button">Save Entry</button>
+            </div>
+            <div class="translatorControlGroup">
+              <button id="discoverStringsButton" type="button">Discover Strings</button>
+              <button id="discoverProjectButton" type="button">Discover Project</button>
+              <button id="runAutomationQaButton" type="button">Run QA</button>
+            </div>
+            <div class="translatorControlGroup">
+              <button id="importTranslationProjectButton" type="button">Import Project</button>
+              <button id="exportTranslationProjectButton" type="button">Export Project</button>
+              <button id="exportFilteredTranslationProjectButton" type="button">Export Filtered</button>
+              <button id="exportTranslationReportButton" type="button">Export Report</button>
+              <button id="snapshotTranslationProjectButton" type="button">Snapshot</button>
+              <button id="exportPresetButton" type="button">Export Preset</button>
+            </div>
+            <div class="translatorControlGroup patchActionGroup">
+              <button id="exportTranslationPatchButton" type="button">Clean Patch</button>
+              <button id="validateCleanTranslationPatchButton" type="button">Validate Patch</button>
+              <button id="applyCleanTranslationPatchButton" type="button">Apply Patch</button>
+              <button id="patchTranslationProjectButton" type="button">Patch Disks</button>
+            </div>
           </div>
           <div id="translationDashboard" class="translationDashboard">No translation project loaded.</div>
           <p id="translationMeta" class="translationMeta">Select bytes in hex view to decode text for translation.</p>

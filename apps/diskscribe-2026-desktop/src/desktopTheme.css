@@ -217,7 +217,6 @@ button:disabled {
 
 body.is-dropping .workspace {
   filter: saturate(0.78) blur(1px);
-  pointer-events: none;
 }
 
 .isHidden {

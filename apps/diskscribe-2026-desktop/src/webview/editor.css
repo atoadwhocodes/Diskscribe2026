@@ -356,11 +356,33 @@ h3 {
 }
 
 .translatorControls {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  margin-bottom: 8px;
+}
+
+.translatorControlGroup {
   align-items: center;
+  background: color-mix(in srgb, rgba(255, 255, 255, 0.42), transparent 20%);
+  border: 1px solid color-mix(in srgb, var(--app-panel-border), transparent 28%);
+  border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 8px;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+}
+
+.translatorEncodingGroup {
+  align-items: stretch;
+  flex-direction: column;
+  grid-row: span 4;
+  justify-content: center;
+}
+
+.patchActionGroup {
+  border-color: color-mix(in srgb, var(--app-accent), var(--app-panel-border) 55%);
 }
 
 .translatorControls label {
@@ -379,9 +401,9 @@ h3 {
 
 .translationProjectBar {
   align-items: center;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 7px;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   margin-top: 10px;
 }
 
@@ -411,7 +433,7 @@ h3 {
   border-radius: 8px;
   color: var(--app-ink);
   min-height: 28px;
-  min-width: 220px;
+  min-width: 0;
   padding: 4px 8px;
 }
 
@@ -538,9 +560,18 @@ pre {
   width: 76px;
 }
 
-.translatorControls button {
-  min-height: 28px;
-  padding: 4px 8px;
+.translatorControls button,
+.translationProjectBar button {
+  min-height: 34px;
+  min-width: 96px;
+  padding: 6px 10px;
+  white-space: normal;
+}
+
+.translatorControls select,
+.translationProjectBar select,
+.translationProjectBar input {
+  width: 100%;
 }
 
 @media (max-width: 1260px) {
@@ -554,6 +585,14 @@ pre {
 }
 
 @media (max-width: 980px) {
+  .translatorControls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .translatorEncodingGroup {
+    grid-row: auto;
+  }
+
   .translatorGrid {
     grid-template-columns: minmax(0, 1fr);
   }
