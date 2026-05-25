@@ -22,6 +22,10 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: INSTALLER_ICON_PATH,
+    extraResource: [
+      path.resolve(__dirname, '..', '..', 'LICENSE'),
+      path.resolve(__dirname, '..', '..', 'LEGAL.md')
+    ],
     executableName: APP_NAME_FOR_WINDOWS,
     appCopyright: `Copyright (c) ${new Date().getFullYear()} ${APP_VENDOR}`,
     win32metadata: {

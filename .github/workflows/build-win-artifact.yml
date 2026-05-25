@@ -107,7 +107,7 @@ jobs:
             gh release create $tag `
               --repo $env:GITHUB_REPOSITORY `
               --title "DiskScribe2026 Desktop $tag" `
-              --notes "Automated desktop release for $tag." `
+              --notes-file "RELEASE_NOTES_1.1.0-alpha.2.md" `
               $setupExe `
               $fullNupkg `
               $releasesFile `
