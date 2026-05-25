@@ -10,6 +10,8 @@ DiskScribe2026 Desktop is a standalone alpha utility for inspecting user-supplie
 - Patch report panel in the desktop UI with warnings, skipped reasons, verified counts, and output paths.
 - Sega CD / Mega-CD `.cue` plus standalone `.iso` ISO9660 file listing and extraction.
 - Conservative Sega CD text patch guardrails for byte fit, control prefixes, inline control tokens, and known no-go files such as `MESS.DAT`.
+- Mandatory full-range source fingerprint validation for applicable clean-patch entries, including same-named disc disambiguation.
+- Output collision protection and read-only clean-patch validation support.
 - Improved Translator Workspace readability and button hit areas.
 
 ## Alpha Limitations
@@ -22,11 +24,12 @@ DiskScribe2026 Desktop is a standalone alpha utility for inspecting user-supplie
 
 ## Verification
 
-Verified locally on May 18, 2026:
+Verified locally on May 25, 2026:
 
-- `npm test`: 41 passing.
+- `npm test`: 48 passing.
 - `npm run lint`: passed.
-- `npm --prefix apps/diskscribe-2026-desktop audit --omit=optional`: zero vulnerabilities.
+- `npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high`: zero production vulnerabilities.
+- `npm --prefix apps/diskscribe-2026-desktop audit --omit=optional`: zero vulnerabilities after patched transitive tooling overrides.
 - `npm run apply-clean-patch -- --help`: passed.
 - `npm run package`: produced Windows artifacts.
 
@@ -39,11 +42,7 @@ Verified locally on May 18, 2026:
 
 ## SHA256
 
-```text
-57ae508dd2c840c400af95240746aed28ed67f10a5312423c83314fe3a7f7f3d *diskscribe2026-1.1.0-alpha2-full.nupkg
-9620b96c6ed7f6b8bf89846802bee7536ccdb9adbac402a2f6c96305ae88084f *DiskScribe2026DesktopSetup.exe
-f3718582ecc6d051410bc2842c90b1065017dafae1dfe0c213fcf3631bc268c7 *RELEASES
-```
+Use the attached `SHA256SUMS.txt` generated from the published release artifacts.
 
 ## Before Tagging
 

@@ -8,9 +8,10 @@ Run this checklist before tagging an alpha release. Do not use or publish propri
 
 1. Run `npm test`.
 2. Run `npm run lint`.
-3. Run `npm audit --omit=optional` from `apps/diskscribe-2026-desktop`.
-4. Run `npm run package`.
-5. Confirm these files exist:
+3. Run `npm audit --omit=dev --audit-level=high` from `apps/diskscribe-2026-desktop` and require zero production findings.
+4. Run `npm audit --omit=optional` from `apps/diskscribe-2026-desktop` and require zero development/tooling findings before tagging.
+5. Run `npm run package`.
+6. Confirm these files exist:
    - `apps/diskscribe-2026-desktop/out/DiskScribe2026 Desktop-win32-x64/DiskScribe2026Desktop.exe`
    - `apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/DiskScribe2026DesktopSetup.exe`
    - `apps/diskscribe-2026-desktop/out/make/squirrel.windows/x64/RELEASES`
@@ -41,6 +42,7 @@ Run this checklist before tagging an alpha release. Do not use or publish propri
 5. Confirm entries include source file context where available.
 6. Confirm direct clean patch export blocks known no-go files such as `MESS.DAT`.
 7. Confirm entries with Sega CD control prefixes/tokens are blocked if translation text omits those controls.
+8. Confirm entries without source fingerprints are blocked from clean patch application.
 
 ## 5. Clean Patch Validation
 
@@ -92,4 +94,5 @@ Run this checklist before tagging an alpha release. Do not use or publish propri
 - Validation can fail safely without writing patched output.
 - Apply writes only to the selected output folder.
 - Reports explain skipped entries clearly.
+- `npm audit --omit=dev --audit-level=high` reports zero production vulnerabilities.
 - `npm audit --omit=optional` reports zero vulnerabilities.

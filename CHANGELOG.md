@@ -18,6 +18,9 @@ All notable changes to this project are documented in this file.
 - Improved Translator Workspace controls by grouping actions into readable rows with larger button hit areas.
 - Hardened clean patch exports so public patch JSON omits original source text and source byte blobs while preserving validation hashes.
 - Updated dependency overrides and lockfile entries to resolve current moderate advisories.
+- Required full-range source fingerprints for public clean-patch application, including safe duplicate-filename disc resolution.
+- Prevented clean-patch output collisions from overwriting existing numbered files and allowed dry-run validation of read-only media.
+- Packaged license, legal policy, and release notes resources with desktop builds.
 
 ### Fixed
 

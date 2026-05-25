@@ -108,7 +108,7 @@ test('translation project merge replaces matching entry ids', () => {
 
 test('patch script marks only encodable in-place entries patchable', () => {
   const project = buildTranslationProject('DiskScribe2026', 'disk.hdi', 'disk.hdi', [
-    { id: 'a', sourcePath: 'disk.hdi', mode: 'disk', start: 0, end: 3, encoding: 'ascii', sourceText: 'ABCD', translatedText: 'WXYZ', status: 'final', notes: '', updatedAt: '' },
+    { id: 'a', sourcePath: 'disk.hdi', mode: 'disk', start: 0, end: 3, encoding: 'ascii', sourceText: 'ABCD', translatedText: 'WXYZ', sourceBytesBase64: 'QUJDRA==', status: 'final', notes: '', updatedAt: '' },
     { id: 'b', sourcePath: 'disk.hdi', mode: 'disk', start: 4, end: 5, encoding: 'ascii', sourceText: 'EF', translatedText: 'LONG', status: 'draft', notes: '', updatedAt: '' },
     { id: 'c', sourcePath: 'disk.hdi', mode: 'disk', start: 6, end: 7, encoding: 'pc98-cp932', sourceText: 'あ', translatedText: 'い', status: 'draft', notes: '', updatedAt: '' }
   ]);
@@ -190,10 +190,11 @@ test('Sega CD patch export preserves required controls for patchable entries', (
       sourcePath: 'alshark.iso',
       mode: 'raw',
       start: 0,
-      end: 15,
+      end: 13,
       encoding: 'ascii',
       sourceText: '$jHello@World%',
       translatedText: '$jHi@All%',
+      sourceBytesBase64: Buffer.from('$jHello@World%', 'ascii').toString('base64'),
       sourceFilePath: 'START.BIN',
       status: 'final',
       notes: '',
@@ -212,10 +213,11 @@ test('Sega CD patch export blocks missing control tokens and prefixes', () => {
       sourcePath: 'alshark.iso',
       mode: 'raw',
       start: 0,
-      end: 15,
+      end: 13,
       encoding: 'ascii',
       sourceText: '$jHello@World%',
       translatedText: 'Hello World',
+      sourceBytesBase64: Buffer.from('$jHello@World%', 'ascii').toString('base64'),
       sourceFilePath: 'START.BIN',
       status: 'final',
       notes: '',
@@ -240,6 +242,7 @@ test('Sega CD patch export blocks known packed no-go files', () => {
       encoding: 'ascii',
       sourceText: 'HELLO',
       translatedText: 'HI',
+      sourceBytesBase64: Buffer.from('HELLO', 'ascii').toString('base64'),
       sourceFilePath: 'MESS.DAT',
       status: 'final',
       notes: '',
@@ -249,6 +252,27 @@ test('Sega CD patch export blocks known packed no-go files', () => {
 
   assert.equal(script.entries[0].patchable, false);
   assert.match(script.entries[0].reason, /MESS\.DAT is marked no-go/);
+});
+
+test('clean patch export refuses patchable entries without a source fingerprint', () => {
+  const script = buildPatchScript('DiskScribe2026', 'disc.iso', 'disc.iso', [
+    {
+      id: 'unverified',
+      sourcePath: 'disc.iso',
+      mode: 'raw',
+      start: 0,
+      end: 3,
+      encoding: 'ascii',
+      sourceText: 'TEXT',
+      translatedText: 'MENU',
+      status: 'final',
+      notes: '',
+      updatedAt: ''
+    }
+  ]);
+
+  assert.equal(script.entries[0].patchable, false);
+  assert.match(script.entries[0].reason, /Source fingerprint is required/);
 });
 
 test('clean patch applier verifies fingerprint before writing', async () => {
@@ -308,6 +332,101 @@ test('clean patch applier rejects fingerprint mismatch without writing', async (
   assert.equal(await fs.readFile(imagePath, 'ascii'), 'DIFFERENT!');
 });
 
+test('clean patch applier rejects entries without a source fingerprint', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
+  const imagePath = path.join(dir, 'sample.iso');
+  await fs.writeFile(imagePath, Buffer.from('ORIGINAL!!', 'ascii'));
+
+  const result = await applyCleanPatchEntry(imagePath, {
+    id: 'unverified',
+    sourcePath: 'sample.iso',
+    mode: 'raw',
+    start: 0,
+    end: 7,
+    encoding: 'ascii',
+    translatedText: 'PATCH',
+    replacementBytes: [0x50, 0x41, 0x54, 0x43, 0x48],
+    byteLength: 8,
+    fitsOriginalRange: true,
+    patchable: true
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.match(result.reason, /valid source fingerprint/);
+  assert.equal(await fs.readFile(imagePath, 'ascii'), 'ORIGINAL!!');
+});
+
+test('clean patch applier rejects fingerprints that cover only part of a patch range', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-partial-fingerprint-'));
+  const imagePath = path.join(dir, 'sample.iso');
+  await fs.writeFile(imagePath, Buffer.from('ORIGINAL!!', 'ascii'));
+
+  const result = await applyCleanPatchEntry(imagePath, {
+    id: 'partial-fingerprint',
+    sourcePath: 'sample.iso',
+    mode: 'raw',
+    start: 0,
+    end: 7,
+    encoding: 'ascii',
+    translatedText: 'PATCH',
+    replacementBytes: [0x50, 0x41, 0x54, 0x43, 0x48],
+    byteLength: 8,
+    sourceVerification: {
+      algorithm: 'fnv1a32',
+      byteLength: 1,
+      hash: hashFnv1a32Buffer(Buffer.from('O', 'ascii'))
+    },
+    fitsOriginalRange: true,
+    patchable: true
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.match(result.reason, /full patch range/);
+  assert.equal(await fs.readFile(imagePath, 'ascii'), 'ORIGINAL!!');
+});
+
+test('clean patch script rejects unverified entries without copying source images', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-unverified-'));
+  const sourcePath = path.join(dir, 'disc.iso');
+  const outputFolder = path.join(dir, 'patched');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [{
+        id: 'unverified-script',
+        sourcePath: 'disc.iso',
+        mode: 'raw',
+        start: 0,
+        end: 4,
+        encoding: 'ascii',
+        translatedText: 'BYE',
+        replacementBytes: [0x42, 0x59, 0x45],
+        byteLength: 5,
+        fitsOriginalRange: true,
+        patchable: true
+      }]
+    },
+    [sourcePath],
+    outputFolder
+  );
+
+  assert.equal(report.appliedCount, 0);
+  assert.equal(report.skippedCount, 1);
+  await assert.rejects(fs.access(path.join(outputFolder, 'disc.iso')));
+});
+
 test('clean patch applier applies multi-file scripts and reports invalid entries', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-'));
   const sourceA = path.join(dir, 'disc-a.iso');
@@ -358,6 +477,11 @@ test('clean patch applier applies multi-file scripts and reports invalid entries
           translatedText: 'TEXT',
           replacementBytes: [0x54, 0x45, 0x58, 0x54],
           byteLength: 4,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 4,
+            hash: hashFnv1a32Buffer(Buffer.from('DDDD', 'ascii'))
+          },
           fitsOriginalRange: true,
           patchable: true
         },
@@ -395,6 +519,116 @@ test('clean patch applier applies multi-file scripts and reports invalid entries
     JSON.parse(await fs.readFile(path.join(outputFolder, 'patch-report.json'), 'utf8')),
     JSON.parse(JSON.stringify(report))
   );
+});
+
+test('clean patch applier distinguishes selected sources with duplicate basenames by fingerprint', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-duplicate-name-'));
+  const firstFolder = path.join(dir, 'disc-one');
+  const secondFolder = path.join(dir, 'disc-two');
+  const outputFolder = path.join(dir, 'patched');
+  await fs.mkdir(firstFolder);
+  await fs.mkdir(secondFolder);
+  const firstSource = path.join(firstFolder, 'disc.iso');
+  const secondSource = path.join(secondFolder, 'disc.iso');
+  await fs.writeFile(firstSource, Buffer.from('AAAA1111', 'ascii'));
+  await fs.writeFile(secondSource, Buffer.from('BBBB2222', 'ascii'));
+
+  const entries = [
+    { id: 'one', original: 'AAAA', replacement: 'MENU' },
+    { id: 'two', original: 'BBBB', replacement: 'TEXT' }
+  ].map(({ id, original, replacement }) => ({
+    id,
+    sourcePath: 'disc.iso',
+    mode: 'raw',
+    start: 0,
+    end: 3,
+    encoding: 'ascii',
+    translatedText: replacement,
+    replacementBytes: Array.from(Buffer.from(replacement, 'ascii')),
+    byteLength: 4,
+    sourceVerification: {
+      algorithm: 'fnv1a32',
+      byteLength: 4,
+      hash: hashFnv1a32Buffer(Buffer.from(original, 'ascii'))
+    },
+    fitsOriginalRange: true,
+    patchable: true
+  }));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'same-name-discs',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries
+    },
+    [firstSource, secondSource],
+    outputFolder
+  );
+
+  assert.equal(report.appliedCount, 2);
+  assert.equal(report.skippedCount, 0);
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc.iso'), 'ascii'), 'MENU1111');
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc-1.iso'), 'ascii'), 'TEXT2222');
+});
+
+test('clean patch applier does not overwrite pre-existing numbered output files', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-collision-'));
+  const sourcePath = path.join(dir, 'disc.iso');
+  const outputFolder = path.join(dir, 'patched');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+  await fs.mkdir(outputFolder);
+  await fs.writeFile(path.join(outputFolder, 'disc.iso'), Buffer.from('KEEP-BASE', 'ascii'));
+  await fs.writeFile(path.join(outputFolder, 'disc-1.iso'), Buffer.from('KEEP-ONE', 'ascii'));
+
+  const report = await applyCleanPatchScriptToImages(
+    {
+      appName: 'DiskScribe2026',
+      patchVersion: 1,
+      sourcePath: 'disc.iso',
+      sourceName: 'disc.iso',
+      exportedAt: '',
+      publicSafe: true,
+      contents: {
+        includesOriginalSourceText: false,
+        includesOriginalSourceBytes: false,
+        includesReplacementBytes: true
+      },
+      entries: [{
+        id: 'collision',
+        sourcePath: 'disc.iso',
+        mode: 'raw',
+        start: 0,
+        end: 4,
+        encoding: 'ascii',
+        translatedText: 'BYE',
+        replacementBytes: [0x42, 0x59, 0x45],
+        byteLength: 5,
+        sourceVerification: {
+          algorithm: 'fnv1a32',
+          byteLength: 5,
+          hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+        },
+        fitsOriginalRange: true,
+        patchable: true
+      }]
+    },
+    [sourcePath],
+    outputFolder
+  );
+
+  assert.equal(report.appliedCount, 1);
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc.iso'), 'ascii'), 'KEEP-BASE');
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc-1.iso'), 'ascii'), 'KEEP-ONE');
+  assert.equal(await fs.readFile(path.join(outputFolder, 'disc-2.iso'), 'ascii'), 'BYE  !!!');
 });
 
 test('clean patch CLI applies a patch and writes a report', async () => {
@@ -526,6 +760,39 @@ test('clean patch dry-run validates without writing output files', async () => {
   await assert.rejects(fs.access(outputFolder));
 });
 
+test('clean patch dry-run validates a read-only source file', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-readonly-'));
+  const sourcePath = path.join(dir, 'disc.iso');
+  await fs.writeFile(sourcePath, Buffer.from('HELLO!!!', 'ascii'));
+  await fs.chmod(sourcePath, 0o444);
+
+  try {
+    const result = await applyCleanPatchEntry(sourcePath, {
+      id: 'read-only',
+      sourcePath: 'disc.iso',
+      mode: 'raw',
+      start: 0,
+      end: 4,
+      encoding: 'ascii',
+      translatedText: 'BYE',
+      replacementBytes: [0x42, 0x59, 0x45],
+      byteLength: 5,
+      sourceVerification: {
+        algorithm: 'fnv1a32',
+        byteLength: 5,
+        hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+      },
+      fitsOriginalRange: true,
+      patchable: true
+    }, { dryRun: true });
+
+    assert.deepEqual(result, { status: 'validated', verified: true });
+    assert.equal(await fs.readFile(sourcePath, 'ascii'), 'HELLO!!!');
+  } finally {
+    await fs.chmod(sourcePath, 0o666);
+  }
+});
+
 test('clean patch applier rejects unsupported future patch versions without copying sources', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'diskscribe-clean-patch-version-'));
   const sourcePath = path.join(dir, 'disc.iso');
@@ -556,6 +823,11 @@ test('clean patch applier rejects unsupported future patch versions without copy
           translatedText: 'BYE',
           replacementBytes: [0x42, 0x59, 0x45],
           byteLength: 5,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 5,
+            hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+          },
           fitsOriginalRange: true,
           patchable: true
         }
@@ -605,6 +877,11 @@ test('clean patch CLI dry-run validates without requiring an output folder', asy
           translatedText: 'BYE',
           replacementBytes: [0x42, 0x59, 0x45],
           byteLength: 5,
+          sourceVerification: {
+            algorithm: 'fnv1a32',
+            byteLength: 5,
+            hash: hashFnv1a32Buffer(Buffer.from('HELLO', 'ascii'))
+          },
           fitsOriginalRange: true,
           patchable: true
         }
