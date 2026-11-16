@@ -10,7 +10,7 @@ import type {
   VsCodeApi
 } from './rendererTypes';
 
-const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|hdm|hdd|fdi|fdd|cue|iso)$/i;
+const SUPPORTED_DISK_EXTENSIONS = /\.(hdi|nhd|d88|dsk|hdm|hdd|fdi|fdd|cue|iso|md|gen)$/i;
 const STATUS_TONE_CLASSES = ['tone-info', 'tone-success', 'tone-warning', 'tone-error', 'tone-busy'];
 
 declare global {
