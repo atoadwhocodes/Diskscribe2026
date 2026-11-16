@@ -414,7 +414,7 @@ async function openDisk(session: DesktopSession, requestedPath: string): Promise
   }
 
   if (!isSupportedDiskPath(normalizedPath)) {
-    postError(session, 'Unsupported extension. Supported types: .hdi, .nhd, .d88, .hdm, .hdd, .fdi, .fdd, .cue, .iso.');
+    postError(session, 'Unsupported extension. Supported types: .hdi, .nhd, .d88, .dsk, .hdm, .hdd, .fdi, .fdd, .cue, .iso, .md, .gen.');
     return;
   }
 
