@@ -31,7 +31,7 @@ const MBR_TYPE_LABELS = new Map<number, string>([
   [0xef, 'EFI System']
 ]);
 
-export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Generic';
+export type ParserKind = 'HDI' | 'NHD' | 'D88' | 'DSK' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Generic';
 
 export interface PartitionEntry {
   index: number;
@@ -161,30 +161,59 @@ export function parseD88(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
   }
   headerSummary.push(`File size: ${imageSizeBytes.toLocaleString()} bytes`);
 
-  const firstTrackOffset = readUint32LE(imagePrefix, 0x20);
-  let dataOffsetBytes = D88_HEADER_SIZE;
-  if (firstTrackOffset > 0) {
-    dataOffsetBytes = firstTrackOffset;
-    headerSummary.push(`First track offset: ${firstTrackOffset.toLocaleString()} bytes`);
+  // D88 track pointers lead to framed sector records rather than a flat disk.
+  const trackOffsets: number[] = [];
+  if (imagePrefix.length >= D88_HEADER_SIZE) {
+    for (let index = 0; index < 164; index += 1) {
+      const offset = readUint32LE(imagePrefix, 0x20 + index * 4);
+      if (offset === 0) {
+        continue;
+      }
+      if (offset < D88_HEADER_SIZE || offset + 16 > imageSizeBytes) {
+        parserNotes.push(`D88 track ${index} points outside the image's sector-record area.`);
+        continue;
+      }
+      trackOffsets.push(offset);
+    }
   } else {
-    parserNotes.push('Track table offset is empty; defaulted to D88 header size.');
+    parserNotes.push('D88 header is truncated; track table unavailable.');
   }
-
-  const partitions = parseMbrPartitions(imagePrefix, dataOffsetBytes, SECTOR_SIZE);
-  if (partitions.length === 0) {
-    parserNotes.push('No MBR partition table detected in first D88 track data.');
-    parserNotes.push('Most floppy images use a filesystem boot sector directly without a partition table.');
+  const firstTrackOffset = trackOffsets.length > 0 ? Math.min(...trackOffsets) : 0;
+  headerSummary.push(`Declared tracks: ${trackOffsets.length}`);
+  if (firstTrackOffset > 0) {
+    headerSummary.push(`First track record: ${firstTrackOffset.toLocaleString()} bytes`);
+    if (firstTrackOffset + 16 <= imagePrefix.length) {
+      const sectorCount = readUint16LE(imagePrefix, firstTrackOffset + 4);
+      const actualSectorBytes = readUint16LE(imagePrefix, firstTrackOffset + 14);
+      const cylinder = imagePrefix[firstTrackOffset];
+      const head = imagePrefix[firstTrackOffset + 1];
+      const sectorNumber = imagePrefix[firstTrackOffset + 2];
+      headerSummary.push(
+        `First sector C/H/R: ${cylinder}/${head}/${sectorNumber}; ${actualSectorBytes} data bytes; ${sectorCount} sector record(s) in track`
+      );
+      if (!isValidSectorSize(actualSectorBytes) ||
+          firstTrackOffset + 16 + actualSectorBytes > imageSizeBytes) {
+        parserNotes.push('First D88 sector declares an invalid or truncated data payload.');
+      }
+    } else {
+      parserNotes.push('First D88 sector header lies outside the preview window.');
+    }
   }
+  if (diskSizeFromHeader > imageSizeBytes) {
+    parserNotes.push('D88 declared disk size exceeds the supplied file length.');
+  }
+  parserNotes.push('D88 is shared by PC-88 and PC-98; machine and filesystem are not determined by extension alone.');
+  parserNotes.push('D88 sectors have headers and may vary in size. Linear FAT/MBR browsing is disabled pending an indexed D88 sector decoder.');
 
   return {
     parserKind: 'D88',
     parserId: 'parseD88',
     sectorSize: SECTOR_SIZE,
-    dataOffsetBytes,
+    dataOffsetBytes: 0,
     headerSummary,
     parserNotes,
-    partitions,
-    filesystems: detectFilesystems(imagePrefix, dataOffsetBytes, partitions)
+    partitions: [],
+    filesystems: []
   };
 }
 
@@ -234,6 +263,38 @@ export function parseHDM(imagePrefix: Uint8Array, imageSizeBytes: number): Parse
   };
 }
 
+/**
+ * Raw DSK images are used on several Japanese computer families.
+ * Metadata is deliberately conservative: extension is not a machine ID.
+ */
+export function parseDSK(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
+  const knownGeometries = new Map<number, string>([
+    [327680, '40 cylinders, 2 sides, 16 sectors/track, 256 bytes/sector'],
+    [655360, '80 cylinders, 2 sides, 16 sectors/track, 256 bytes/sector'],
+    [737280, '80 cylinders, 2 sides, 9 sectors/track, 512 bytes/sector'],
+    [1261568, '77 cylinders, 2 sides, 8 sectors/track, 1024 bytes/sector']
+  ]);
+  const bpb = parseBootSectorBpb(imagePrefix, 0);
+  const sectorSize = bpb?.bytesPerSector ?? (imageSizeBytes === 327680 || imageSizeBytes === 655360 ? 256 : imageSizeBytes === 1261568 ? 1024 : SECTOR_SIZE);
+  return {
+    parserKind: 'DSK',
+    parserId: 'parseDSK',
+    sectorSize,
+    dataOffsetBytes: 0,
+    headerSummary: [
+      `File size: ${imageSizeBytes.toLocaleString()} bytes`,
+      `Raw floppy geometry candidate: ${knownGeometries.get(imageSizeBytes) || 'unrecognized layout'}`
+    ],
+    parserNotes: [
+      'Raw DSK is not PC-88-specific; machine and filesystem require verification.',
+      'N88-BASIC disk organization and other non-FAT directory structures are not yet decoded.',
+      'File-system extraction is disabled for DSK until a format-specific decoder is verified.'
+    ],
+    partitions: [],
+    filesystems: []
+  };
+}
+
 export function parseHDD(imagePrefix: Uint8Array, imageSizeBytes: number): ParsedDiskImage {
   const parsed = parseHDI(imagePrefix, imageSizeBytes);
   return {
@@ -277,6 +338,9 @@ export function parseGenericByExtension(
   }
   if (extension === '.d88') {
     return parseD88(imagePrefix, imageSizeBytes);
+  }
+  if (extension === '.dsk') {
+    return parseDSK(imagePrefix, imageSizeBytes);
   }
   if (extension === '.hdm') {
     return parseHDM(imagePrefix, imageSizeBytes);
