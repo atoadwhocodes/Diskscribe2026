@@ -97,3 +97,48 @@ test('public desktop summary opens linear Genesis ROM without pretending it has 
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+
+test('clean patch normalizer refuses partial, empty and unsafe patch documents', () => {
+  const { normalizeCleanPatchScript } = require('../src/core/translationPatchApply');
+  const base = {
+    appName: 'DiskScribe2026',
+    patchVersion: 1,
+    publicSafe: true,
+    contents: {
+      includesOriginalSourceText: false,
+      includesOriginalSourceBytes: false,
+      includesReplacementBytes: true
+    },
+    entries: [{
+      id: 'safe',
+      sourcePath: 'disc.iso',
+      mode: 'raw',
+      start: 0,
+      end: 3,
+      encoding: 'ascii',
+      translatedText: 'OK',
+      replacementBytes: [79, 75],
+      byteLength: 4,
+      patchable: true,
+      fitsOriginalRange: true
+    }]
+  };
+  assert.equal(normalizeCleanPatchScript(base).entries.length, 1);
+  assert.equal(normalizeCleanPatchScript({ ...base, entries: [] }), undefined);
+  assert.equal(normalizeCleanPatchScript({ ...base, patchVersion: 0 }), undefined);
+  assert.equal(normalizeCleanPatchScript({ ...base, patchVersion: 1.5 }), undefined);
+  assert.equal(normalizeCleanPatchScript({ ...base, entries: [...base.entries, { start: -1 }] }), undefined);
+  assert.equal(normalizeCleanPatchScript({
+    ...base,
+    entries: [{ ...base.entries[0], start: 0.1 }]
+  }), undefined);
+  assert.equal(normalizeCleanPatchScript({
+    ...base,
+    entries: [{ ...base.entries[0], replacementBytes: [79, '75'] }]
+  }), undefined);
+  assert.equal(normalizeCleanPatchScript({
+    ...base,
+    entries: [{ ...base.entries[0], end: 17 * 1024 * 1024 }]
+  }), undefined);
+});
