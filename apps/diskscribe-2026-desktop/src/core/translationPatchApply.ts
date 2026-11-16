@@ -1,5 +1,5 @@
 import * as iconv from 'iconv-lite';
-import { existsSync, promises as fs } from 'node:fs';
+import { constants as fsConstants, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import {
   encodePatchText,
@@ -24,7 +24,7 @@ export interface CleanPatchApplyOptions {
 const SUPPORTED_CLEAN_PATCH_VERSION = 1;
 
 export function normalizeCleanPatchScript(rawScript: unknown): TranslationPatchScript | undefined {
-  if (!isRecord(rawScript) || rawScript.publicSafe !== true || !Array.isArray(rawScript.entries)) {
+  if (!isRecord(rawScript) || rawScript.publicSafe !== true || !Array.isArray(rawScript.entries) || rawScript.entries.length === 0) {
     return undefined;
   }
   if (!isRecord(rawScript.contents) || rawScript.contents.includesOriginalSourceText !== false) {
@@ -37,16 +37,20 @@ export function normalizeCleanPatchScript(rawScript: unknown): TranslationPatchS
   const entries: TranslationPatchEntry[] = [];
   for (const rawEntry of rawScript.entries) {
     const entry = normalizeCleanPatchEntry(rawEntry);
-    if (entry) {
-      entries.push(entry);
+    if (!entry) {
+      return undefined;
     }
+    entries.push(entry);
   }
 
-  const patchVersion = Number(rawScript.patchVersion);
+  const patchVersion = rawScript.patchVersion;
+  if (typeof patchVersion !== 'number' || !Number.isSafeInteger(patchVersion) || patchVersion < 1) {
+    return undefined;
+  }
 
   return {
     appName: typeof rawScript.appName === 'string' ? rawScript.appName : 'DiskScribe2026',
-    patchVersion: Number.isInteger(patchVersion) ? patchVersion : 1,
+    patchVersion,
     sourcePath: typeof rawScript.sourcePath === 'string' ? rawScript.sourcePath : '',
     sourceName: typeof rawScript.sourceName === 'string' ? rawScript.sourceName : 'clean-translation-patch',
     exportedAt: typeof rawScript.exportedAt === 'string' ? rawScript.exportedAt : '',
@@ -372,18 +376,22 @@ async function sourcePathMatchesVerification(sourcePath: string, entry: Translat
 }
 
 async function copySourceToUniqueOutput(sourcePath: string, outputFolder: string): Promise<string> {
-  const outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath));
-  await fs.copyFile(sourcePath, outputPath);
-  return outputPath;
-}
-
-function uniqueOutputPath(outputFolder: string, fileName: string): string {
-  for (let index = 0; ; index += 1) {
-    const candidate = path.join(outputFolder, uniqueOutputFileName(fileName, index));
-    if (!fileExists(candidate)) {
-      return candidate;
+  // COPYFILE_EXCL makes the name reservation atomic with file creation.
+  // An existsSync check followed by a normal copy can overwrite a file
+  // concurrently created by another patch process.
+  for (let index = 0; index < 100000; index += 1) {
+    const outputPath = path.join(outputFolder, uniqueOutputFileName(path.basename(sourcePath), index));
+    try {
+      await fs.copyFile(sourcePath, outputPath, fsConstants.COPYFILE_EXCL);
+      return outputPath;
+    } catch (error: unknown) {
+      if (isRecord(error) && error.code === 'EEXIST') {
+        continue;
+      }
+      throw error;
     }
   }
+  throw new Error('Unable to allocate a unique patch output name.');
 }
 
 function uniqueOutputFileName(fileName: string, index: number): string {
@@ -393,10 +401,6 @@ function uniqueOutputFileName(fileName: string, index: number): string {
   }
   const parsed = path.parse(sanitized);
   return `${parsed.name}-${index}${parsed.ext}`;
-}
-
-function fileExists(filePath: string): boolean {
-  return existsSync(filePath);
 }
 
 function sanitizeFileName(fileName: string): string {
@@ -415,14 +419,19 @@ function normalizeCleanPatchEntry(rawEntry: unknown): TranslationPatchEntry | un
   if (!isRecord(rawEntry)) {
     return undefined;
   }
-  const start = Math.floor(Number(rawEntry.start));
-  const end = Math.floor(Number(rawEntry.end));
-  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start) {
+  const start = rawEntry.start;
+  const end = rawEntry.end;
+  if (typeof start !== 'number' || typeof end !== 'number' ||
+      !Number.isSafeInteger(start) || !Number.isSafeInteger(end) ||
+      start < 0 || end < start || end - start + 1 > 16 * 1024 * 1024) {
     return undefined;
   }
   const replacementBytes = Array.isArray(rawEntry.replacementBytes)
-    ? rawEntry.replacementBytes.map((byte) => Number(byte))
+    ? rawEntry.replacementBytes
     : undefined;
+  if (replacementBytes && replacementBytes.some((byte) => typeof byte !== 'number' || !Number.isInteger(byte) || byte < 0 || byte > 255)) {
+    return undefined;
+  }
   const rawByteLength = Number(rawEntry.byteLength);
   return {
     id: typeof rawEntry.id === 'string' ? rawEntry.id : `patch:${start.toString(16)}-${end.toString(16)}`,
