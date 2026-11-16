@@ -640,7 +640,9 @@ async function handleHexRead(
     return;
   }
 
-  const mode = normalizeMode(message.mode, session.mode);
+  const mode = session.summary
+    ? chooseValidMode(session.summary, normalizeMode(message.mode, session.mode))
+    : normalizeMode(message.mode, session.mode);
   session.mode = mode;
 
   if (!session.summary || !session.reader) {
@@ -680,7 +682,9 @@ async function handleHexJump(
     return;
   }
 
-  const mode = normalizeMode(message.mode, session.mode);
+  const mode = session.summary
+    ? chooseValidMode(session.summary, normalizeMode(message.mode, session.mode))
+    : normalizeMode(message.mode, session.mode);
   const requestedOffset = Number.isFinite(message.offset) ? Math.floor(Number(message.offset)) : 0;
   const offset = clampViewOffset(session, mode, requestedOffset);
   postJumpAck(session, mode, offset);
@@ -694,7 +698,9 @@ async function handleHexSelect(
     return;
   }
 
-  const mode = normalizeMode(message.mode, session.mode);
+  const mode = session.summary
+    ? chooseValidMode(session.summary, normalizeMode(message.mode, session.mode))
+    : normalizeMode(message.mode, session.mode);
   const start = clampViewOffset(
     session,
     mode,
@@ -725,7 +731,9 @@ async function handleHexExtract(
     return;
   }
 
-  const mode = normalizeMode(message.mode, session.mode);
+  const mode = session.summary
+    ? chooseValidMode(session.summary, normalizeMode(message.mode, session.mode))
+    : normalizeMode(message.mode, session.mode);
   const start = clampViewOffset(
     session,
     mode,
@@ -745,6 +753,14 @@ async function jumpToLba(session: DesktopSession, lba: number): Promise<void> {
     postRendererMessage(session, {
       type: 'desktop.notice',
       message: 'Open a disk image before jumping to LBA.'
+    });
+    return;
+  }
+
+  if (isUnmappedContainer(session.summary)) {
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: 'LBA navigation is unavailable for ROMs and undecoded floppy containers; use raw byte offsets.'
     });
     return;
   }
@@ -784,6 +800,14 @@ async function copyLba(session: DesktopSession): Promise<void> {
     postRendererMessage(session, {
       type: 'desktop.notice',
       message: 'No byte selection to copy.'
+    });
+    return;
+  }
+
+  if (isUnmappedContainer(session.summary)) {
+    postRendererMessage(session, {
+      type: 'desktop.notice',
+      message: 'No logical LBA mapping exists for this ROM or undecoded floppy container.'
     });
     return;
   }
@@ -1655,7 +1679,14 @@ function toDiskOffset(session: DesktopSession, mode: HexMode, offset: number): n
   return diskOffset >= 0 ? diskOffset : undefined;
 }
 
+function isUnmappedContainer(summary: DiskSummary): boolean {
+  return summary.format === 'Mega Drive' || summary.format === 'D88' || summary.format === 'DSK';
+}
+
 function chooseValidMode(summary: DiskSummary, requestedMode: HexMode): HexMode {
+  if (isUnmappedContainer(summary)) {
+    return 'raw';
+  }
   if (requestedMode === 'disk') {
     const diskLength = Math.max(0, summary.sizeBytes - summary.dataOffsetBytes);
     if (diskLength <= 0 && summary.sizeBytes > 0) {
