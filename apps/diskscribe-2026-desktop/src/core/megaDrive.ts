@@ -20,7 +20,7 @@ export interface MegaDriveRomHeader {
 function readAscii(bytes: Uint8Array, start: number, end: number): string {
   return Buffer.from(bytes.subarray(start, end))
     .toString('latin1')
-    .replace(/[\x00-\x1f\x7f-\xff]/g, ' ')
+    .replace(/[^ -~]/g, ' ')
     .trim();
 }
 
