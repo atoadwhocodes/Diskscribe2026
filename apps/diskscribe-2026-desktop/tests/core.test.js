@@ -200,8 +200,11 @@ test('D88 parser defaults safely when the track table is empty', () => {
 
   const parsed = parseD88(bytes, bytes.length);
 
-  assert.equal(parsed.dataOffsetBytes, 0x2b0);
-  assert.match(parsed.parserNotes.join('\n'), /Track table offset is empty/);
+  assert.equal(parsed.dataOffsetBytes, 0);
+  assert.equal(parsed.filesystems.length, 0);
+  assert.equal(parsed.partitions.length, 0);
+  assert.match(parsed.headerSummary.join('\n'), /Declared tracks: 0/);
+  assert.match(parsed.parserNotes.join('\n'), /Linear FAT\/MBR browsing is disabled/);
 });
 
 test('Sega CD cue parser reads MODE1 ISO9660 file table and extracts files', async () => {
