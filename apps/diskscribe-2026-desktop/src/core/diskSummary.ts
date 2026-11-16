@@ -5,10 +5,11 @@ import * as iconv from 'iconv-lite';
 import { parseGenericByExtension, type FileSystemInfo, type PartitionEntry } from './diskParsers';
 import { parseFatDirectoryTree, type FatDirectoryEntry } from './fat';
 import { parseSegaCdCue, parseStandaloneIso, type IsoImageSummary, type SegaCdImageSummary } from './segaCd';
+import { inspectMegaDriveRom, type MegaDriveRomHeader } from './megaDrive';
 
 const MAX_PREVIEW_BYTES = 262144;
 const MAX_RAW_ANALYSIS_BYTES = 16 * 1024 * 1024;
-const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.hdm', '.hdd', '.fdi', '.fdd', '.cue', '.iso']);
+const SUPPORTED_EXTENSIONS = new Set(['.hdi', '.nhd', '.d88', '.dsk', '.hdm', '.hdd', '.fdi', '.fdd', '.cue', '.iso', '.md', '.gen']);
 
 const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 2, sectorsPerTrack: 8 },
@@ -22,7 +23,7 @@ const COMMON_GEOMETRIES: Array<{ heads: number; sectorsPerTrack: number }> = [
   { heads: 16, sectorsPerTrack: 63 }
 ];
 
-export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Sega CD' | 'ISO9660' | 'Unknown';
+export type DiskFormat = 'HDI' | 'NHD' | 'D88' | 'DSK' | 'HDM' | 'HDD' | 'FDI' | 'FDD' | 'Sega CD' | 'ISO9660' | 'Mega Drive' | 'Unknown';
 
 export interface GeometryGuess {
   cylinders: number;
@@ -48,6 +49,7 @@ export interface DiskSummary {
   rootDirectoryEntries: RootDirectoryEntry[];
   rawAnalysis?: RawDiskAnalysis;
   segaCd?: SegaCdSummary;
+  megaDrive?: MegaDriveRomHeader;
   hexPreview: string;
   shiftJisPreview: string;
   notes: string[];
@@ -122,6 +124,9 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
   if (extension === '.iso') {
     return buildStandaloneIsoDiskSummary(filePath);
   }
+  if (extension === '.md' || extension === '.gen') {
+    return buildMegaDriveRomSummary(filePath);
+  }
 
   const stat = await fs.stat(filePath);
   const previewBytes = await readPrefix(filePath, Math.min(MAX_PREVIEW_BYTES, stat.size));
@@ -186,6 +191,43 @@ export async function buildDiskSummaryFromPath(filePath: string): Promise<DiskSu
     hexPreview: toHexPreview(previewBytes, 16, 16),
     shiftJisPreview: decodeShiftJisPreview(previewBytes.subarray(0, 1024)),
     notes
+  };
+}
+
+async function buildMegaDriveRomSummary(filePath: string): Promise<DiskSummary> {
+  const stat = await fs.stat(filePath);
+  const prefix = await readPrefix(filePath, Math.min(stat.size, MAX_PREVIEW_BYTES));
+  const megaDrive = inspectMegaDriveRom(prefix, stat.size);
+  return {
+    uri: pathToFileURL(filePath).toString(),
+    fileName: path.basename(filePath),
+    extension: path.extname(filePath).toLowerCase(),
+    format: 'Mega Drive',
+    parserId: 'inspectMegaDriveRom',
+    dataOffsetBytes: 0,
+    headerSummary: [
+      `Hardware: ${megaDrive.hardware}`,
+      `Domestic title: ${megaDrive.domesticTitle || '(empty)'}`,
+      `Overseas title: ${megaDrive.overseasTitle || '(empty)'}`,
+      `Serial: ${megaDrive.serial || '(empty)'}`,
+      `Region: ${megaDrive.region || '(empty)'}`,
+      `Header checksum: 0x${megaDrive.checksum.toString(16).padStart(4, '0')}`,
+      `68000 initial stack pointer: 0x${megaDrive.initialStackPointer.toString(16).padStart(8, '0')}`,
+      `68000 reset vector: 0x${megaDrive.resetVector.toString(16).padStart(8, '0')}`,
+      `ROM address range: 0x${megaDrive.romStart.toString(16)}-0x${megaDrive.romEnd.toString(16)}`
+    ],
+    sizeBytes: stat.size,
+    // The shared disk-view model requires a numeric sector size; for this ROM
+    // a logical unit is one byte, NOT a floppy/CD sector or a physical LBA.
+    sectorSize: 1,
+    totalSectors: stat.size,
+    partitions: [],
+    filesystems: [],
+    rootDirectoryEntries: [],
+    megaDrive,
+    hexPreview: toHexPreview(prefix, 16, 16),
+    shiftJisPreview: decodeShiftJisPreview(prefix.subarray(0, 1024)),
+    notes: megaDrive.notes
   };
 }
 
@@ -279,7 +321,7 @@ async function buildSegaCdDiskSummary(filePath: string): Promise<DiskSummary> {
 
 export function formatSummaryAsText(summary: DiskSummary): string {
   const lines: string[] = [
-    `${summary.format === 'Sega CD' || summary.format === 'ISO9660' ? `${summary.format} Image Report` : 'PC-98 Virtual Disk Report'}`,
+    summary.format === 'Mega Drive' ? 'Mega Drive / Genesis ROM Inspection' : summary.format === 'Sega CD' || summary.format === 'ISO9660' ? `${summary.format} Image Report` : 'Legacy Disk Image Report',
     `Source URI: ${summary.uri}`,
     `File: ${summary.fileName}`,
     `Extension: ${summary.extension}`,
@@ -287,8 +329,8 @@ export function formatSummaryAsText(summary: DiskSummary): string {
     `Parser: ${summary.parserId}`,
     `Data Offset: ${summary.dataOffsetBytes.toLocaleString()} bytes`,
     `Size: ${summary.sizeBytes.toLocaleString()} bytes`,
-    `Sector Size: ${summary.sectorSize.toLocaleString()} bytes`,
-    `Total Sectors: ${summary.totalSectors.toLocaleString()}`
+    summary.format === 'Mega Drive' ? 'Addressing: raw bytes (no physical disk sectors)' : `Sector Size: ${summary.sectorSize.toLocaleString()} bytes`,
+    summary.format === 'Mega Drive' ? `ROM Bytes: ${summary.sizeBytes.toLocaleString()}` : `Total Sectors: ${summary.totalSectors.toLocaleString()}`
   ];
 
   if (summary.geometry) {
@@ -546,6 +588,9 @@ function detectFormat(extension: string): DiskFormat {
   if (extension === '.d88') {
     return 'D88';
   }
+  if (extension === '.dsk') {
+    return 'DSK';
+  }
   if (extension === '.hdm') {
     return 'HDM';
   }
@@ -563,6 +608,9 @@ function detectFormat(extension: string): DiskFormat {
   }
   if (extension === '.iso') {
     return 'ISO9660';
+  }
+  if (extension === '.md' || extension === '.gen') {
+    return 'Mega Drive';
   }
   return 'Unknown';
 }
