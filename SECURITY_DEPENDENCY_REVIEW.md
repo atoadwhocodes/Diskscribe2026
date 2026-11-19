@@ -37,6 +37,8 @@ GitHub must rescan the default branch after an approved merge.
 - Explicitly group security updates as well as version updates. Limit ordinary
   npm update PRs to three and Actions update PRs to one. These limits do not
   suppress security alerts or impose the same limits on security update PRs.
+- Correct the existing version-group update types to `minor` and `patch`;
+  the previous `version-update:semver-*` values are invalid inside a group.
 
 Grouping semantics follow the
 [GitHub Dependabot reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference).

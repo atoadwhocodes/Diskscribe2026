@@ -15,8 +15,8 @@ updates:
       desktop-npm-dev:
         dependency-type: "development"
         update-types:
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
+          - "minor"
+          - "patch"
     ignore:
       - dependency-name: "*"
         update-types:
