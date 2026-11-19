@@ -2,7 +2,7 @@
 
 ## Audit evidence
 
-The November 18â€“19, 2026 review used the npm advisory service against the desktop
+The November 18-19, 2026 review used the npm advisory service against the desktop
 lockfile, including development and packaging dependencies:
 
 | Tree | Critical | High | Moderate | Affected packages |
@@ -54,7 +54,9 @@ Grouping semantics follow the
 - ESLint: passed with import checks enabled.
 - Windows application package: passed. The packaged main entry exists and
   packaged LICENSE and LEGAL.md exactly match source.
-- Windows Squirrel installer and full update package creation: passed.
+- Windows Squirrel installer/full update package: passed for the coordinated
+  toolchain upgrade. The final Express-only rebuild was interrupted in the
+  installer-maker stage before completion; that final installer is not verified.
 
 The local build uses an isolated cache because this machine's ordinary Electron
 cache path is not a directory. No repair or modification of that existing cache
