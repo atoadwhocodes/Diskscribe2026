@@ -9,15 +9,19 @@ export const HEX_SETTINGS = {
 export const DISK_IMAGE_FILTERS = [
   {
     name: 'Disk Images',
-    extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd', 'cue', 'iso']
+    extensions: ['hdi', 'nhd', 'd88', 'dsk', 'hdm', 'hdd', 'fdi', 'fdd', 'cue', 'iso', 'md', 'gen']
   },
   {
-    name: 'PC-98 Disk Images',
-    extensions: ['hdi', 'nhd', 'd88', 'hdm', 'hdd', 'fdi', 'fdd']
+    name: 'PC-88 / PC-98 Disk Images',
+    extensions: ['hdi', 'nhd', 'd88', 'dsk', 'hdm', 'hdd', 'fdi', 'fdd']
   },
   {
     name: 'Sega CD / ISO Images',
     extensions: ['cue', 'iso']
+  },
+  {
+    name: 'Mega Drive / Genesis ROM Images',
+    extensions: ['md', 'gen']
   }
 ];
 

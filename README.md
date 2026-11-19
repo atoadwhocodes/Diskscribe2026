@@ -2,7 +2,7 @@
 
 Status: alpha / work in progress.
 
-DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy disk images, with current support focused on PC-98 and Sega CD workflows.
+DiskScribe2026 is a desktop-only Electron application for inspecting and translating legacy media images. PC-98 and Sega CD remain the most developed workflows. PC-88-compatible floppy container inspection and linear Mega Drive / Genesis ROM header inspection are being added incrementally, without claiming full filesystem or disassembly support.
 
 ## Included Features
 
@@ -23,12 +23,16 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 - Save/load batch plans as JSON
 - Sega CD `.cue` support with MODE1/2352 Track 01 ISO9660 file listing
 - Standalone `.iso` ISO9660 file listing
+- Read-only `.d88` sector-record metadata inspection for PC-88/PC-98 floppy containers (not a decoded filesystem)
+- Read-only raw `.dsk` floppy geometry candidates (not an N88-BASIC filesystem decoder)
+- Read-only linear `.md` / `.gen` Mega Drive / Genesis 68000 ROM header inspection (not binary disassembly)
 - Extract files from Sega CD and standalone ISO9660 data tracks
 
 ## Supported Formats
 
-- Disk images: `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`
+- Disk images: `.hdi`, `.nhd`, `.d88`, `.dsk`, `.hdm`, `.hdd`, `.fdi`, `.fdd`
 - Sega CD images: `.cue` with MODE1/2352 data track and companion `.bin` files
+- Mega Drive / Genesis read-only ROM headers: linear `.md`, `.gen` (not `.smd`, generic `.bin`, or CD track `.bin`)
 - ISO9660 images: `.iso`
 - Extract output: `.bin` and original FAT filenames where available
 - Batch plans: `.json`
@@ -39,12 +43,14 @@ DiskScribe2026 is a desktop-only Electron application for inspecting and transla
 
 Current parsing and extraction support:
 
-- NEC PC-98 (FAT-oriented disk workflows via `.hdi`, `.nhd`, `.d88`, `.hdm`, `.hdd`, `.fdi`, `.fdd`)
+- NEC PC-98 (FAT-oriented disk workflows via `.hdi`, `.nhd`, `.hdm`, `.hdd`, `.fdi`, `.fdd`; D88 currently metadata only)
+- NEC PC-88 (D88 sector-record metadata and raw DSK inspection only; N88-BASIC and non-FAT file extraction not yet implemented)
 - Sega CD / Mega-CD (ISO9660 data track workflows via `.cue` + `.bin`, and standalone `.iso`)
+- Sega Mega Drive / Genesis (read-only 68000 ROM header inspection via linear `.md` / `.gen`)
 
 Roadmap systems (planned support list):
 
-- [JP] NEC PC-88
+- [JP] NEC PC-88 full sector-level and N88-BASIC file decoding (currently metadata-only)
 - [JP] Sharp X68000
 - [JP] Fujitsu FM TOWNS
 - [JP] Fujitsu FM-7 / FM-77AV
@@ -108,6 +114,17 @@ Validate without writing patched copies:
 ```bash
 npm run apply-clean-patch -- --dry-run --patch patch.json --source disc.iso
 ```
+
+
+## Architecture Direction and Boundaries
+
+- **PC-88**: Z80-compatible CPU-family analysis, N88-BASIC variants, machine-aware floppy layouts and Shift-JIS / ANK encodings belong in separate, tested adapters. A D88 filename is not evidence that a disk targets a particular computer.
+- **Mega Drive / Genesis**: the Motorola 68000 cartridge ROM header is separate from the Genesis Z80 sound processor. The new linear ROM inspector is read-only, and rejects images without the required SEGA header.
+- **Sega CD / Mega-CD**: extends the Mega Drive with a *second* 68000 (sub-CPU), CD drive, extra RAM and PCM hardware. CD track parsing is not the same as decoding a cartridge ROM; future 68000 disassembly should share opcode-decoding logic but use distinct address-space maps.
+- **Other Japanese and European computers**: target formats are research items only until real test fixtures and clean-room, independently reviewed decoders exist. See `FORMAT_ROADMAP.md`.
+- **Nintendo**: outside the DiskScribe compatibility roadmap at present. Do not bundle copyrighted firmware, game data, game binaries, or proprietary documentation in this repository.
+
+**Known limitations:** D88 currently exposes sector records as raw container bytes and does not perform logical-sector-to-file-offset mapping or FAT extraction. DSK geometry is provisional. Genesis `.md` is also used for Markdown files; the format signature is checked, and ordinary text documents are rejected. Raw `.bin`, SMD-interleaved files, Mega Drive assembly/disassembly, and Sega CD 68000 address-map interpretation are not implemented by this change.
 
 ## Development
 
