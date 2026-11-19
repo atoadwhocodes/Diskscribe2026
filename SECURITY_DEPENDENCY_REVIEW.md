@@ -2,7 +2,7 @@
 
 ## Audit evidence
 
-The November 18, 2026 review used the npm advisory service against the desktop
+The November 18â€“19, 2026 review used the npm advisory service against the desktop
 lockfile, including development and packaging dependencies:
 
 | Tree | Critical | High | Moderate | Affected packages |
@@ -24,6 +24,8 @@ GitHub must rescan the default branch after an approved merge.
 - Upgrade Electron to 45.4.1, Forge packages to 8.0.1 and Fuses to 2.1.3,
   with the coordinated lockfile refresh that removes the remaining affected
   download, extraction and packaging dependencies.
+- Refresh Express to 4.22.3, also covering the Express patch proposed by #46;
+  qs and the other affected transitive dependencies resolve to patched versions.
 - Require Node 22.13 or later within Node 22, matching Forge 8's minimum.
 - Point the application entry at `.webpack/main/index.cjs`, as required by
   Forge 8's webpack output.
