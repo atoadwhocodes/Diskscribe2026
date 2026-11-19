@@ -51,7 +51,7 @@ Public patch releases should use the clean export path. A clean patch export sho
 3. Offset ranges and byte lengths.
 4. Encodings and patch compatibility metadata.
 5. Replacement text or replacement bytes created by the translation project.
-6. Source-byte fingerprints or hashes for validation, when available.
+6. Full-range source-byte fingerprints or hashes for each patchable entry.
 7. Patch status, fit information, and nonproprietary notes.
 
 A clean patch export must not intentionally include:
@@ -71,7 +71,7 @@ Patched output should not be treated as a public release artifact unless the dis
 
 ## 8. Verification and Safety Controls
 
-Clean patch exports should support validation before patching. Where original source bytes are available in a private project, the clean export may include non-reversible fingerprints, hashes, byte lengths, and offset metadata so the patcher can verify that the user's source image appears to match the expected version.
+Clean patch exports should support validation before patching. Each patchable public entry must include a non-reversible fingerprint or hash covering its full replacement range, plus the byte length and offset metadata needed to verify that the user's source image appears to match the expected version.
 
 The clean export should avoid embedding the original bytes themselves. If an entry cannot be validated without including original material, the export should prefer a hash or mark the entry as requiring manual verification.
 
@@ -106,9 +106,10 @@ The codebase should preserve the following product boundaries:
 4. Strip `sourceText` from clean patch entries.
 5. Strip `sourceBytesBase64` and other original byte blobs from clean patch entries.
 6. Sanitize local source paths in clean patch exports.
-7. Include source verification hashes where useful and available.
+7. Include full-range source verification hashes for every patchable public entry.
 8. Keep patched disk generation local to the user's machine.
 9. Maintain tests proving that clean patch exports do not contain original source text or original source byte blobs.
+10. Require source verification fingerprints covering each full replacement range for public clean-patch application and reject entries that cannot be verified against selected source media.
 
 ## 12. Fair Use and Anti-Circumvention Notes
 
@@ -130,3 +131,5 @@ The following references are provided for general orientation only:
 ## 14. Review
 
 This policy should be reviewed before public releases, before major export-format changes, and before distributing any package that includes translation data, sample media, or patched output.
+
+Engineering policy review completed May 25, 2026 for the `1.1.0-alpha.2` clean-patch safeguards. Packaged builds include this policy and the project license as resources, and release assets are accompanied by release notes and checksums; this review is not legal advice or permission to distribute third-party material.

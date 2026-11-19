@@ -73,7 +73,13 @@ export function enrichCleanPatchScriptForExport(rawScript: unknown): Translation
       const encoded = encodePatchTextForPatch(entry.translatedText, entry.encoding);
       const fitsOriginalRange = encoded.bytes !== undefined && encoded.bytes.length <= byteLength;
       const inheritedReason = stripRendererPlaceholderReasons(entry.reason);
-      const reason = [encoded.reason, fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.', inheritedReason]
+      const hasCompleteSourceVerification = entry.sourceVerification?.byteLength === byteLength;
+      const verificationReason = !entry.sourceVerification
+        ? 'Source fingerprint is required for clean patch application.'
+        : hasCompleteSourceVerification
+        ? undefined
+        : 'Source fingerprint must cover the full clean patch range.';
+      const reason = [encoded.reason, fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.', verificationReason, inheritedReason]
         .filter(Boolean)
         .join(' ');
       return {
@@ -81,7 +87,7 @@ export function enrichCleanPatchScriptForExport(rawScript: unknown): Translation
         replacementBytes: encoded.bytes,
         byteLength,
         fitsOriginalRange,
-        patchable: encoded.bytes !== undefined && fitsOriginalRange && !inheritedReason,
+        patchable: encoded.bytes !== undefined && fitsOriginalRange && hasCompleteSourceVerification && !inheritedReason,
         reason: reason || undefined
       };
     })
@@ -95,6 +101,8 @@ function stripRendererPlaceholderReasons(reason: string | undefined): string | u
   const cleaned = reason
     .replace(/Encoding .+? is export-only until byte encoding support is added\.\s*/g, '')
     .replace(/Translation does not fit in the original byte range\.\s*/g, '')
+    .replace(/Source fingerprint is required for clean patch application\.\s*/g, '')
+    .replace(/Source fingerprint must cover the full clean patch range\.\s*/g, '')
     .trim();
   return cleaned || undefined;
 }
@@ -117,21 +125,27 @@ export async function applyCleanPatchEntry(
   if (entry.replacementBytes.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 0xff)) {
     return { status: 'skipped', reason: 'Replacement bytes contain invalid values.' };
   }
+  if (!entry.sourceVerification || entry.sourceVerification.byteLength <= 0) {
+    return { status: 'skipped', reason: 'Patch entry does not include a valid source fingerprint.' };
+  }
+  if (entry.sourceVerification.byteLength !== byteLength) {
+    return { status: 'skipped', reason: 'Source fingerprint does not cover the full patch range.' };
+  }
 
-  const handle = await fs.open(outputPath, 'r+');
+  const handle = await fs.open(outputPath, options.dryRun ? 'r' : 'r+');
   try {
     const current = Buffer.alloc(byteLength);
-    await handle.read(current, 0, byteLength, entry.start);
-    if (entry.sourceVerification) {
-      const verificationBytes = current.subarray(0, entry.sourceVerification.byteLength);
-      const actualHash = hashFnv1a32Buffer(verificationBytes);
-      if (
-        entry.sourceVerification.algorithm !== 'fnv1a32' ||
-        entry.sourceVerification.byteLength > byteLength ||
-        actualHash !== entry.sourceVerification.hash
-      ) {
-        return { status: 'skipped', reason: 'Source fingerprint does not match expected image.' };
-      }
+    const { bytesRead } = await handle.read(current, 0, byteLength, entry.start);
+    if (bytesRead !== byteLength) {
+      return { status: 'skipped', reason: 'Patch range exceeds the selected source image.' };
+    }
+    const verificationBytes = current.subarray(0, entry.sourceVerification.byteLength);
+    const actualHash = hashFnv1a32Buffer(verificationBytes);
+    if (
+      entry.sourceVerification.algorithm !== 'fnv1a32' ||
+      actualHash !== entry.sourceVerification.hash
+    ) {
+      return { status: 'skipped', reason: 'Source fingerprint does not match expected image.' };
     }
 
     if (options.dryRun) {
@@ -155,9 +169,14 @@ export async function applyCleanPatchScriptToImages(
   outputFolder: string,
   options: CleanPatchApplyOptions = {}
 ): Promise<TranslationPatchReport> {
-  const sourceFilesByName = new Map<string, string>();
+  const sourceFilesByName = new Map<string, string[]>();
   for (const sourcePath of sourcePaths) {
-    sourceFilesByName.set(path.basename(sourcePath).toLowerCase(), sourcePath);
+    const name = path.basename(sourcePath).toLowerCase();
+    const matchingPaths = sourceFilesByName.get(name) || [];
+    if (!matchingPaths.includes(sourcePath)) {
+      matchingPaths.push(sourcePath);
+    }
+    sourceFilesByName.set(name, matchingPaths);
   }
 
   const sourceToOutput = new Map<string, string>();
@@ -189,18 +208,36 @@ export async function applyCleanPatchScriptToImages(
       );
       continue;
     }
+    if (!entry.sourceVerification || entry.sourceVerification.byteLength <= 0) {
+      reportEntries.push(
+        toCleanPatchReportEntry(entry, 'skipped', undefined, 'Patch entry does not include a valid source fingerprint.')
+      );
+      continue;
+    }
+    if (entry.sourceVerification.byteLength !== entry.end - entry.start + 1) {
+      reportEntries.push(
+        toCleanPatchReportEntry(entry, 'skipped', undefined, 'Source fingerprint does not cover the full patch range.')
+      );
+      continue;
+    }
 
-    const sourcePath = sourceFilesByName.get(path.basename(entry.sourcePath).toLowerCase());
-    if (!sourcePath) {
+    const matchingSources = sourceFilesByName.get(path.basename(entry.sourcePath).toLowerCase());
+    if (!matchingSources || matchingSources.length === 0) {
       reportEntries.push(toCleanPatchReportEntry(entry, 'skipped', undefined, 'Matching source image was not selected.'));
       continue;
     }
+    const sourceMatch = await findSourcePathForPatchEntry(entry, matchingSources);
+    if (!sourceMatch.sourcePath) {
+      reportEntries.push(toCleanPatchReportEntry(entry, 'skipped', undefined, sourceMatch.reason));
+      continue;
+    }
+    const sourcePath = sourceMatch.sourcePath;
 
     let outputPath = sourceToOutput.get(sourcePath);
     if (!outputPath) {
       outputPath = options.dryRun
         ? path.join(outputFolder, uniqueOutputFileName(path.basename(sourcePath), sourceToOutput.size))
-        : await copySourceToUniqueOutput(sourcePath, outputFolder, sourceToOutput.size);
+        : await copySourceToUniqueOutput(sourcePath, outputFolder);
       sourceToOutput.set(sourcePath, outputPath);
     }
 
@@ -293,26 +330,69 @@ function toCleanPatchReportEntry(
   };
 }
 
-async function copySourceToUniqueOutput(sourcePath: string, outputFolder: string, index: number): Promise<string> {
-  const outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath), index);
+async function findSourcePathForPatchEntry(
+  entry: TranslationPatchEntry,
+  matchingSources: string[]
+): Promise<{ sourcePath?: string; reason?: string }> {
+  if (matchingSources.length === 1) {
+    return { sourcePath: matchingSources[0] };
+  }
+  if (!entry.sourceVerification || entry.sourceVerification.byteLength <= 0) {
+    return { reason: 'Multiple selected source images share this name and no fingerprint can identify the intended image.' };
+  }
+
+  const verifiedMatches: string[] = [];
+  for (const sourcePath of matchingSources) {
+    if (await sourcePathMatchesVerification(sourcePath, entry)) {
+      verifiedMatches.push(sourcePath);
+    }
+  }
+  if (verifiedMatches.length === 1) {
+    return { sourcePath: verifiedMatches[0] };
+  }
+  if (verifiedMatches.length === 0) {
+    return { reason: 'No same-named selected source image matches the patch fingerprint.' };
+  }
+  return { reason: 'Multiple same-named selected source images match the patch fingerprint.' };
+}
+
+async function sourcePathMatchesVerification(sourcePath: string, entry: TranslationPatchEntry): Promise<boolean> {
+  const verification = entry.sourceVerification;
+  if (!verification || verification.byteLength <= 0) {
+    return false;
+  }
+  const handle = await fs.open(sourcePath, 'r');
+  try {
+    const bytes = Buffer.alloc(verification.byteLength);
+    const { bytesRead } = await handle.read(bytes, 0, verification.byteLength, entry.start);
+    return bytesRead === verification.byteLength && hashFnv1a32Buffer(bytes) === verification.hash;
+  } finally {
+    await handle.close();
+  }
+}
+
+async function copySourceToUniqueOutput(sourcePath: string, outputFolder: string): Promise<string> {
+  const outputPath = uniqueOutputPath(outputFolder, path.basename(sourcePath));
   await fs.copyFile(sourcePath, outputPath);
   return outputPath;
 }
 
-function uniqueOutputPath(outputFolder: string, fileName: string, index: number): string {
-  const candidate = path.join(outputFolder, uniqueOutputFileName(fileName, 0));
-  if (!fileExists(candidate)) {
-    return candidate;
+function uniqueOutputPath(outputFolder: string, fileName: string): string {
+  for (let index = 0; ; index += 1) {
+    const candidate = path.join(outputFolder, uniqueOutputFileName(fileName, index));
+    if (!fileExists(candidate)) {
+      return candidate;
+    }
   }
-  return path.join(outputFolder, uniqueOutputFileName(fileName, index + 1));
 }
 
 function uniqueOutputFileName(fileName: string, index: number): string {
+  const sanitized = sanitizeFileName(fileName);
   if (index <= 0) {
-    return sanitizeFileName(fileName);
+    return sanitized;
   }
-  const parsed = path.parse(fileName);
-  return `${sanitizeFileName(parsed.name)}-${index}${parsed.ext}`;
+  const parsed = path.parse(sanitized);
+  return `${parsed.name}-${index}${parsed.ext}`;
 }
 
 function fileExists(filePath: string): boolean {
@@ -392,7 +472,7 @@ function normalizeSourceVerification(value: unknown): TranslationPatchEntry['sou
     return undefined;
   }
   const byteLength = Math.floor(Number(value.byteLength));
-  if (value.algorithm !== 'fnv1a32' || !Number.isFinite(byteLength) || byteLength < 0) {
+  if (value.algorithm !== 'fnv1a32' || !Number.isFinite(byteLength) || byteLength <= 0) {
     return undefined;
   }
   if (typeof value.hash !== 'string' || !/^[0-9a-f]{8}$/i.test(value.hash)) {

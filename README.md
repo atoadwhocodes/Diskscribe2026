@@ -93,7 +93,7 @@ Note: roadmap systems are listed as targeted platforms and are not yet guarantee
 4. Distribute the clean patch JSON, not a patched game image.
 5. Users may choose `Validate Patch` first to check the clean patch against their own source image or images without writing output.
 6. Users choose `Apply Patch`, select the clean patch JSON, select their own matching source image or images, and choose an output folder.
-7. DiskScribe2026 writes patched copies plus `patch-report.json`. Entries with mismatched fingerprints, missing source images, invalid bytes, overlong replacements, or unsupported future patch versions are skipped and reported.
+7. DiskScribe2026 writes patched copies plus `patch-report.json`. Patchable entries require source fingerprints covering their full replacement range; entries with missing, incomplete, or mismatched fingerprints, missing source images, invalid bytes, overlong replacements, or unsupported future patch versions are skipped and reported.
 
 Command-line apply is also available for repeatable local testing:
 
@@ -134,6 +134,7 @@ Build output:
 - Known control prefixes such as `$j`, `$l`, `$f`, `$p`, `$d`, `_`, `!`, `&`, and `0` are preserved when present in source text.
 - Required inline control tokens `@`, `%`, and `#` must remain present when the source text uses them.
 - Known packed/no-go files such as `MESS.DAT` are blocked from direct clean patch export until a format-specific reinserter is implemented.
+- Clean patch application requires a full-range source fingerprint for every patchable entry and uses it to disambiguate selected images that share a filename.
 - These rules are conservative and can be expanded per-game as the record format is confirmed.
 
 ## Roadmap

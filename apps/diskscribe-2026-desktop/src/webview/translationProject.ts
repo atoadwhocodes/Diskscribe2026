@@ -292,10 +292,16 @@ function toPatchEntry(entry: TranslationEntry): TranslationPatchEntry {
   const encoded = encodePatchText(entry.translatedText, entry.encoding);
   const fitsOriginalRange = encoded.bytes !== undefined && encoded.bytes.length <= byteLength;
   const sourceVerification = buildSourceVerification(entry.sourceBytesBase64);
+  const hasCompleteSourceVerification = sourceVerification?.byteLength === byteLength;
   const segaCdRules = validateSegaCdTextEntry(entry, encoded.bytes?.length ?? Number.POSITIVE_INFINITY);
   const reason = [
     encoded.reason,
     fitsOriginalRange ? undefined : 'Translation does not fit in the original byte range.',
+    sourceVerification
+      ? hasCompleteSourceVerification
+        ? undefined
+        : 'Source fingerprint must cover the full clean patch range.'
+      : 'Source fingerprint is required for clean patch application.',
     ...segaCdRules.reasons
   ]
     .filter(Boolean)
@@ -312,7 +318,7 @@ function toPatchEntry(entry: TranslationEntry): TranslationPatchEntry {
     byteLength,
     sourceVerification,
     fitsOriginalRange,
-    patchable: encoded.bytes !== undefined && fitsOriginalRange && segaCdRules.ok,
+    patchable: encoded.bytes !== undefined && fitsOriginalRange && hasCompleteSourceVerification && segaCdRules.ok,
     reason: reason || undefined
   };
 }
@@ -322,7 +328,7 @@ function buildSourceVerification(sourceBytesBase64: string | undefined): Transla
     return undefined;
   }
   const bytes = decodeBase64Bytes(sourceBytesBase64);
-  if (!bytes) {
+  if (!bytes || bytes.length === 0) {
     return undefined;
   }
   return {

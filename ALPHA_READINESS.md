@@ -11,15 +11,16 @@ Use this checklist to decide whether a build is ready to tag as an alpha.
 
 ## Required Before Tagging
 
-- [x] `npm test` passes. Verified May 18, 2026 for `1.1.0-alpha.2`: 41 tests passing.
-- [x] `npm run lint` passes. Verified May 18, 2026 for `1.1.0-alpha.2`.
-- [x] `npm audit --omit=optional` reports zero vulnerabilities. Verified May 18, 2026 for `1.1.0-alpha.2`.
-- [x] `npm run package` produces Windows artifacts. Verified May 18, 2026 for `1.1.0-alpha.2`.
+- [x] `npm test` passes. Verified May 25, 2026 for `1.1.0-alpha.2`: 48 tests passing.
+- [x] `npm run lint` passes. Verified May 25, 2026 for `1.1.0-alpha.2`.
+- [x] `npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high` reports zero production vulnerabilities. Verified May 25, 2026 for `1.1.0-alpha.2`.
+- [x] `npm --prefix apps/diskscribe-2026-desktop audit --omit=optional` reports zero vulnerabilities. Verified May 25, 2026 after patched transitive tooling overrides.
+- [x] `npm run package` produces Windows artifacts. Verified May 25, 2026 for `1.1.0-alpha.2` under Node `22.22.3`.
 - [ ] `ALPHA_SMOKE_TEST.md` has been run against the packaged app.
 - [x] `CHANGELOG.md` includes the current alpha changes. Updated for `1.1.0-alpha.2`.
-- [ ] `LEGAL.md` has been reviewed for any new patch/export behavior.
-- [ ] Branch protection for `main` is restored unless direct-push development is still intentionally open.
-- [x] Installer checksums are generated locally. Attach `SHA256SUMS.txt` to the release.
+- [x] `LEGAL.md` has been reviewed for new patch/export behavior. Engineering policy review recorded May 25, 2026.
+- [x] Branch protection for `main` is restored. Verified May 25, 2026: active `Protect main` ruleset requires pull requests and `CI`, `Gitleaks`, `Dependency Review`, and `CodeQL` checks.
+- [x] Installer checksums are generated locally. Verified May 25, 2026; attach `SHA256SUMS.txt` to the release.
 - [x] Release notes clearly state alpha limitations. See `RELEASE_NOTES_1.1.0-alpha.2.md`.
 
 ## Alpha Limitations To Publish
@@ -36,6 +37,7 @@ Use this checklist to decide whether a build is ready to tag as an alpha.
 ```bash
 npm test
 npm run lint
+npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high
 npm --prefix apps/diskscribe-2026-desktop audit --omit=optional
 npm run package
 npm run apply-clean-patch -- --help
@@ -50,25 +52,29 @@ npm run apply-clean-patch -- --help
 
 ## Latest Local Verification
 
-Verified on May 18, 2026 for `1.1.0-alpha.2`:
+Verified on May 25, 2026 for `1.1.0-alpha.2`:
 
-- `npm test`: 41 passing.
+- `npm test`: 48 passing.
 - `npm run lint`: passed.
-- `npm --prefix apps/diskscribe-2026-desktop audit --omit=optional`: zero vulnerabilities.
+- `npm --prefix apps/diskscribe-2026-desktop audit --omit=dev --audit-level=high`: zero production vulnerabilities.
+- `npm --prefix apps/diskscribe-2026-desktop audit --omit=optional`: zero vulnerabilities after patched transitive tooling overrides.
 - `npm run apply-clean-patch -- --help`: passed.
 - `npm run package`: produced fresh Windows artifacts.
 - Local `SHA256SUMS.txt`: generated.
 
-Generated artifact sizes:
+Generated artifact sizes on May 25, 2026:
 
-- `DiskScribe2026DesktopSetup.exe`: 134,165,504 bytes.
-- `diskscribe2026-1.1.0-alpha2-full.nupkg`: 133,332,545 bytes.
-- Unpacked `DiskScribe2026Desktop.exe`: 213,942,272 bytes.
+- `DiskScribe2026DesktopSetup.exe`: 134,169,600 bytes.
+- `diskscribe2026-1.1.0-alpha2-full.nupkg`: 133,337,203 bytes.
 
-Local SHA256:
+Local SHA256 generated on May 25, 2026:
 
-- `diskscribe2026-1.1.0-alpha2-full.nupkg`: `57ae508dd2c840c400af95240746aed28ed67f10a5312423c83314fe3a7f7f3d`
-- `DiskScribe2026DesktopSetup.exe`: `9620b96c6ed7f6b8bf89846802bee7536ccdb9adbac402a2f6c96305ae88084f`
-- `RELEASES`: `f3718582ecc6d051410bc2842c90b1065017dafae1dfe0c213fcf3631bc268c7`
+- `diskscribe2026-1.1.0-alpha2-full.nupkg`: `46dc82be1fa75a365e63d623739f555d309cc26343b11a3bcc799e7d7fe41cb0`
+- `DiskScribe2026DesktopSetup.exe`: `423078f665957bc616adcbdd7b7a110a392138a9b4a922af3a11dc072924f31b`
+- `RELEASES`: `705cd5a0a7eee202e6e666a05a3ed8eadd7fd946c0b991aed271f87031314139`
 
-Note: Electron Forge completed successfully but emitted a Node deprecation warning from dependency code: `DEP0187 Passing invalid argument types to fs.existsSync is deprecated`.
+Non-interactive packaged-app checks performed May 25, 2026:
+
+- The packaged executable remained running for an 8-second launch probe without an immediate crash.
+- Packaged `resources/LICENSE` and `resources/LEGAL.md` exist and match the source documents.
+- Interactive UI/media paths in `ALPHA_SMOKE_TEST.md` remain pending manual execution with lawful test media.
