@@ -5,7 +5,7 @@
   "description": "Standalone desktop app for PC-98 disk images, Sega CD cue sheets, and ISO9660 images with filesystem inspection and Shift-JIS translation tools.",
   "license": "MIT",
   "engines": {
-    "node": "22.x"
+    "node": ">=22.13.0 <23"
   },
   "repository": {
     "type": "git",

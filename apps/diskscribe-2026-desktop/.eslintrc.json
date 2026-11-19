@@ -12,5 +12,14 @@
     "plugin:import/electron",
     "plugin:import/typescript"
   ],
-  "parser": "@typescript-eslint/parser"
+  "parser": "@typescript-eslint/parser",
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.json",
+        "conditionNames": ["import", "require", "node", "default"],
+        "mainFields": ["module", "main"]
+      }
+    }
+  }
 }
